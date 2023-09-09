@@ -5,7 +5,8 @@
     "strict": true,
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
-    "lib": ["ESNext", "DOM"]
+    "lib": ["ESNext", "DOM"],
+    "types": ["bun-types"]
   },
   "include": ["src/**/*"]
 }

@@ -31,4 +31,12 @@ module.exports = {
     },
   },
   ignorePatterns: ["node_modules/", "dist/"],
+
+  rules: {
+    // allow default exports
+    "import/no-default-export": "off",
+
+    // allow implicit return types
+    "@typescript-eslint/explicit-function-return-type": "off",
+  },
 };

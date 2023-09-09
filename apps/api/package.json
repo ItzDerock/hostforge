@@ -1,0 +1,14 @@
+{
+  "name": "api",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.1.8",
+    "hono": "^3.5.4",
+    "zod": "^3.22.2"
+  },
+  "devDependencies": {
+    "bun-types": "^0.6.2"
+  }
+}

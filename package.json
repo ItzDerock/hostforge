@@ -12,6 +12,10 @@
     "tsconfig": "workspace:*",
     "turbo": "latest"
   },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "packageManager": "pnpm@8.6.10",
   "name": "hostforge"
 }

@@ -1,5 +1,6 @@
 {
-  "private": true,
+  "name": "hostforge",
+  "packageManager": "yarn@1.22.17+",
   "scripts": {
     "build": "turbo run build --skip-infer",
     "dev": "turbo run dev --skip-infer",
@@ -15,7 +16,5 @@
   "workspaces": [
     "packages/*",
     "apps/*"
-  ],
-  "name": "hostforge",
-  "packageManager": "yarn@1.22.17+"
+  ]
 }

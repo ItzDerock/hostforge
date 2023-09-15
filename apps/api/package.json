@@ -1,15 +1,18 @@
 {
   "name": "api",
+  "version": "1.0.50",
   "scripts": {
-    "dev": "bun run --hot src/index.ts",
-    "start": "bun run src/index.ts"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
-    "@hono/zod-validator": "^0.1.8",
-    "hono": "^3.5.4",
+    "@elysiajs/swagger": "^0.6.2",
+    "@t3-oss/env-core": "^0.6.1",
+    "elysia": "^0.6.23",
     "zod": "^3.22.2"
   },
   "devDependencies": {
-    "bun-types": "^1.0.1"
-  }
+    "bun-types": "latest"
+  },
+  "module": "src/index.js"
 }

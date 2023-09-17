@@ -1,4 +1,3 @@
-import path from "path";
 import { db } from ".";
 import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 
@@ -7,4 +6,5 @@ import { migrate } from "drizzle-orm/bun-sqlite/migrator";
  */
 export function prepDatabase() {
   migrate(db, { migrationsFolder: "./migrations" });
+  return;
 }

@@ -1,8 +1,10 @@
-import { drizzle, BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
+import { drizzle } from "drizzle-orm/bun-sqlite";
 import { Database } from "bun:sqlite";
 import path from "path";
 import { env } from "../env";
 import fs from "fs/promises";
+import * as session from "./models/session";
+import * as user from "./models/user";
 
 // build database path
 const dbPath = path.join(process.cwd(), env.dbPath);
@@ -23,4 +25,6 @@ const sqlite = new Database(path.join(process.cwd(), env.dbPath));
 // enter WAL mode
 sqlite.run("pragma journal_mode = WAL");
 
-export const db: BunSQLiteDatabase = drizzle(sqlite);
+export const db = drizzle(sqlite, {
+  schema: { ...user, ...session },
+});

@@ -14,7 +14,8 @@
     "turbo": "latest"
   },
   "workspaces": [
-    "packages/*",
-    "apps/*"
+    "./packages/eslint-config-custom",
+    "./packages/tsconfig",
+    "./apps/api"
   ]
 }

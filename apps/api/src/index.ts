@@ -2,6 +2,10 @@ import { Elysia } from "elysia";
 import { cookie } from "@elysiajs/cookie";
 import { authController } from "./controllers/auth";
 import { env } from "./env";
+import { prepDatabase } from "./database/migrate";
+
+// start by prepping the database
+prepDatabase();
 
 // base elysia app with all the plugins
 const baseApp = new Elysia().use(cookie());

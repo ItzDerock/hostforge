@@ -34,3 +34,7 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# data
+apps/api/data
+apps/api/migrations

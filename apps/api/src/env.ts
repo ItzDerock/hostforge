@@ -6,12 +6,17 @@ export const env = createEnv({
    * Serverside environment variables
    */
   server: {
-    port: z.preprocess(Number, z.number()),
-    host: z.string(),
+    port: z.preprocess(Number, z.number()).default(3000),
+    host: z.string().default("0.0.0.0"),
+    dbPath: z.string().default("./data/sqlite.db"),
   },
 
+  /**
+   * Map environment variables to runtime environment
+   */
   runtimeEnv: {
-    port: process.env.PORT ?? "3000",
-    host: process.env.HOST ?? "0.0.0.0",
+    port: process.env.PORT,
+    host: process.env.HOST,
+    dbPath: process.env.DB_PATH,
   },
 });

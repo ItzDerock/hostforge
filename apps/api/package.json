@@ -2,18 +2,22 @@
   "name": "api",
   "version": "1.0.50",
   "scripts": {
+    "generate": "drizzle-kit generate:sqlite --out migrations --schema src/database/models",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun --watch src/index.ts"
   },
   "dependencies": {
     "@elysiajs/cookie": "^0.6.1",
     "@elysiajs/swagger": "^0.6.2",
+    "@paralleldrive/cuid2": "^2.2.2",
     "@t3-oss/env-core": "^0.6.1",
+    "drizzle-orm": "^0.28.6",
     "elysia": "latest",
     "zod": "^3.22.2"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "drizzle-kit": "^0.19.13"
   },
   "module": "src/index.js"
 }

@@ -6,7 +6,7 @@ export const env = createEnv({
    * Serverside environment variables
    */
   server: {
-    port: z.number(),
+    port: z.preprocess(Number, z.number()),
     host: z.string(),
   },
 

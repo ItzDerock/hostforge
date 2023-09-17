@@ -1,7 +1,26 @@
 import { Elysia } from "elysia";
-import { ElysiaLoader } from "./loader";
+import { cookie } from "@elysiajs/cookie";
 import { authController } from "./controllers/auth";
+import { env } from "./env";
 
-// const app = new ElysiaLoader(new Elysia()).load(import("./controllers/auth"));
-let app = new Elysia();
-app = app.use(authController);
+// base elysia app with all the plugins
+const baseApp = new Elysia().use(cookie());
+type ExtractContext<T> = T extends Elysia<infer _U, infer V> ? V : never;
+export type BaseElysiaContext = ExtractContext<typeof baseApp>;
+
+// add in our routes
+const withRoutes = baseApp.use(authController);
+export type ElysiaWithRoutes = typeof withRoutes;
+
+// if this is the main module, start the server
+if (import.meta.main) {
+  withRoutes.listen(
+    {
+      port: env.port,
+      hostname: env.host,
+    },
+    (data) => {
+      console.log(`🚀 listening on ${data.hostname}:${data.port}`);
+    }
+  );
+}

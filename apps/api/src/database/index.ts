@@ -5,6 +5,8 @@ import { env } from "../env";
 import fs from "fs/promises";
 import * as session from "./models/session";
 import * as user from "./models/user";
+import * as relations from "./models/relations";
+import Elysia from "elysia";
 
 // build database path
 const dbPath = path.join(process.cwd(), env.dbPath);
@@ -26,5 +28,8 @@ const sqlite = new Database(path.join(process.cwd(), env.dbPath));
 sqlite.run("pragma journal_mode = WAL");
 
 export const db = drizzle(sqlite, {
-  schema: { ...user, ...session },
+  schema: { ...user, ...session, ...relations },
 });
+
+// plugin to decorate `ctx.db` with the database
+export const database = new Elysia().state("db", db);

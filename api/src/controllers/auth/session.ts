@@ -1,6 +1,6 @@
 import cookie from "@elysiajs/cookie";
 import Elysia from "elysia";
-import type { ExtractContext } from "../..";
+import type { ExtractContext } from "../../base";
 import { db } from "../../database";
 import { userModel } from "../../database/models/user";
 import { sessionModel } from "../../database/models/session";

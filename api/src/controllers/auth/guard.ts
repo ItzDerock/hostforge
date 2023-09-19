@@ -1,4 +1,4 @@
-import type { BaseElysia } from "../..";
+import type { BaseElysia } from "../../base";
 type Context = Parameters<Parameters<BaseElysia["post"]>[1]>[0];
 
 export function isSignedIn(ctx: Context) {

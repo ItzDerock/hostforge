@@ -1,19 +1,16 @@
 {
   "name": "hostforge",
-  "packageManager": "yarn@1.22.17+",
-  "scripts": {
-    "build": "turbo run build --skip-infer",
-    "dev": "turbo run dev --skip-infer",
-    "lint": "turbo run lint --skip-infer",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
-  },
   "devDependencies": {
     "eslint": "^8.48.0",
     "prettier": "^3.0.3",
-    "turbo": "latest"
+    "api": "workspace:*"
+  },
+  "license": "zlib",
+  "scripts": {
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "workspaces": [
-    "./web",
-    "./api"
+    "./api/",
+    "./web/"
   ]
 }

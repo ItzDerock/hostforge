@@ -10,12 +10,10 @@
   "devDependencies": {
     "eslint": "^8.48.0",
     "prettier": "^3.0.3",
-    "tsconfig": "workspace:*",
     "turbo": "latest"
   },
   "workspaces": [
-    "./packages/eslint-config-custom",
-    "./packages/tsconfig",
-    "./apps/api"
+    "./web",
+    "./api"
   ]
 }

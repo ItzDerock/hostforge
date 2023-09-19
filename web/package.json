@@ -1,7 +1,8 @@
 {
-  "name": "@hostforge/web",
+  "name": "web",
   "version": "0.1.0",
   "private": true,
+  "main": "./src/index.ts",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -16,7 +17,7 @@
     "autoprefixer": "10.4.15",
     "eslint": "8.49.0",
     "eslint-config-next": "13.5.0",
-    "next": "13.4.9",
+    "next": "13.5.1",
     "postcss": "8.4.30",
     "react": "18.2.0",
     "react-dom": "18.2.0",

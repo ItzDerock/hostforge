@@ -1,4 +1,4 @@
 import { edenTreaty } from "@elysiajs/eden";
-import { ElysiaWithRoutes } from "api";
+import { ElysiaAPI } from "api";
 
-export const app = edenTreaty<ElysiaWithRoutes>();
+export const app = edenTreaty<ElysiaAPI>();

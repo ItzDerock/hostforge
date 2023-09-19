@@ -15,12 +15,13 @@
     "elysia": "latest",
     "ipaddr.js": "^2.1.0",
     "otp-io": "^1.2.6",
-    "zod": "^3.22.2"
+    "zod": "^3.22.2",
+    "web": "workspace:*"
   },
   "devDependencies": {
     "bun-types": "latest",
     "drizzle-kit": "^0.19.13"
   },
-  "module": "src/index.ts",
+  "module": "src/api.ts",
   "main": "src/index.ts"
 }

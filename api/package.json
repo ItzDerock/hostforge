@@ -4,7 +4,7 @@
   "scripts": {
     "generate": "drizzle-kit generate:sqlite --out migrations --schema src/database/models",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bun --watch src/index.ts"
+    "dev": "bun src/index.ts"
   },
   "dependencies": {
     "@elysiajs/cookie": "latest",

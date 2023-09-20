@@ -1,13 +1,10 @@
-import { IncomingMessage, ServerResponse, createServer } from "node:http";
+import { IncomingMessage, ServerResponse, createServer } from "http";
 import { app, type ElysiaAPI as EAPI } from "./api";
 export type ElysiaAPI = EAPI;
 import { prepDatabase } from "./database/migrate";
 import { env } from "./env";
 import next from "web";
-import { parse } from "url";
 import path from "path";
-
-createServer(app);
 
 // if this is the main module, start the server
 if (import.meta.main) {
@@ -24,47 +21,23 @@ if (import.meta.main) {
   await nextApp.prepare();
   const handle = nextApp.getRequestHandler();
 
-  // const handleBun = (req: Request) => {
-  //   return new Promise<Response>((resolve) => {
-  //     const start = Date.now();
-
-  //     const http_req = new IncomingMessage(req);
-  //     const http_res = new ServerResponse({
-  //       reply: (response) => {
-  //         console.log("Reply got");
-  //         resolve(response);
-  //         console.log("🛬 response took " + (Date.now() - start) + "ms");
-  //       },
-
-  //       req: http_req,
-  //     });
-
-  //     console.log("📦 Rendering page: " + req.url);
-  //     handle(http_req, http_res);
-  //   });
-  // };
-
   const handleBun = (req: Request) => {
     return new Promise<Response>((resolve) => {
+      const start = Date.now();
+
       const http_req = new IncomingMessage(req);
       const http_res = new ServerResponse({
         reply: (response) => {
-          console.log("resolving promise");
+          console.log("Reply got");
           resolve(response);
-          console.log("resolve called!");
+          console.log("🛬 response took " + (Date.now() - start) + "ms");
         },
 
         req: http_req,
       });
 
-      console.log("passing request to next.js");
-      handle(http_req, http_res)
-        .then(() => {
-          console.log("next OK!");
-        })
-        .catch((err) => {
-          console.error(err);
-        });
+      console.log("📦 Rendering page: " + req.url);
+      handle(http_req, http_res);
     });
   };
 

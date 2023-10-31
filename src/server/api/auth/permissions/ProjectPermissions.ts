@@ -1,4 +1,4 @@
-import { Permission, createPermissionsClass } from ".";
+import { createPermissionsClass } from "ts-permissions";
 
 enum ProjectPermissionsEnum {
   /**
@@ -32,37 +32,6 @@ enum ProjectPermissionsEnum {
   ManageServices,
 }
 
-export const ProjectPermissions = createPermissionsClass(
-  ProjectPermissionsEnum,
-);
-
-// export class ProjectPermissions extends Permission<
-//   Record<ProjectPermissionsEnum, number>
-// > {
-//   public static Flags = ProjectPermissionsEnum;
-// }
-
-// const test = {
-//   Administrator: 0,
-//   ManageMembers: 1,
-//   CreateService: 2,
-//   ViewServices: 3,
-//   ManageServices: 4,
-// };
-
-// type Test = { [key in keyof typeof ProjectPermissions]: number }
-
-// class TestClass<T extends {}> {
-//   constructor(public value: {
-//     [key in keyof typeof T]: number | string;
-//   }) {}
-//   use(something: T) {
-//     return new TestClass(something);
-//   }
-// }
-
-// const inst = new TestClass<ProjectPermissions>(ProjectPermissions);
-// inst.use(ProjectPermissions.Owner);
-
-// export const ProjectPermissionsClass = new Permission(ProjectPermissions);
-// ProjectPermissionsClass.for(0b11111).has(ProjectPermissions.Owner);
+export const ProjectPermissions = createPermissionsClass<
+  typeof ProjectPermissionsEnum
+>(ProjectPermissionsEnum, "ProjectPermissions");

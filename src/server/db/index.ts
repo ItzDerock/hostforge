@@ -1,16 +1,18 @@
-import { PrismaClient } from "@prisma/client";
-
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import SQLite3 from "better-sqlite3";
+import { join } from "path";
 import { env } from "~/env.mjs";
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+const sqlite = new SQLite3(env.DATABASE_PATH);
 
-export const db =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log:
-      env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-  });
+// enable WAL mode
+sqlite.pragma("journal_mode = WAL");
 
-if (env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+// load uuidv7 extension
+// built from https://github.com/craigpastro/sqlite-uuidv7
+sqlite.loadExtension(
+  env.SQLITE_UUIDV7_EXT_PATH ??
+    join(__dirname, "../../../exts/sqlite-uuidv7.so"),
+);
+
+export const db = drizzle(sqlite);

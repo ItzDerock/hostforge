@@ -7,16 +7,13 @@ export const env = createEnv({
    * isn't built with invalid env vars.
    */
   server: {
-    DATABASE_URL: z
-      .string()
-      .url()
-      .refine(
-        (str) => !str.includes("YOUR_MYSQL_URL_HERE"),
-        "You forgot to change the default URL"
-      ),
+    DATABASE_PATH: z.string().default("./data/db.sqlite"),
+
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
+
+    SQLITE_UUIDV7_EXT_PATH: z.string().optional(),
   },
 
   /**
@@ -33,9 +30,9 @@ export const env = createEnv({
    * middlewares) or client-side so we need to destruct manually.
    */
   runtimeEnv: {
-    DATABASE_URL: process.env.DATABASE_URL,
+    DATABASE_PATH: process.env.DATABASE_PATH,
     NODE_ENV: process.env.NODE_ENV,
-    // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+    SQLITE_UUIDV7_EXT_PATH: process.env.SQLITE_UUIDV7_EXT_PATH,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

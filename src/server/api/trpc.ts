@@ -6,12 +6,13 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
-import { initTRPC } from "@trpc/server";
+import { TRPCError, initTRPC } from "@trpc/server";
 import { type NextRequest } from "next/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { db } from "~/server/db";
+import { Session } from "../auth/Session";
 
 /**
  * 1. CONTEXT
@@ -20,9 +21,9 @@ import { db } from "~/server/db";
  *
  * These allow you to access things when processing a request, like the database, the session, etc.
  */
-
 interface CreateContextOptions {
   headers: Headers;
+  session: Session | null;
 }
 
 /**
@@ -38,6 +39,7 @@ interface CreateContextOptions {
 export const createInnerTRPCContext = (opts: CreateContextOptions) => {
   return {
     headers: opts.headers,
+    session: opts.session,
     db,
   };
 };
@@ -48,11 +50,20 @@ export const createInnerTRPCContext = (opts: CreateContextOptions) => {
  *
  * @see https://trpc.io/docs/context
  */
-export const createTRPCContext = (opts: { req: NextRequest }) => {
-  // Fetch stuff that depends on the request
+export const createTRPCContext = async (opts: { req: NextRequest }) => {
+  // resolve session data
+  const sessionToken = opts.req.cookies.get("session")?.value;
+
+  const session: Session | null = sessionToken
+    ? await Session.fetchFromTokenAndUpdate(sessionToken, {
+        ip: opts.req.ip,
+        ua: opts.req.headers.get("user-agent") ?? undefined,
+      })
+    : null;
 
   return createInnerTRPCContext({
     headers: opts.req.headers,
+    session,
   });
 };
 
@@ -63,8 +74,7 @@ export const createTRPCContext = (opts: { req: NextRequest }) => {
  * ZodErrors so that you get typesafety on the frontend if your procedure fails due to validation
  * errors on the backend.
  */
-
-const t = initTRPC.context<typeof createTRPCContext>().create({
+export const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
     return {
@@ -100,3 +110,26 @@ export const createTRPCRouter = t.router;
  * are logged in.
  */
 export const publicProcedure = t.procedure;
+
+/**
+ * Authenticated procedure
+ *
+ * This is the base piece you use to build new queries and mutations on your tRPC API. It guarantees
+ * that a user querying is authorized, and you can access user session data.
+ */
+export const authenticatedProcedure = t.procedure.use(
+  t.middleware(({ ctx, next }) => {
+    if (!ctx.session) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "You must be logged in to perform this action.",
+      });
+    }
+
+    return next({
+      ctx: {
+        session: ctx.session,
+      },
+    });
+  }),
+);

@@ -1,6 +1,14 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { users, sessions } from "../db/schema";
+import { randomBytes } from "crypto";
+import assert from "assert";
+import { NextRequest } from "next/server";
+
+export type SessionUpdateData = Partial<{
+  ua: string;
+  ip: string;
+}>;
 
 export class Session {
   /**
@@ -29,14 +37,21 @@ export class Session {
    */
   static async fetchFromTokenAndUpdate(
     token: string,
-    context: {
-      ip?: string;
-      ua?: string;
-    },
+    context: SessionUpdateData | NextRequest,
   ) {
+    // parse context
+    const parsedContext =
+      context instanceof NextRequest
+        ? Session.getContextFromRequest(context)
+        : context;
+
     const [sessionData] = await db
       .update(sessions)
-      .set({ lastAccessed: new Date(), lastIP: context.ip, lastUA: context.ua })
+      .set({
+        lastAccessed: new Date(),
+        lastIP: parsedContext.ip,
+        lastUA: parsedContext.ua,
+      })
       .where(eq(sessions.token, token))
       .returning();
 
@@ -45,6 +60,47 @@ export class Session {
     }
 
     return new Session(sessionData);
+  }
+
+  /**
+   * Create a new session for a user.
+   */
+  static async createForUser(
+    userId: string,
+    context: SessionUpdateData | NextRequest,
+  ) {
+    // generate a session token
+    const token = randomBytes(64).toString("hex");
+
+    // parse context
+    const parsedContext =
+      context instanceof NextRequest
+        ? Session.getContextFromRequest(context)
+        : context;
+
+    // insert the session into the database
+    const [sessionData] = await db
+      .insert(sessions)
+      .values({
+        lastUA: parsedContext.ua,
+        lastIP: parsedContext.ip,
+        token,
+        userId,
+      })
+      .returning();
+
+    assert(sessionData, "Session should be created");
+    return new Session(sessionData);
+  }
+
+  /**
+   * Utility function to extract context from a request.
+   */
+  static getContextFromRequest(request: NextRequest) {
+    return {
+      ua: request.headers.get("user-agent") ?? undefined,
+      ip: request.ip,
+    } satisfies SessionUpdateData;
   }
 
   /**

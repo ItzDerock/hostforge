@@ -23,6 +23,7 @@ import { Session } from "../auth/Session";
  */
 interface CreateContextOptions {
   headers: Headers;
+  request: NextRequest;
   session: Session | null;
 }
 
@@ -41,6 +42,7 @@ export const createInnerTRPCContext = (opts: CreateContextOptions) => {
     headers: opts.headers,
     session: opts.session,
     db,
+    request: opts.request,
   };
 };
 
@@ -64,6 +66,7 @@ export const createTRPCContext = async (opts: { req: NextRequest }) => {
   return createInnerTRPCContext({
     headers: opts.req.headers,
     session,
+    request: opts.req,
   });
 };
 

@@ -11,8 +11,16 @@ import {
 } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { useForm } from "@mantine/form";
 
 export default function LoginForm() {
+  const form = useForm({
+    initialValues: {
+      email: "",
+      password: "",
+    },
+  });
+
   return (
     <Card className="mx-auto w-80">
       <CardHeader>

@@ -20,7 +20,7 @@ export const users = sqliteTable(
   {
     id: text("id").default(uuidv7).primaryKey(),
     username: text("username").unique().notNull(),
-    password: blob("password"), // raw hash
+    password: text("password"), // raw hash
 
     // user configuration
     mfaToken: blob("mfa_token"), // raw hash
@@ -46,7 +46,7 @@ export const sessions = sqliteTable("session", {
   // NOT IN MILLISECONDS!
   lastAccessed: integer("last_accessed", { mode: "timestamp" }),
   createdAt: integer("created_at").default(now),
-  userId: text("id"),
+  userId: text("id").notNull(),
 });
 
 export const sessionRelations = relations(sessions, ({ one }) => ({

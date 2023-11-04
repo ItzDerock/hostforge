@@ -5,6 +5,7 @@ import { users } from "~/server/db/schema";
 import { TRPCError } from "@trpc/server";
 import assert from "assert";
 import { Session } from "~/server/auth/Session";
+import { hash } from "argon2";
 
 export const setupProcedure = publicProcedure
   .input(
@@ -34,7 +35,7 @@ export const setupProcedure = publicProcedure
       .insert(users)
       .values({
         username: input.username,
-        password: input.password,
+        password: await hash(input.password),
       })
       .returning({ id: users.id });
 

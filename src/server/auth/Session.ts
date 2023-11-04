@@ -108,4 +108,30 @@ export class Session {
    * @param sessionData The user's session data.
    */
   constructor(public readonly data: typeof sessions.$inferSelect) {}
+
+  /**
+   * Get the user associated with this session.
+   */
+  async getUser() {
+    const [userData] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, this.data.userId));
+
+    // if the user doesn't exist, it was deleted.
+    // delete the session and throw an error.
+    if (!userData) {
+      await this.delete();
+      throw new Error("User does not exist");
+    }
+
+    return userData;
+  }
+
+  /**
+   * Delete this session.
+   */
+  async delete() {
+    await db.delete(sessions).where(eq(sessions.token, this.data.token));
+  }
 }

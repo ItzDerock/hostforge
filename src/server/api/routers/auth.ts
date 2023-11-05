@@ -64,7 +64,7 @@ export const authRouter = createTRPCRouter({
       }
 
       const session = await Session.createForUser(user.id, ctx.request);
-      ctx.request.cookies.set("session", session.data.token);
+      ctx.headers.set("Set-Cookie", session.getCookieString());
 
       return {
         success: true,

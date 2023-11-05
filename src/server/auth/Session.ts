@@ -3,7 +3,7 @@ import { db } from "../db";
 import { users, sessions } from "../db/schema";
 import { randomBytes } from "crypto";
 import assert from "assert";
-import { NextRequest } from "next/server";
+import { NextRequest, userAgent } from "next/server";
 
 export type SessionUpdateData = Partial<{
   ua: string;
@@ -11,6 +11,12 @@ export type SessionUpdateData = Partial<{
 }>;
 
 export class Session {
+  /**
+   * The length of time a session should last.
+   * currently 30 days.
+   */
+  static readonly EXPIRE_TIME = 1000 * 60 * 60 * 24 * 30;
+
   /**
    * Fetch a session from a session token.
    * @param token The session cookie
@@ -74,7 +80,7 @@ export class Session {
 
     // parse context
     const parsedContext =
-      context instanceof NextRequest
+      context instanceof Request
         ? Session.getContextFromRequest(context)
         : context;
 
@@ -98,7 +104,7 @@ export class Session {
    */
   static getContextFromRequest(request: NextRequest) {
     return {
-      ua: request.headers.get("user-agent") ?? undefined,
+      ua: userAgent(request).ua ?? undefined,
       ip: request.ip,
     } satisfies SessionUpdateData;
   }
@@ -133,5 +139,15 @@ export class Session {
    */
   async delete() {
     await db.delete(sessions).where(eq(sessions.token, this.data.token));
+  }
+
+  /**
+   * Returns a cookie string for this session.
+   */
+  getCookieString() {
+    const expire = new Date(this.data.createdAt + Session.EXPIRE_TIME);
+    return `sessionToken=${
+      this.data.token
+    }; Expires=${expire.toUTCString()}; Path=/; HttpOnly; SameSite=Strict`;
   }
 }

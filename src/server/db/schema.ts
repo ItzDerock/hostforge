@@ -9,7 +9,7 @@ import {
 
 // util
 const uuidv7 = sql`(uuid_generate_v7())`;
-const now = sql`CURRENT_TIMESTAMP`;
+const now = sql<number>`CURRENT_TIMESTAMP`;
 
 /**
  * User table.
@@ -45,7 +45,7 @@ export const sessions = sqliteTable("session", {
   lastIP: text("last_ip"),
   // NOT IN MILLISECONDS!
   lastAccessed: integer("last_accessed", { mode: "timestamp" }),
-  createdAt: integer("created_at").default(now),
+  createdAt: integer("created_at").default(now).notNull(),
   userId: text("id").notNull(),
 });
 

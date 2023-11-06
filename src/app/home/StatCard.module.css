@@ -1,0 +1,9 @@
+/* tailwind does not have text-shadow support, so we do it ourselves */
+.stat-card > p {
+  /* -webkit-text-stroke: 1px theme("colors.card.DEFAULT"); */
+  text-shadow:
+    1px 1px 0 theme("colors.card.DEFAULT"),
+    -1px 1px 0 theme("colors.card.DEFAULT"),
+    1px -1px 0 theme("colors.card.DEFAULT"),
+    -1px -1px 0 theme("colors.card.DEFAULT");
+}

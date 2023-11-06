@@ -3,14 +3,17 @@ import {
   authenticatedProcedure,
   createTRPCRouter,
   publicProcedure,
-} from "../trpc";
+} from "../../trpc";
 import { users } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import argon2 from "argon2";
 import { Session } from "~/server/auth/Session";
+import { sessionsRouter } from "./sessions";
 
 export const authRouter = createTRPCRouter({
+  sessions: sessionsRouter,
+
   me: authenticatedProcedure.query(async ({ ctx }) => {
     const user = await ctx.session.getUser();
 

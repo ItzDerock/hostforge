@@ -4,6 +4,7 @@ import { users, sessions } from "../db/schema";
 import { randomBytes } from "crypto";
 import assert from "assert";
 import { NextRequest, userAgent } from "next/server";
+import { hash } from "argon2";
 
 export type SessionUpdateData = Partial<{
   ua: string;
@@ -90,13 +91,13 @@ export class Session {
       .values({
         lastUA: parsedContext.ua,
         lastIP: parsedContext.ip,
-        token,
+        token: await hash(token),
         userId,
       })
       .returning();
 
     assert(sessionData, "Session should be created");
-    return new Session(sessionData);
+    return new Session(sessionData, token);
   }
 
   /**
@@ -112,8 +113,12 @@ export class Session {
   /**
    * Create a new session instance from a user's session data.
    * @param sessionData The user's session data.
+   * @param unhashedSessionToken The unhashed session token.
    */
-  constructor(public readonly data: typeof sessions.$inferSelect) {}
+  constructor(
+    public readonly data: typeof sessions.$inferSelect,
+    private readonly unhashedSessionToken?: string,
+  ) {}
 
   /**
    * Get the user associated with this session.
@@ -145,9 +150,11 @@ export class Session {
    * Returns a cookie string for this session.
    */
   getCookieString() {
+    assert(this.unhashedSessionToken, "Sessions cannot be unhashed");
+
     const expire = new Date(this.data.createdAt + Session.EXPIRE_TIME);
     return `sessionToken=${
-      this.data.token
+      this.unhashedSessionToken
     }; Expires=${expire.toUTCString()}; Path=/; HttpOnly; SameSite=Strict`;
   }
 }

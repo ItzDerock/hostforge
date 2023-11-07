@@ -4,7 +4,8 @@ import { users, sessions } from "../db/schema";
 import { randomBytes } from "crypto";
 import assert from "assert";
 import { NextRequest, userAgent } from "next/server";
-import { hash } from "argon2";
+import { hash as argon2Hash } from "argon2";
+import { env } from "~/env.mjs";
 
 export type SessionUpdateData = Partial<{
   ua: string;
@@ -19,11 +20,23 @@ export class Session {
   static readonly EXPIRE_TIME = 1000 * 60 * 60 * 24 * 30;
 
   /**
+   * Hash function
+   */
+  static async hash(token: string) {
+    return argon2Hash(token, {
+      salt: Buffer.from(env.SESSION_SECRET),
+    });
+  }
+
+  /**
    * Fetch a session from a session token.
    * @param token The session cookie
    * @returns
    */
   static async fetchFromToken(token: string) {
+    // hash token
+    token = await this.hash(token);
+
     const [sessionData] = await db
       .select()
       .from(sessions)
@@ -51,6 +64,9 @@ export class Session {
       context instanceof NextRequest
         ? Session.getContextFromRequest(context)
         : context;
+
+    // hash token
+    token = await this.hash(token);
 
     const [sessionData] = await db
       .update(sessions)
@@ -91,7 +107,7 @@ export class Session {
       .values({
         lastUA: parsedContext.ua,
         lastIP: parsedContext.ip,
-        token: await hash(token),
+        token: await this.hash(token),
         userId,
       })
       .returning();

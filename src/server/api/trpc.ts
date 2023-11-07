@@ -7,7 +7,7 @@
  * need to use are documented accordingly near the end.
  */
 import { TRPCError, initTRPC } from "@trpc/server";
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
@@ -57,6 +57,9 @@ export const createTRPCContext = async (opts: {
   req: NextRequest;
   resHeaders: Headers;
 }) => {
+  // disable caching
+  opts.resHeaders.set("Cache-Control", "no-store");
+
   // resolve session data
   const sessionToken = opts.req.cookies.get("sessionToken")?.value;
 

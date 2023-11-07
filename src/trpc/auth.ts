@@ -1,6 +1,6 @@
-import { TRPCLink } from "@trpc/client";
+import { type TRPCLink } from "@trpc/client";
 import { observable } from "@trpc/server/observable";
-import { AppRouter } from "~/server/api/root";
+import { type AppRouter } from "~/server/api/root";
 import { httpLink } from "@trpc/client/links/httpLink";
 
 type LinkOptions = Parameters<typeof httpLink>[0];
@@ -10,7 +10,7 @@ type LinkOptions = Parameters<typeof httpLink>[0];
  * Cannot set cookies in a streaming response, but we don't want to require every request to be a non-streaming batch request, so this is the best option.
  */
 export const authLink: (opts: LinkOptions) => TRPCLink<AppRouter> = (opts) => {
-  const originalLink = httpLink(opts);
+  const originalLink = httpLink<AppRouter>(opts);
 
   return (runtime) =>
     ({ next, op }) => {

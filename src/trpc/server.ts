@@ -6,7 +6,7 @@ import {
 
 import { type AppRouter } from "~/server/api/root";
 import { getUrl, transformer } from "./shared";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export const api = createTRPCProxyClient<AppRouter>({
   transformer,
@@ -19,9 +19,13 @@ export const api = createTRPCProxyClient<AppRouter>({
     unstable_httpBatchStreamLink({
       url: getUrl(),
       headers() {
+        const heads = headers();
+        const cooks = cookies();
+
         return {
-          cookie: cookies().toString(),
+          cookie: cooks.toString(),
           "x-trpc-source": "rsc",
+          "X-Forwarded-For": heads.get("X-Forwarded-For") ?? undefined,
         };
       },
     }),

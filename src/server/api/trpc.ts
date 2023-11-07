@@ -10,10 +10,9 @@ import { TRPCError, initTRPC } from "@trpc/server";
 import { type NextRequest } from "next/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
-
 import { db } from "~/server/db";
 import { Session } from "../auth/Session";
-import { cookies } from "next/headers";
+import ipaddr from "ipaddr.js";
 
 /**
  * 1. CONTEXT
@@ -60,9 +59,19 @@ export const createTRPCContext = async (opts: {
   // disable caching
   opts.resHeaders.set("Cache-Control", "no-store");
 
+  // resolve real IP
+  const forwardedFor = opts.req.headers.get("x-forwarded-for");
+  let ip = forwardedFor?.split(",")[0];
+
+  // validate IP
+  if (!ip || !ipaddr.isValid(ip)) {
+    ip = opts.req.ip;
+  }
+
   // resolve session data
   const sessionToken = opts.req.cookies.get("sessionToken")?.value;
 
+  // fetch session data from token
   const session: Session | null = sessionToken
     ? await Session.fetchFromTokenAndUpdate(sessionToken, {
         ip: opts.req.ip,

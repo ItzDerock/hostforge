@@ -14,7 +14,9 @@ export const env = createEnv({
       .default("development"),
 
     SQLITE_UUIDV7_EXT_PATH: z.string().optional(),
-    SESSION_SECRET: z.string(),
+    SESSION_SECRET: z.string().min(8),
+    HOSTNAME: z.string().default("localhost"),
+    PORT: z.number().default(3000),
   },
 
   /**
@@ -35,6 +37,8 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     SQLITE_UUIDV7_EXT_PATH: process.env.SQLITE_UUIDV7_EXT_PATH,
     SESSION_SECRET: process.env.SESSION_SECRET,
+    HOSTNAME: process.env.HOSTNAME,
+    PORT: process.env.PORT,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

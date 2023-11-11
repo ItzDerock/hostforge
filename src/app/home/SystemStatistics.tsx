@@ -4,6 +4,7 @@ import { api } from "~/trpc/react";
 import { StatCard } from "./StatCard";
 import { RouterOutputs } from "~/trpc/shared";
 import { RiPulseFill } from "react-icons/ri";
+import { useState } from "react";
 
 const TEST_DATA = [
   { cpu: 0.05 },
@@ -16,19 +17,24 @@ const TEST_DATA = [
   { cpu: 0.3 },
 ];
 
-export function SystemStatistics(props: {
-  initialData: RouterOutputs["system"]["current"];
-}) {
-  const { data } = api.system.current.useQuery(undefined, {
-    initialData: props.initialData,
-    refetchInterval: 5_000,
+type StatData = RouterOutputs["system"]["currentStats"];
+
+export function SystemStatistics(props: { initialData: StatData }) {
+  const [data, setData] = useState<StatData>(props.initialData);
+
+  api.system.liveStats.useSubscription(undefined, {
+    onData: (data) => {
+      setData(data);
+    },
   });
 
   return (
     <div className="m-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
       <StatCard
         title="CPU Usage"
-        value={`${data.cpu.usage ?? 0}%`}
+        // value={`${data.cpu.usage ?? 0}%`}
+        value={data.cpu.usage}
+        unit="%"
         subvalue={`of ${data.cpu.cores} CPUs`}
         icon={RiPulseFill}
         data={TEST_DATA}
@@ -58,9 +64,6 @@ export function SystemStatistics(props: {
         data={TEST_DATA}
         dataKey="cpu"
       />
-      {/* <StatCard />
-      <StatCard />
-      <StatCard /> */}
     </div>
   );
 }

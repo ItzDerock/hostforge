@@ -5,13 +5,17 @@ import {
   type HTTPBatchStreamLinkOptions,
   loggerLink,
   unstable_httpBatchStreamLink,
+  wsLink,
+  createWSClient,
+  splitLink,
+  httpLink,
 } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import { useState } from "react";
 
 import { type AppRouter } from "~/server/api/root";
 import { getUrl, transformer } from "./shared";
-import { authLink } from "./auth";
+import { authLink } from "./links";
 
 export const api = createTRPCReact<AppRouter>();
 
@@ -48,8 +52,34 @@ export function TRPCReactProvider(props: {
             process.env.NODE_ENV === "development" ||
             (op.direction === "down" && op.result instanceof Error),
         }),
+
         authLink(sharedLinkOptions(props.cookies)),
-        unstable_httpBatchStreamLink(sharedLinkOptions(props.cookies)),
+
+        splitLink({
+          condition(op) {
+            return op.type === "subscription";
+          },
+
+          // true: httpLink(sharedLinkOptions(props.cookies)),
+          // false: unstable_httpBatchStreamLink(sharedLinkOptions(props.cookies)),
+
+          true: wsLink({
+            client: createWSClient({
+              url: getUrl().replace("http", "ws"),
+            }),
+          }),
+
+          false: unstable_httpBatchStreamLink(sharedLinkOptions(props.cookies)),
+        }),
+
+        // authLink(sharedLinkOptions(props.cookies)),
+        // wsLink({
+        //   client: createWSClient({
+        //     url: getUrl().replace("http", "ws"),
+        //   }),
+        // }),
+        // wsLink(sharedLinkOptions(props.cookies)),
+        // unstable_httpBatchStreamLink(sharedLinkOptions(props.cookies)),
       ],
     }),
   );

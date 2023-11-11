@@ -31,6 +31,8 @@ async function startApp() {
 
   // create the http server
   const server = createServer((req, res) => {
+    console.log("req", req.url);
+
     getHandler(req, res).catch((error) => {
       logger.error(error);
       res.statusCode = 500;
@@ -43,11 +45,14 @@ async function startApp() {
   const trpcHandler = applyWSSHandler({
     wss,
     router: appRouter,
-    createContext: ({ req }) =>
-      createTRPCContext({
+    createContext: ({ req }) => {
+      console.log("createContext", req.url);
+
+      return createTRPCContext({
         req: incomingRequestToNextRequest(req),
         resHeaders: new Headers(),
-      }),
+      });
+    },
   });
 
   process.on("SIGTERM", () => {
@@ -60,10 +65,16 @@ async function startApp() {
 
   // handle the upgrade
   server.on("upgrade", (req, socket, head) => {
+    console.log("upgrade", req.url);
+
     // send trpc requests to the trpc server
     if (req.url?.startsWith("/api/trpc")) {
-      wss.handleUpgrade(req, socket, head, () => undefined);
+      console.log("🚚 passing upgrade to tRPC");
+      wss.handleUpgrade(req, socket, head, (ws) => {
+        wss.emit("connection", ws, req);
+      });
     } else {
+      console.log("🆙 ws for next.js recieved");
       void upgradeHandler(req, socket, head);
     }
   });

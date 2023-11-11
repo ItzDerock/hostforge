@@ -1,6 +1,7 @@
 import assert from "assert";
 import { type IncomingMessage } from "http";
 import { NextRequest } from "next/server.js";
+import { getUrl } from "~/trpc/shared";
 
 /**
  * Turns an node:http IncomingMessage into a next.js request
@@ -29,9 +30,13 @@ export function incomingRequestToNextRequest(req: IncomingMessage) {
     });
   }
 
-  // create the web request
+  // resolve URL
   assert(req.url, "req.url is undefined");
-  return new NextRequest(req.url, {
+  const url = new URL(req.url, getUrl());
+
+  // create the web request
+
+  return new NextRequest(url.toString(), {
     method: req.method,
     body,
     headers,

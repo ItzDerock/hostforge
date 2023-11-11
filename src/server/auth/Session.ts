@@ -3,9 +3,9 @@ import { db } from "../db";
 import { users, sessions } from "../db/schema";
 import { randomBytes } from "crypto";
 import assert from "assert";
-import { NextRequest, userAgent } from "next/server";
+import { NextRequest, userAgent } from "next/server.js";
 import { hash as argon2Hash } from "argon2";
-import { env } from "~/env.mjs";
+import { env } from "~/env";
 
 export type SessionUpdateData = Partial<{
   ua: string;

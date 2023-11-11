@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import SQLite3 from "better-sqlite3";
 import { join } from "path";
-import { env } from "~/env.mjs";
+import { env } from "~/env";
 
 const sqlite = new SQLite3(env.DATABASE_PATH);
 

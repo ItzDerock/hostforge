@@ -1,6 +1,6 @@
 import assert from "assert";
-import { IncomingMessage } from "http";
-import { NextRequest } from "next/server";
+import { type IncomingMessage } from "http";
+import { NextRequest } from "next/server.js";
 
 /**
  * Turns an node:http IncomingMessage into a next.js request

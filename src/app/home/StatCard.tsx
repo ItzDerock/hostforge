@@ -1,11 +1,10 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { RiPulseFill } from "react-icons/ri";
 import { ResponsiveContainer, AreaChart, Area } from "recharts";
-import styles from "./StatCard.module.css";
+// import styles from "./StatCard.module.css";
 
-export function StatCard<T extends { [key: string]: number }>(props: {
+export function StatCard<T extends Record<string, number>>(props: {
   title: string;
   value: string;
   subvalue: string;
@@ -73,7 +72,7 @@ export function StatCard<T extends { [key: string]: number }>(props: {
           </ResponsiveContainer>
         </div>
 
-        <div className={`relative z-10 ${styles["stat-card"]}`}>
+        <div className={`relative z-10 ${/*styles["stat-card"]*/ "asdf"}`}>
           <p className="stroke stroke-card text-2xl font-bold">{props.value}</p>
           <p className="stroke stroke-card text-sm text-muted-foreground">
             {props.subvalue}

@@ -7,6 +7,7 @@ export const env = createEnv({
    * isn't built with invalid env vars.
    */
   server: {
+    // make sure to update drizzle.config.js if you change this
     DATABASE_PATH: z.string().default("./data/db.sqlite"),
 
     NODE_ENV: z
@@ -16,7 +17,10 @@ export const env = createEnv({
     SQLITE_UUIDV7_EXT_PATH: z.string().optional(),
     SESSION_SECRET: z.string().min(8),
     HOSTNAME: z.string().default("localhost"),
-    PORT: z.number().default(3000),
+    PORT: z
+      .string()
+      .default("3000")
+      .transform((str) => parseInt(str)),
   },
 
   /**

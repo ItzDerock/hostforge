@@ -1,9 +1,20 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "ES2020",
     "outDir": "dist",
-    "noEmit": false
+    "moduleResolution": "node",
+    "target": "ESNext",
+    "lib": ["ESNext", "DOM"],
+    "isolatedModules": false,
+    "noEmit": false,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./src/*"]
+    },
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true
   },
-  "include": ["./src/**/*"]
+  "include": ["next-env.d.ts", "src/server/**/*.ts", "src/server/**/*.tsx"]
 }

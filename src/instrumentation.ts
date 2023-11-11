@@ -1,6 +1,7 @@
-import pacakge from "../package.json";
-import { env } from "./env.mjs";
-const { version } = pacakge;
+// import pacakge from "../package.json";
+import { env } from "~/env";
+// const { version } = pacakge;
+const version = "1.0.0";
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
@@ -8,15 +9,17 @@ export async function register() {
     const { migrate } = await import("drizzle-orm/better-sqlite3/migrator");
     const { db } = await import("./server/db");
     const { mkdir, stat } = await import("fs/promises");
-    const { dirname } = await import("path");
+    const path = await import("path");
 
     // check if database folder exists
     try {
-      const dir = dirname(env.DATABASE_PATH);
+      const dir = path.dirname(env.DATABASE_PATH);
       await stat(dir);
     } catch (e) {
-      await mkdir(dirname(env.DATABASE_PATH), { recursive: true });
-      logger.debug(`Created database folder ${dirname(env.DATABASE_PATH)}`);
+      await mkdir(path.dirname(env.DATABASE_PATH), { recursive: true });
+      logger.debug(
+        `Created database folder ${path.dirname(env.DATABASE_PATH)}`,
+      );
     }
 
     if (env.NODE_ENV === "production") {

@@ -3,6 +3,9 @@ import TypedEmitter from "typed-emitter";
 import osu from "node-os-utils";
 import os from "os";
 import baseLogger from "../../utils/logger";
+import { db } from "~/server/db";
+import { systemStats } from "~/server/db/schema";
+import { between, lte } from "drizzle-orm";
 
 export type BasicServerStats = {
   collectedAt: Date;
@@ -86,7 +89,8 @@ type StatEvents = {
  * Manages the stats for the current server.
  */
 export class StatManager {
-  private logger = baseLogger.child({ module: "StatManager" });
+  static readonly DB_MAX_STORE_TIME = /* 1 week */ 7 * 24 * 60 * 60 * 1000;
+  private logger = baseLogger.child({ module: "stats" });
 
   /**
    * The current stats for the server.
@@ -126,16 +130,7 @@ export class StatManager {
   private liveInterval: NodeJS.Timeout | null = null;
 
   constructor() {
-    this.update();
-
-    // collect stats every hour
-    setInterval(
-      async () => {
-        await this.update();
-        await this.updateDatabase();
-      },
-      60 * 60 * 1000,
-    );
+    this.update().then(() => this.updateDatabase());
 
     // whenever a new listener is added, start the live interval
     this.events.on("newListener", (event) => {
@@ -155,6 +150,18 @@ export class StatManager {
         this.liveInterval = null;
       }
     });
+  }
+
+  start() {
+    this.logger.info("Starting hourly stat collection.");
+    // collect stats every hour
+    setInterval(
+      async () => {
+        await this.update();
+        await this.updateDatabase();
+      },
+      60 * 60 * 1000,
+    );
   }
 
   /**
@@ -219,7 +226,46 @@ export class StatManager {
   /**
    * Updates the database with the current stats.
    */
-  async updateDatabase() {}
+  async updateDatabase() {
+    const startTime = Date.now();
+    await db
+      .insert(systemStats)
+      .values({
+        timestamp: this.currentStats.collectedAt.getTime(),
+        cpuUsage: this.currentStats.cpu.usage,
+        diskUsage: this.currentStats.storage.used * 1024,
+        memoryUsage: this.currentStats.memory.used * 1024,
+        networkTx: this.currentStats.network.tx / 1024 / 1024,
+        networkRx: this.currentStats.network.rx / 1024 / 1024,
+      })
+      .execute();
+
+    this.logger.debug(
+      `Updated database with new stats. Took ${Date.now() - startTime}ms.`,
+    );
+
+    // delete old stats
+    const count = await db
+      .delete(systemStats)
+      .where(
+        lte(systemStats.timestamp, Date.now() - StatManager.DB_MAX_STORE_TIME),
+      )
+      .execute();
+
+    this.logger.debug(`Deleted ${count.changes} old stats from the database.`);
+  }
+
+  /**
+   * Fetches stats from the database in the given time range.
+   */
+  async getStatsInRange(start: Date, end = Date.now()) {
+    return db
+      .select()
+      .from(systemStats)
+      .where(between(systemStats.timestamp, start.getTime(), end));
+  }
 }
 
-export const stats = new StatManager();
+export const stats = (((globalThis as any).statsManager as
+  | StatManager
+  | undefined) ??= new StatManager());

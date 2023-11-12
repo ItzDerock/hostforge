@@ -5,6 +5,7 @@ import {
   integer,
   sqliteTable,
   index,
+  real,
 } from "drizzle-orm/sqlite-core";
 
 // util
@@ -75,3 +76,20 @@ export const MFARequestSessionRelations = relations(
     }),
   }),
 );
+
+/**
+ * System Statistics
+ * Historical data about the system's usage
+ */
+export const systemStats = sqliteTable("system_stats", {
+  timestamp: integer("id").primaryKey().default(now),
+
+  // percent as decimal * 10_000 to keep 2 decimal places
+  cpuUsage: integer("cpu_usage"),
+
+  // everything else is in megabytes
+  memoryUsage: integer("memory_usage").notNull(),
+  diskUsage: integer("disk_usage").notNull(),
+  networkTx: integer("network_tx").notNull(),
+  networkRx: integer("network_rx").notNull(),
+});

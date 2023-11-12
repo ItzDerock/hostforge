@@ -17,4 +17,10 @@ export const systemRouter = createTRPCRouter({
       };
     });
   }),
+
+  history: authenticatedProcedure.query(async ({ ctx }) => {
+    return await stats.getStatsInRange(
+      new Date(Date.now() - 1000 * 60 * 60 * 24),
+    );
+  }),
 });

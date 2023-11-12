@@ -2,21 +2,30 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import SQLite3 from "better-sqlite3";
 import { join } from "path";
 import { env } from "~/env";
+import logger from "../utils/logger";
 
-const sqlite = new SQLite3(env.DATABASE_PATH);
+const globalForDB = globalThis as unknown as {
+  db: ReturnType<typeof createDatabaseInstance>;
+};
 
-// enable WAL mode
-sqlite.pragma("journal_mode = WAL");
+function createDatabaseInstance() {
+  logger.child({ module: "database" }).debug("Creating database client.");
+  const sqlite = new SQLite3(env.DATABASE_PATH);
 
-// load uuidv7 extension
-// built from https://github.com/craigpastro/sqlite-uuidv7
-sqlite.loadExtension(
-  env.SQLITE_UUIDV7_EXT_PATH ??
-    join(
-      // cannot use __dirname since this file will change locations when compiled
-      process.cwd(),
-      "./exts/sqlite-uuidv7",
-    ),
-);
+  // enable WAL mode
+  sqlite.pragma("journal_mode = WAL");
 
-export const db = drizzle(sqlite);
+  // load uuidv7 extension
+  // built from https://github.com/craigpastro/sqlite-uuidv7
+  sqlite.loadExtension(
+    env.SQLITE_UUIDV7_EXT_PATH ??
+      join(
+        // cannot use __dirname since this file will change locations when compiled
+        process.cwd(),
+        "./exts/sqlite-uuidv7",
+      ),
+  );
+  return drizzle(sqlite);
+}
+
+export const db = (globalForDB.db ??= createDatabaseInstance());

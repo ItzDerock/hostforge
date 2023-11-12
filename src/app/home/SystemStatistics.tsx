@@ -9,22 +9,15 @@ import {
   FaHardDrive,
   FaEthernet,
 } from "react-icons/fa6";
-import { useState } from "react";
-
-const TEST_DATA = [
-  { cpu: 0.05 },
-  { cpu: 0.1 },
-  { cpu: 0.08 },
-  { cpu: 0.09 },
-  { cpu: 0.2 },
-  { cpu: 0.1 },
-  { cpu: 0.12 },
-  { cpu: 0.3 },
-];
+import { useMemo, useState } from "react";
 
 type StatData = RouterOutputs["system"]["currentStats"];
+type HistoricalStatData = RouterOutputs["system"]["history"];
 
-export function SystemStatistics(props: { initialData: StatData }) {
+export function SystemStatistics(props: {
+  initialData: StatData;
+  historicalData: HistoricalStatData;
+}) {
   const [data, setData] = useState<StatData>(props.initialData);
 
   api.system.liveStats.useSubscription(undefined, {
@@ -32,6 +25,15 @@ export function SystemStatistics(props: { initialData: StatData }) {
       setData(data);
     },
   });
+
+  const historicalData = useMemo(
+    () =>
+      props.historicalData.map((data) => ({
+        ...data,
+        network: data.networkTx + data.networkRx,
+      })),
+    [props.historicalData],
+  );
 
   return (
     <div className="m-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -41,8 +43,8 @@ export function SystemStatistics(props: { initialData: StatData }) {
         unit="%"
         subvalue={`of ${data.cpu.cores} CPUs`}
         icon={FaMicrochip}
-        data={TEST_DATA}
-        dataKey="cpu"
+        data={historicalData}
+        dataKey="cpuUsage"
       />
 
       <StatCard
@@ -53,8 +55,8 @@ export function SystemStatistics(props: { initialData: StatData }) {
           2,
         )} GB`}
         icon={FaMemory}
-        data={TEST_DATA}
-        dataKey="cpu"
+        data={historicalData}
+        dataKey="memoryUsage"
       />
 
       <StatCard
@@ -65,8 +67,8 @@ export function SystemStatistics(props: { initialData: StatData }) {
           2,
         )} / ${data.storage.total.toFixed(2)} GB`}
         icon={FaHardDrive}
-        data={TEST_DATA}
-        dataKey="cpu"
+        data={historicalData}
+        dataKey="diskUsage"
       />
 
       <StatCard
@@ -81,8 +83,8 @@ export function SystemStatistics(props: { initialData: StatData }) {
         secondarySubvalue="RX / Mbps"
         // misc
         icon={FaEthernet}
-        data={TEST_DATA}
-        dataKey="cpu"
+        data={historicalData}
+        dataKey="network"
       />
     </div>
   );

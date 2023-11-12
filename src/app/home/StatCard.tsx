@@ -5,7 +5,7 @@ import { ResponsiveContainer, AreaChart, Area } from "recharts";
 import styles from "./StatCard.module.css";
 import { AnimatedNumber } from "~/components/AnimatedPercent";
 
-export function StatCard<T extends Record<string, number>>(props: {
+export function StatCard<T extends Record<string, any>>(props: {
   title: string;
 
   icon: React.FC<{ className: string }>;
@@ -35,7 +35,7 @@ export function StatCard<T extends Record<string, number>>(props: {
         <div className="absolute inset-0 z-0 h-full w-full">
           <ResponsiveContainer
             width={"100%"}
-            height={"50%"}
+            height={"40%"}
             className="absolute bottom-0 left-0"
           >
             <AreaChart

@@ -13,6 +13,7 @@ import { db } from "./db";
 import { mkdir, stat } from "fs/promises";
 import path from "path";
 import { version } from "../../package.json";
+import { stats } from "./modules/stats";
 
 // check if database folder exists
 try {
@@ -34,14 +35,15 @@ if (env.NODE_ENV === "production") {
     .info("Not running database migrations, use drizzle-kit push to migrate");
 }
 
+// start statistics
+stats.start();
+
 // initialize the next app
 const app = next({
   dev: env.NODE_ENV !== "production",
   hostname: env.HOSTNAME,
   port: env.PORT,
-  // dir: path.join(__dirname, "../.."),
   customServer: true,
-  isNodeDebugging: true,
 });
 
 await app.prepare();

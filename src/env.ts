@@ -29,7 +29,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    // NEXT_PUBLIC_CLIENTVAR: z.string().min(1),
+    NEXT_PUBLIC_BUILD_COMMIT_SHA: z.string().default("unknown"),
   },
 
   /**
@@ -43,6 +43,7 @@ export const env = createEnv({
     SESSION_SECRET: process.env.SESSION_SECRET,
     HOSTNAME: process.env.HOSTNAME,
     PORT: process.env.PORT,
+    NEXT_PUBLIC_BUILD_COMMIT_SHA: process.env.NEXT_PUBLIC_BUILD_COMMIT_SHA,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

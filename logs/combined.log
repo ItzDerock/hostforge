@@ -1,0 +1,95 @@
+2023-11-12T01:48:57.462Z info: Not running database migrations, use drizzle-kit push to migrate
+2023-11-12T01:48:57.463Z info: 🚀 Hostforge v1.0.0 ready!
+2023-11-12T01:48:57.469Z info: Server listening on port 3000
+2023-11-12T01:49:11.893Z warn: SIGTERM received, shutting down...
+2023-11-12T01:49:17.625Z [32minfo[39m: Not running database migrations, use drizzle-kit push to migrate
+2023-11-12T01:49:17.627Z [32minfo[39m: 🚀 Hostforge v1.0.0 ready!
+2023-11-12T01:49:17.635Z [32minfo[39m: Server listening on port 3000
+2023-11-12T01:50:31.777Z [33mwarn[39m: SIGTERM received, shutting down...
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge v1.0.0 ready!"}
+{"level":"info","message":"Server listening on port 3000"}
+{"level":"warn","message":"SIGTERM received, shutting down..."}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge v1.0.0 ready!"}
+{"level":"info","message":"Server listening on port 3000"}
+{"level":"warn","message":"SIGTERM received, shutting down..."}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge v1.0.0 ready!"}
+{"level":"info","message":"Server listening on port 3000"}
+{"level":"warn","message":"SIGTERM received, shutting down..."}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge v1.0.0 ready!"}
+{"level":"info","message":"Server listening on port 3000"}
+{"level":"warn","message":"SIGTERM received, shutting down..."}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge v1.0.0 ready!"}
+{"level":"info","message":"Server listening on port 3000"}
+{"level":"warn","message":"SIGTERM received, shutting down..."}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge v1.0.0 ready!"}
+{"level":"info","message":"Server listening on port 3000"}
+{"level":"warn","message":"SIGTERM received, shutting down..."}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge v1.0.0 ready!"}
+{"level":"info","message":"Server listening on port 3000"}
+{"level":"warn","message":"SIGTERM received, shutting down..."}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge v1.0.0 ready!"}
+{"level":"info","message":"Server listening on port 3000"}
+{"level":"warn","message":"SIGTERM received, shutting down..."}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge v1.0.0 ready!"}
+{"level":"info","message":"Server listening on port 3000"}
+{"level":"warn","message":"SIGTERM received, shutting down..."}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge v1.0.0 ready!"}
+{"level":"info","message":"Server listening on port 3000"}
+{"level":"warn","message":"SIGTERM received, shutting down..."}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge v1.0.0 ready!"}
+{"level":"info","message":"Server listening on port 3000"}
+{"level":"warn","message":"SIGTERM received, shutting down..."}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge v1.0.0 ready!"}
+{"level":"info","message":"Server listening on port 3000"}
+{"level":"warn","message":"SIGTERM received, shutting down..."}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge v1.0.0 ready!"}
+{"level":"info","message":"Server listening on port 3000"}
+{"level":"warn","message":"SIGTERM received, shutting down..."}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge"}
+{"level":"info","message":"Server listening on localhost:3000"}
+{"level":"info","message":"Version: 0.1.0"}
+{"level":"info","message":"Environment: development"}
+{"level":"info","message":"Build commit: unknown"}
+{"level":"warn","message":"SIGTERM received, shutting down..."}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge"}
+{"level":"info","message":" │ Server listening on localhost:3000"}
+{"level":"info","message":" │ Version: 0.1.0"}
+{"level":"info","message":" │ Environment: development"}
+{"level":"info","message":" ╰ Build commit: unknown"}
+{"level":"warn","message":"SIGTERM received, shutting down..."}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge"}
+{"level":"info","message":"│ Server listening on localhost:3000"}
+{"level":"info","message":"│ Version: 0.1.0"}
+{"level":"info","message":"│ Environment: development"}
+{"level":"info","message":"╰ Build commit: unknown"}
+{"level":"warn","message":"SIGTERM received, shutting down..."}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge"}
+{"level":"info","message":"│  Server listening on localhost:3000"}
+{"level":"info","message":"│  Version: 0.1.0"}
+{"level":"info","message":"│  Environment: development"}
+{"level":"info","message":"╰  Build commit: unknown"}
+{"level":"info","message":"Not running database migrations, use drizzle-kit push to migrate","module":"database"}
+{"level":"info","message":"🚀 Hostforge"}
+{"level":"info","message":"│  Server listening on 0.0.0.0:3000"}
+{"level":"info","message":"│  Version: 0.1.0"}
+{"level":"info","message":"│  Environment: development"}
+{"level":"info","message":"╰  Build commit: unknown"}

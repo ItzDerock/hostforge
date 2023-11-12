@@ -3,21 +3,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { ResponsiveContainer, AreaChart, Area } from "recharts";
 import styles from "./StatCard.module.css";
-// import AnimatedNumber from "react-animated-numbers";
-
-import dynamic from "next/dynamic";
-const AnimatedNumber = dynamic(() => import("react-animated-numbers"), {
-  ssr: false,
-});
+import { AnimatedNumber } from "~/components/AnimatedPercent";
 
 export function StatCard<T extends Record<string, number>>(props: {
   title: string;
-  value: number;
-  unit: string;
-  subvalue: string;
+
   icon: React.FC<{ className: string }>;
   data: T[];
   dataKey: keyof T & string;
+
+  value: number;
+  unit?: string;
+  subvalue?: string;
+
+  secondaryValue?: number;
+  secondaryUnit?: string;
+  secondarySubvalue?: string;
 }) {
   const rechartsColorId = `color${props.dataKey}`;
   const Icon = props.icon;
@@ -79,21 +80,36 @@ export function StatCard<T extends Record<string, number>>(props: {
           </ResponsiveContainer>
         </div>
 
-        <div className={`relative z-10 ${styles["stat-card"]}`}>
-          <p className="stroke stroke-card text-2xl font-bold">
-            <AnimatedNumber
-              animateToNumber={128391}
-              includeComma
-              fontStyle={{
-                fontSize: 24,
-                // fontWeight: "inherit",
-              }}
-            />
-            {props.unit}
-          </p>
-          <p className="stroke stroke-card text-sm text-muted-foreground">
-            {props.subvalue}
-          </p>
+        <div className="relative z-10">
+          <div className="stroke flex flex-row stroke-card text-2xl font-bold">
+            <div>
+              <AnimatedNumber number={props.value} />
+              {props.unit}
+
+              {props.subvalue !== undefined && (
+                <p
+                  className={`stroke stroke-card text-sm text-muted-foreground ${styles["stat-card"]} font-normal`}
+                >
+                  {props.subvalue}
+                </p>
+              )}
+            </div>
+
+            {props.secondaryValue !== undefined && (
+              <div className="ml-auto mr-0 text-right">
+                <AnimatedNumber number={props.secondaryValue} />
+                {props.secondaryUnit}
+
+                {props.secondarySubvalue && (
+                  <p
+                    className={`stroke stroke-card text-sm text-muted-foreground ${styles["stat-card"]} text-right font-normal`}
+                  >
+                    {props.secondarySubvalue}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

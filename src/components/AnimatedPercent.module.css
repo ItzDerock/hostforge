@@ -1,0 +1,33 @@
+@property --percent {
+  syntax: "<number>";
+  initial-value: 0;
+  inherits: false;
+}
+@property --temp {
+  syntax: "<number>";
+  initial-value: 0;
+  inherits: false;
+}
+@property --v1 {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+@property --v2 {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+
+.animated-percent {
+  transition: --percent 1.5s;
+  transition-timing-function: cubic-bezier(0.38, 0, 0, 1);
+  --temp: calc(var(--percent) * 100);
+  --v1: max(var(--temp) - 0.5, 0);
+  --v2: max((var(--temp) - var(--v1)) * 100 - 0.5, 0);
+  counter-reset: v1 var(--v1) v2 var(--v2);
+}
+
+.animated-percent::before {
+  content: counter(v1) "." counter(v2, decimal-leading-zero);
+}

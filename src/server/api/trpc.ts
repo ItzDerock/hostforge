@@ -56,8 +56,6 @@ export const createTRPCContext = async (opts: {
   req: NextRequest;
   resHeaders: Headers;
 }) => {
-  console.log("contexting ", opts.req.url);
-
   // disable caching
   opts.resHeaders.set("Cache-Control", "no-store");
 

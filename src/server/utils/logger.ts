@@ -18,6 +18,8 @@ const logger = createLogger({
             (module ?? "main") + ":",
           )} ${message}`;
         }),
+
+        format.metadata({}),
       ),
 
       level: "debug",

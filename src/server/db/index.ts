@@ -9,7 +9,6 @@ const globalForDB = globalThis as unknown as {
 };
 
 function createDatabaseInstance() {
-  logger.child({ module: "database" }).debug("Creating database client.");
   const sqlite = new SQLite3(env.DATABASE_PATH);
 
   // enable WAL mode

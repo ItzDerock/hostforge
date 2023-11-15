@@ -1,7 +1,5 @@
 import { api } from "~/trpc/server";
-import Test from "./RSC";
-import { StatCard } from "./StatCard";
-import { SystemStatistics } from "./SystemStatistics";
+import { SystemStatistics } from "./_components/SystemStatistics";
 import { Project } from "./_components/Project";
 
 export default async function DashboardHome() {
@@ -12,7 +10,6 @@ export default async function DashboardHome() {
 
   return (
     <div className="mx-auto max-w-[1500px]">
-      <Test />
       <SystemStatistics
         initialData={initialStats}
         historicalData={historicalData}

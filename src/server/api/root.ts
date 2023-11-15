@@ -1,5 +1,5 @@
 import { createTRPCRouter } from "~/server/api/trpc";
-import { setupProcedure } from "./routers/setup";
+import { setupRouter } from "./routers/setup";
 import { authRouter } from "./routers/auth";
 import { systemRouter } from "./routers/system";
 
@@ -9,7 +9,7 @@ import { systemRouter } from "./routers/system";
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-  setup: setupProcedure,
+  setup: setupRouter,
   auth: authRouter,
   system: systemRouter,
 });

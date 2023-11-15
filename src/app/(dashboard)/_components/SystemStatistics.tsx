@@ -10,7 +10,6 @@ import {
   FaEthernet,
 } from "react-icons/fa6";
 import { useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 
 type StatData = RouterOutputs["system"]["currentStats"];
 type HistoricalStatData = RouterOutputs["system"]["history"];

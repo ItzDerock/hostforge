@@ -25,7 +25,7 @@ export function SetupForm() {
   const [toastLoading, setToastLoading] = useState<
     string | number | undefined
   >();
-  const setupInstance = api.setup.useMutation({
+  const setupInstance = api.setup.setup.useMutation({
     onSuccess: () => {
       router.push("/dashboard");
       toast.success("Successfully setup instance!", { id: toastLoading });

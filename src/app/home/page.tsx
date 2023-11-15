@@ -2,6 +2,7 @@ import { api } from "~/trpc/server";
 import Test from "./RSC";
 import { StatCard } from "./StatCard";
 import { SystemStatistics } from "./SystemStatistics";
+import { Project } from "./_components/Project";
 
 export default async function DashboardHome() {
   const [initialStats, historicalData] = await Promise.all([
@@ -16,6 +17,8 @@ export default async function DashboardHome() {
         initialData={initialStats}
         historicalData={historicalData}
       />
+
+      <Project />
     </div>
   );
 }

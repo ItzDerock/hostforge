@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { ResponsiveContainer, AreaChart, Area } from "recharts";
 import styles from "./StatCard.module.css";
 import { AnimatedNumber } from "~/components/AnimatedPercent";
+// import { MotionConfig } from "framer-motion";
 
 export function StatCard<T extends Record<string, any>>(props: {
   title: string;
@@ -19,12 +20,18 @@ export function StatCard<T extends Record<string, any>>(props: {
   secondaryValue?: number;
   secondaryUnit?: string;
   secondarySubvalue?: string;
+
+  type?: "fullscreen" | "card";
 }) {
   const rechartsColorId = `color${props.dataKey}`;
   const Icon = props.icon;
 
   return (
-    <Card className="relative overflow-clip">
+    <Card
+      className={`relative overflow-clip ${
+        props.type === "fullscreen" ? "h-full w-full" : undefined
+      }`}
+    >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle>{props.title}</CardTitle>
         <Icon className="text-2xl text-muted-foreground" />

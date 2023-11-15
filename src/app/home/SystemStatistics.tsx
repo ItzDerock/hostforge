@@ -10,6 +10,7 @@ import {
   FaEthernet,
 } from "react-icons/fa6";
 import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 type StatData = RouterOutputs["system"]["currentStats"];
 type HistoricalStatData = RouterOutputs["system"]["history"];
@@ -19,6 +20,7 @@ export function SystemStatistics(props: {
   historicalData: HistoricalStatData;
 }) {
   const [data, setData] = useState<StatData>(props.initialData);
+  // const [selectedId, setSelected] = useState<string | null>(null);
 
   api.system.liveStats.useSubscription(undefined, {
     onData: (data) => {
@@ -36,7 +38,8 @@ export function SystemStatistics(props: {
   );
 
   return (
-    <div className="m-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      {/* <motion.div layoutId="cpuUsage" onClick={() => setSelected("cpuUsage")}> */}
       <StatCard
         title="CPU Usage"
         value={data.cpu.usage}
@@ -46,6 +49,7 @@ export function SystemStatistics(props: {
         data={historicalData}
         dataKey="cpuUsage"
       />
+      {/* </motion.div> */}
 
       <StatCard
         title="Memory Usage"
@@ -86,6 +90,27 @@ export function SystemStatistics(props: {
         data={historicalData}
         dataKey="network"
       />
+
+      {/* animations soon™️ */}
+      {/* <AnimatePresence>
+        {selectedId && (
+          <motion.div
+            layoutId={selectedId}
+            className="fixed inset-0 z-50 bg-black/40 p-8"
+          >
+            <StatCard
+              title="CPU Usage"
+              value={data.cpu.usage}
+              unit="%"
+              subvalue={`of ${data.cpu.cores} CPUs`}
+              icon={FaMicrochip}
+              data={historicalData}
+              dataKey="cpuUsage"
+              type="fullscreen"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence> */}
     </div>
   );
 }

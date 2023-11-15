@@ -3,10 +3,11 @@ import { db } from "../db";
 import { users, sessions } from "../db/schema";
 import { randomBytes } from "crypto";
 import assert from "assert";
-import { hash as argon2Hash } from "argon2";
 import { env } from "~/env";
 import { IncomingMessage } from "http";
-import { ExtendedRequest } from "../api/trpc";
+import type { ExtendedRequest } from "../api/trpc";
+import logger from "../utils/logger";
+import crypto from "crypto";
 
 export type SessionUpdateData = Partial<{
   ua: string;
@@ -19,14 +20,16 @@ export class Session {
    * currently 30 days.
    */
   static readonly EXPIRE_TIME = 1000 * 60 * 60 * 24 * 30;
+  static readonly logger = logger.child({ module: "sessions" });
 
   /**
    * Hash function
    */
-  static async hash(token: string) {
-    return argon2Hash(token, {
-      salt: Buffer.from(env.SESSION_SECRET),
-    });
+  static hash(token: string) {
+    return crypto
+      .createHash("sha256")
+      .update(token + env.SESSION_SECRET)
+      .digest("hex");
   }
 
   /**
@@ -36,7 +39,7 @@ export class Session {
    */
   static async fetchFromToken(token: string) {
     // hash token
-    token = await this.hash(token);
+    token = this.hash(token);
 
     const [sessionData] = await db
       .select()
@@ -67,7 +70,7 @@ export class Session {
         : context;
 
     // hash token
-    token = await this.hash(token);
+    token = this.hash(token);
 
     const [sessionData] = await db
       .update(sessions)
@@ -108,7 +111,7 @@ export class Session {
       .values({
         lastUA: parsedContext.ua,
         lastIP: parsedContext.ip,
-        token: await this.hash(token),
+        token: this.hash(token),
         userId,
       })
       .returning();

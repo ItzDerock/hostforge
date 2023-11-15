@@ -7,7 +7,6 @@ import { WebSocketServer } from "ws";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { appRouter } from "./api/root";
 import { createTRPCContext } from "./api/trpc";
-import { incomingRequestToNextRequest } from "./utils/serverUtils";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { db } from "./db";
 import { mkdir, stat } from "fs/promises";
@@ -61,7 +60,7 @@ const server = createServer((req, res) => {
       req.url.startsWith("/") ? `http://127.0.0.1${req.url}` : req.url,
     ).pathname.replace("/api/trpc/", "");
 
-    return nodeHTTPRequestHandler({
+    return void nodeHTTPRequestHandler({
       path,
       req,
       res,
@@ -87,7 +86,7 @@ const wss = new WebSocketServer({ noServer: true });
 const trpcHandler = applyWSSHandler({
   wss,
   router: appRouter,
-  createContext: ({ req, res }) => {
+  createContext: ({ req }) => {
     return createTRPCContext({
       req,
     });

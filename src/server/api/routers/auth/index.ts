@@ -10,6 +10,7 @@ import { TRPCError } from "@trpc/server";
 import argon2 from "argon2";
 import { Session } from "~/server/auth/Session";
 import { sessionsRouter } from "./sessions";
+import assert from "assert";
 
 export const authRouter = createTRPCRouter({
   sessions: sessionsRouter,
@@ -31,6 +32,14 @@ export const authRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      assert(
+        ctx.response,
+        new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot sign in over WebSocket.",
+        }),
+      );
+
       const [user] = await ctx.db
         .select({ password: users.password, id: users.id, mfa: users.mfaToken })
         .from(users)
@@ -67,7 +76,7 @@ export const authRouter = createTRPCRouter({
       }
 
       const session = await Session.createForUser(user.id, ctx.request);
-      ctx.headers.set("Set-Cookie", session.getCookieString());
+      ctx.response.setHeader("Set-Cookie", session.getCookieString());
 
       return {
         success: true,

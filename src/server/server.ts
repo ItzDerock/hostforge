@@ -14,6 +14,7 @@ import { mkdir, stat } from "fs/promises";
 import path from "path";
 import { version } from "../../package.json";
 import { stats } from "./modules/stats";
+import { nodeHTTPRequestHandler } from "@trpc/server/adapters/node-http";
 
 // check if database folder exists
 try {
@@ -54,6 +55,26 @@ const upgradeHandler = app.getUpgradeHandler();
 
 // create the http server
 const server = createServer((req, res) => {
+  // routes starting with /api/trpc are handled by trpc
+  if (req.url?.startsWith("/api/trpc")) {
+    const path = new URL(
+      req.url.startsWith("/") ? `http://127.0.0.1${req.url}` : req.url,
+    ).pathname.replace("/api/trpc/", "");
+
+    return nodeHTTPRequestHandler({
+      path,
+      req,
+      res,
+      router: appRouter,
+      createContext: ({ req }) => {
+        return createTRPCContext({
+          req,
+          res,
+        });
+      },
+    });
+  }
+
   getHandler(req, res).catch((error) => {
     logger.error(error);
     res.statusCode = 500;
@@ -66,10 +87,9 @@ const wss = new WebSocketServer({ noServer: true });
 const trpcHandler = applyWSSHandler({
   wss,
   router: appRouter,
-  createContext: ({ req }) => {
+  createContext: ({ req, res }) => {
     return createTRPCContext({
-      req: incomingRequestToNextRequest(req),
-      resHeaders: new Headers(),
+      req,
     });
   },
 });

@@ -3,9 +3,10 @@ import { db } from "../db";
 import { users, sessions } from "../db/schema";
 import { randomBytes } from "crypto";
 import assert from "assert";
-import { NextRequest, userAgent } from "next/server.js";
 import { hash as argon2Hash } from "argon2";
 import { env } from "~/env";
+import { IncomingMessage } from "http";
+import { ExtendedRequest } from "../api/trpc";
 
 export type SessionUpdateData = Partial<{
   ua: string;
@@ -57,11 +58,11 @@ export class Session {
    */
   static async fetchFromTokenAndUpdate(
     token: string,
-    context: SessionUpdateData | NextRequest,
+    context: SessionUpdateData | ExtendedRequest,
   ) {
     // parse context
     const parsedContext =
-      context instanceof NextRequest
+      context instanceof IncomingMessage
         ? Session.getContextFromRequest(context)
         : context;
 
@@ -90,14 +91,14 @@ export class Session {
    */
   static async createForUser(
     userId: string,
-    context: SessionUpdateData | NextRequest,
+    context: SessionUpdateData | ExtendedRequest,
   ) {
     // generate a session token
     const token = randomBytes(64).toString("hex");
 
     // parse context
     const parsedContext =
-      context instanceof Request
+      context instanceof IncomingMessage
         ? Session.getContextFromRequest(context)
         : context;
 
@@ -119,10 +120,10 @@ export class Session {
   /**
    * Utility function to extract context from a request.
    */
-  static getContextFromRequest(request: NextRequest) {
+  static getContextFromRequest(request: ExtendedRequest) {
     return {
-      ua: userAgent(request).ua ?? undefined,
       ip: request.ip,
+      ua: request.headers["user-agent"],
     } satisfies SessionUpdateData;
   }
 

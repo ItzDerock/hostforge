@@ -13,6 +13,14 @@ import { ZodError } from "zod";
 import { db } from "~/server/db";
 import { Session } from "../auth/Session";
 import ipaddr from "ipaddr.js";
+import { IncomingMessage, ServerResponse } from "http";
+import logger from "../utils/logger";
+import cookie from "cookie";
+
+export type ExtendedRequest = IncomingMessage & {
+  cookies: Record<string, string>;
+  ip: string;
+};
 
 /**
  * 1. CONTEXT
@@ -22,8 +30,8 @@ import ipaddr from "ipaddr.js";
  * These allow you to access things when processing a request, like the database, the session, etc.
  */
 interface CreateContextOptions {
-  headers: Headers;
-  request: NextRequest;
+  request: ExtendedRequest;
+  response?: ServerResponse;
   session: Session | null;
 }
 
@@ -39,10 +47,10 @@ interface CreateContextOptions {
  */
 export const createInnerTRPCContext = (opts: CreateContextOptions) => {
   return {
-    headers: opts.headers,
     session: opts.session,
-    db,
     request: opts.request,
+    response: opts.response,
+    db,
   };
 };
 
@@ -53,36 +61,55 @@ export const createInnerTRPCContext = (opts: CreateContextOptions) => {
  * @see https://trpc.io/docs/context
  */
 export const createTRPCContext = async (opts: {
-  req: NextRequest;
-  resHeaders: Headers;
+  req: IncomingMessage;
+  res?: ServerResponse;
 }) => {
   // disable caching
-  opts.resHeaders.set("Cache-Control", "no-store");
+  opts.res?.setHeader("Cache-Control", "no-store");
 
   // resolve real IP
-  const forwardedFor = opts.req.headers.get("x-forwarded-for");
-  let ip = forwardedFor?.split(",")[0];
+  let forwardedFor = opts.req.headers["x-forwarded-for"];
+  let ip = opts.req.socket.remoteAddress;
 
-  // validate IP
-  if (!ip || !ipaddr.isValid(ip)) {
-    ip = opts.req.ip;
+  if (forwardedFor) {
+    if (Array.isArray(forwardedFor)) {
+      logger.debug("Multiple forwarded-for headers found, using first");
+      forwardedFor = forwardedFor[0];
+    }
+
+    ip = forwardedFor?.split(",")[0];
   }
 
+  // now double check that the IP is valid
+  if (!ip || !ipaddr.isValid(ip)) {
+    logger.warn("Unable to resolve IP address from headers, using socket. ", {
+      forwardedFor,
+      ip,
+    });
+    ip = opts.req.socket.remoteAddress;
+  }
+
+  // set the IP
+  (opts.req as ExtendedRequest).ip = ip ?? "";
+
   // resolve session data
-  const sessionToken = opts.req.cookies.get("sessionToken")?.value;
+  const cookies = ((opts.req as ExtendedRequest).cookies = cookie.parse(
+    opts.req.headers.cookie ?? "",
+  ));
+  const sessionToken = cookies["sessionToken"];
 
   // fetch session data from token
   const session: Session | null = sessionToken
     ? await Session.fetchFromTokenAndUpdate(sessionToken, {
-        ip: opts.req.ip,
-        ua: opts.req.headers.get("user-agent") ?? undefined,
+        ip,
+        ua: opts.req.headers["user-agent"] ?? undefined,
       })
     : null;
 
   return createInnerTRPCContext({
-    headers: opts.resHeaders,
     session,
-    request: opts.req,
+    request: opts.req as ExtendedRequest,
+    response: opts.res,
   });
 };
 

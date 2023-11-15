@@ -4,7 +4,6 @@ import { sql } from "drizzle-orm";
 import { users } from "~/server/db/schema";
 import { TRPCError } from "@trpc/server";
 import assert from "assert";
-import { Session } from "~/server/auth/Session";
 import { hash } from "argon2";
 
 export const setupRouter = createTRPCRouter({
@@ -42,8 +41,10 @@ export const setupRouter = createTRPCRouter({
 
       // log the user in
       assert(user, "User should be created");
-      const session = await Session.createForUser(user.id, ctx.request);
-      ctx.request.cookies.set("session", session.data.token);
+
+      // TODO: fix setup
+      // const session = await Session.createForUser(user.id, ctx.request);
+      // ctx.request.cookies.set("session", session.data.token);
 
       return {
         success: true,

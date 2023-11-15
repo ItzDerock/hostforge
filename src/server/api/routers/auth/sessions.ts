@@ -1,7 +1,6 @@
 import { sessions } from "~/server/db/schema";
 import { authenticatedProcedure, createTRPCRouter } from "../../trpc";
 import { eq } from "drizzle-orm";
-import { Session } from "~/server/auth/Session";
 
 export const sessionsRouter = createTRPCRouter({
   list: authenticatedProcedure.query(async ({ ctx }) => {

@@ -95,7 +95,7 @@ export function StatCard<T extends Record<string, any>>(props: {
 
               {props.subvalue !== undefined && (
                 <p
-                  className={`stroke stroke-card text-sm text-muted-foreground ${styles["stat-card"]} font-normal`}
+                  className={`stroke stroke-card text-sm text-foreground/80 ${styles["stat-card"]} font-normal`}
                 >
                   {props.subvalue}
                 </p>
@@ -109,7 +109,7 @@ export function StatCard<T extends Record<string, any>>(props: {
 
                 {props.secondarySubvalue && (
                   <p
-                    className={`stroke stroke-card text-sm text-muted-foreground ${styles["stat-card"]} text-right font-normal`}
+                    className={`stroke stroke-card text-sm text-foreground/80 ${styles["stat-card"]} text-right font-normal`}
                   >
                     {props.secondarySubvalue}
                   </p>

@@ -24,7 +24,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`font-sans ${inter.variable} min-h-screen min-w-full`}>
+      <body
+        className={`font-sans ${inter.variable} min-h-screen min-w-full p-4`}
+      >
         <TRPCReactProvider cookies={cookies().toString()}>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <ToastProvider>{children}</ToastProvider>

@@ -15,7 +15,11 @@ export default async function DashboardHome() {
         historicalData={historicalData}
       />
 
-      <Project />
+      <div className="mt-4 grid grid-cols-2 gap-8">
+        <Project />
+        <Project />
+        <Project />
+      </div>
     </div>
   );
 }

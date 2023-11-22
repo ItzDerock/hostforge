@@ -26,7 +26,7 @@ export default function LoginForm() {
   const login = api.auth.login.useMutation({
     onSuccess: (data) => {
       toast.success("Successfully logged in!", { id: toastLoading });
-      router.push("/home");
+      router.push("/");
     },
 
     onError: (error) => {

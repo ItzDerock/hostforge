@@ -19,7 +19,7 @@ export function AnimatedNumber(props: AnimatedNumberProps) {
   return (
     <div className={cn("relative inline-block", props.className)}>
       <div className="absolute inset-0 text-transparent">
-        {props.number.toFixed(2)}
+        {(props.number * 100).toFixed(2)}
       </div>
       <div className={styles["animated-percent"]} ref={divRef} />
     </div>

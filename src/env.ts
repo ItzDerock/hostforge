@@ -21,6 +21,8 @@ export const env = createEnv({
       .string()
       .default("3000")
       .transform((str) => parseInt(str)),
+
+    STORAGE_PATH: z.string().default("/var/lib/hostforge"),
   },
 
   /**
@@ -44,6 +46,7 @@ export const env = createEnv({
     HOSTNAME: process.env.HOSTNAME,
     PORT: process.env.PORT,
     NEXT_PUBLIC_BUILD_COMMIT_SHA: process.env.NEXT_PUBLIC_BUILD_COMMIT_SHA,
+    STORAGE_PATH: process.env.STORAGE_PATH,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

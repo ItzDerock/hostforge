@@ -14,6 +14,10 @@ import path from "path";
 import { version } from "../../package.json";
 import { stats } from "./modules/stats";
 import { nodeHTTPRequestHandler } from "@trpc/server/adapters/node-http";
+import {
+  createOpenApiHttpHandler,
+  generateOpenApiDocument,
+} from "trpc-openapi";
 
 // check if database folder exists
 try {
@@ -48,9 +52,25 @@ const app = next({
 
 await app.prepare();
 
+// create openapi documentation if in development
+const openAPIDocument =
+  env.NODE_ENV === "development"
+    ? JSON.stringify(
+        generateOpenApiDocument(appRouter, {
+          title: "Hostforge API Documentation",
+          version,
+          baseUrl: `http://${env.HOSTNAME}:${env.PORT}`,
+        }),
+      )
+    : null;
+
 // get the handles
 const getHandler = app.getRequestHandler();
 const upgradeHandler = app.getUpgradeHandler();
+const openAPIHandle = createOpenApiHttpHandler({
+  router: appRouter,
+  createContext: createTRPCContext,
+});
 
 // create the http server
 const server = createServer((req, res) => {
@@ -72,6 +92,18 @@ const server = createServer((req, res) => {
         });
       },
     });
+  }
+
+  // handle openAPI routes
+  if (req.url?.startsWith("/api/")) {
+    return void openAPIHandle(req, res);
+  }
+
+  // serve openapi documentation
+  if (req.url?.startsWith("/openapi.json") && openAPIDocument) {
+    res.setHeader("Content-Type", "application/json");
+    res.end(openAPIDocument);
+    return;
   }
 
   getHandler(req, res).catch((error) => {

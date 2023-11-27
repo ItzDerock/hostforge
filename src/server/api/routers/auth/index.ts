@@ -15,14 +15,24 @@ import assert from "assert";
 export const authRouter = createTRPCRouter({
   sessions: sessionsRouter,
 
-  me: authenticatedProcedure.query(async ({ ctx }) => {
-    const user = await ctx.session.getUser();
+  me: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: "/api/auth/me",
+        summary: "Get the current user",
+      },
+    })
+    .input(z.void())
+    .output(z.unknown())
+    .query(async ({ ctx }) => {
+      const user = await ctx.session.getUser();
 
-    return {
-      id: user.id,
-      username: user.username,
-    };
-  }),
+      return {
+        id: user.id,
+        username: user.username,
+      };
+    }),
 
   login: publicProcedure
     .input(

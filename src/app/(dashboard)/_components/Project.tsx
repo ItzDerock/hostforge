@@ -2,7 +2,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { FaGear } from "react-icons/fa6";
-import { Service } from "./Service";
 import {
   ColumnDef,
   flexRender,
@@ -25,7 +24,6 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Button } from "~/components/ui/button";
-import { DropdownMenuIcon } from "@radix-ui/react-icons";
 
 type Container = {
   id: string;

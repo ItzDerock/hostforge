@@ -1,5 +1,6 @@
 import { authenticatedProcedure, createTRPCRouter } from "../../trpc";
 import { observable } from "@trpc/server/observable";
+import { updateTraefik } from "~/server/docker/traefik";
 import { BasicServerStats, stats } from "~/server/modules/stats";
 
 export const systemRouter = createTRPCRouter({
@@ -22,5 +23,14 @@ export const systemRouter = createTRPCRouter({
     return await stats.getStatsInRange(
       new Date(Date.now() - 1000 * 60 * 60 * 24),
     );
+  }),
+
+  // core container options
+  redeployTraefik: authenticatedProcedure.mutation(async ({ ctx }) => {
+    setTimeout(() => {
+      void updateTraefik();
+    }, 200);
+
+    return "ok";
   }),
 });

@@ -16,6 +16,9 @@ import ipaddr from "ipaddr.js";
 import { IncomingMessage, ServerResponse } from "http";
 import logger from "../utils/logger";
 import cookie from "cookie";
+import { getDockerInstance } from "../docker";
+import Dockerode from "dockerode";
+import { OpenApiMeta, generateOpenApiDocument } from "trpc-openapi";
 
 export type ExtendedRequest = IncomingMessage & {
   cookies: Record<string, string>;
@@ -33,6 +36,7 @@ interface CreateContextOptions {
   request: ExtendedRequest;
   response?: ServerResponse;
   session: Session | null;
+  docker: Dockerode;
 }
 
 /**
@@ -51,6 +55,7 @@ export const createInnerTRPCContext = (opts: CreateContextOptions) => {
     request: opts.request,
     response: opts.response,
     db,
+    docker: opts.docker,
   };
 };
 
@@ -110,6 +115,7 @@ export const createTRPCContext = async (opts: {
     session,
     request: opts.req as ExtendedRequest,
     response: opts.res,
+    docker: await getDockerInstance(),
   });
 };
 
@@ -120,19 +126,22 @@ export const createTRPCContext = async (opts: {
  * ZodErrors so that you get typesafety on the frontend if your procedure fails due to validation
  * errors on the backend.
  */
-export const t = initTRPC.context<typeof createTRPCContext>().create({
-  transformer: superjson,
-  errorFormatter({ shape, error }) {
-    return {
-      ...shape,
-      data: {
-        ...shape.data,
-        zodError:
-          error.cause instanceof ZodError ? error.cause.flatten() : null,
-      },
-    };
-  },
-});
+export const t = initTRPC
+  .meta<OpenApiMeta>()
+  .context<typeof createTRPCContext>()
+  .create({
+    transformer: superjson,
+    errorFormatter({ shape, error }) {
+      return {
+        ...shape,
+        data: {
+          ...shape.data,
+          zodError:
+            error.cause instanceof ZodError ? error.cause.flatten() : null,
+        },
+      };
+    },
+  });
 
 /**
  * 3. ROUTER & PROCEDURE (THE IMPORTANT BIT)

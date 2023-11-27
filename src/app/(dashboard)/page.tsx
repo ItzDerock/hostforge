@@ -1,6 +1,7 @@
 import { api } from "~/trpc/server";
 import { SystemStatistics } from "./_components/SystemStatistics";
 import { Project } from "./_components/Project";
+import { Button } from "~/components/ui/button";
 
 export default async function DashboardHome() {
   const [initialStats, historicalData] = await Promise.all([
@@ -14,6 +15,18 @@ export default async function DashboardHome() {
         initialData={initialStats}
         historicalData={historicalData}
       />
+
+      <div className="w-full">
+        <h1>Welcome back!</h1>
+        <p className="text-muted-foreground">
+          Here's a quick overview of your projects.
+        </p>
+
+        <div className="mt-4 flex flex-row justify-between align-bottom">
+          <h2 className="mb-0 mt-auto block text-xl font-semibold">Projects</h2>
+          <Button variant="outline">Create project</Button>
+        </div>
+      </div>
 
       <div className="mt-4 grid grid-cols-2 gap-8">
         <Project />

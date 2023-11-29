@@ -1,6 +1,6 @@
 "use client";
 
-import CodeMirror from "@uiw/react-codemirror";
+import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 // import { yaml } from "@nicktomlin/codemirror-lang-yaml-lite";
 import { langs } from "@uiw/codemirror-extensions-langs";
 import { useTheme } from "next-themes";
@@ -20,7 +20,7 @@ export default function YAMLEditor({
       value={value}
       onChange={onChange}
       theme={theme.theme === "dark" ? "dark" : "light"}
-      extensions={[langs.yaml()]}
+      extensions={[langs.yaml(), EditorView.lineWrapping]}
       data-enable-grammarly="false"
       spellCheck={false}
       width="100%"

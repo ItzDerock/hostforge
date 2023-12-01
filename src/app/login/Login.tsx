@@ -1,5 +1,9 @@
 "use client";
 
+import { useForm } from "@mantine/form";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -11,11 +15,7 @@ import {
 } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { useForm } from "@mantine/form";
 import { api } from "~/trpc/react";
-import { toast } from "sonner";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -26,7 +26,7 @@ export default function LoginForm() {
   const login = api.auth.login.useMutation({
     onSuccess: (data) => {
       toast.success("Successfully logged in!", { id: toastLoading });
-      router.push("/");
+      router.push("/#");
     },
 
     onError: (error) => {

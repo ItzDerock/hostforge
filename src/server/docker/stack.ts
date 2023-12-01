@@ -1,11 +1,12 @@
 import assert from "assert";
+import { parse } from "dotenv";
 import {
-  service,
-  serviceDomain,
-  servicePort,
-  serviceSysctl,
-  serviceUlimit,
-  serviceVolume,
+  type service,
+  type serviceDomain,
+  type servicePort,
+  type serviceSysctl,
+  type serviceUlimit,
+  type serviceVolume,
 } from "../db/schema";
 import {
   DOCKER_DEPLOY_MODE_MAP,
@@ -13,8 +14,11 @@ import {
   DockerVolumeType,
   ServicePortType,
 } from "../db/types";
-import { ComposeSpecification, DefinitionsService, Ulimits } from "./compose";
-import { parse } from "dotenv";
+import {
+  type ComposeSpecification,
+  type DefinitionsService,
+  type Ulimits,
+} from "./compose";
 
 type Service = typeof service.$inferSelect & {
   domains: (typeof serviceDomain.$inferSelect)[];

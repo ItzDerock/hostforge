@@ -1,5 +1,10 @@
 "use client";
 
+import { useForm } from "@mantine/form";
+import { useQuery } from "@tanstack/react-query";
+import React, { Suspense } from "react";
+import { toast } from "sonner";
+import { FormInputGroup } from "~/components/FormInput";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -13,12 +18,7 @@ import {
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { useForm } from "@mantine/form";
-import React, { Suspense } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { api } from "~/trpc/react";
-import { FormInputGroup } from "~/components/FormInput";
 
 // kinda large dependency, but syntax highlighting is nice
 const Editor = React.lazy(() => import("./YAMLEditor"));
@@ -30,7 +30,11 @@ enum ProjectType {
 }
 
 export function CreateProjectButton() {
-  const create = api.projects.create.useMutation();
+  const create = api.projects.create.useMutation({
+    onError(error) {
+      toast.error(error.message);
+    },
+  });
 
   const form = useForm({
     initialValues: {
@@ -99,9 +103,9 @@ export function CreateProjectButton() {
         <DialogHeader>
           <DialogTitle>Create a Project</DialogTitle>
           <DialogDescription>
-            Each project has it's own private internal network and is isolated
-            from other projects. You can either create a blank project or choose
-            from a template.
+            Each project has it&apos;s own private internal network and is
+            isolated from other projects. You can either create a blank project
+            or choose from a template.
           </DialogDescription>
         </DialogHeader>
 

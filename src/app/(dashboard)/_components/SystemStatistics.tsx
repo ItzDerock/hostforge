@@ -1,15 +1,15 @@
 "use client";
 
-import { api } from "~/trpc/react";
-import { StatCard } from "./StatCard";
-import { RouterOutputs } from "~/trpc/shared";
-import {
-  FaMicrochip,
-  FaMemory,
-  FaHardDrive,
-  FaEthernet,
-} from "react-icons/fa6";
 import { useMemo, useState } from "react";
+import {
+  FaEthernet,
+  FaHardDrive,
+  FaMemory,
+  FaMicrochip,
+} from "react-icons/fa6";
+import { api } from "~/trpc/react";
+import { type RouterOutputs } from "~/trpc/shared";
+import { StatCard } from "./StatCard";
 
 type StatData = RouterOutputs["system"]["currentStats"];
 type HistoricalStatData = RouterOutputs["system"]["history"];

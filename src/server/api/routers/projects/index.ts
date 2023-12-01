@@ -1,8 +1,8 @@
-import { z } from "zod";
-import { authenticatedProcedure, createTRPCRouter } from "../../trpc";
-import { projects, service } from "~/server/db/schema";
 import assert from "assert";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
+import { projects, service } from "~/server/db/schema";
+import { authenticatedProcedure, createTRPCRouter } from "../../trpc";
 
 export const projectRouter = createTRPCRouter({
   list: authenticatedProcedure
@@ -21,16 +21,26 @@ export const projectRouter = createTRPCRouter({
           id: projects.id,
           friendlyName: projects.friendlyName,
           internalName: projects.internalName,
-          service: {
-            id: service.id,
-            name: service.name,
-          },
+          createdAt: projects.createdAt,
         })
-        .from(projects)
-        .leftJoin(service, eq(projects.id, service.projectId))
-        .where(eq(projects.ownerId, ctx.session.data.userId));
+        .from(projects);
 
-      return userProjects;
+      return await Promise.all(
+        userProjects.map(async (project) => {
+          const projServices = await ctx.db
+            .select({
+              id: service.id,
+              name: service.name,
+            })
+            .from(service)
+            .where(eq(service.projectId, project.id));
+
+          return {
+            ...project,
+            services: projServices,
+          };
+        }),
+      );
     }),
 
   create: authenticatedProcedure

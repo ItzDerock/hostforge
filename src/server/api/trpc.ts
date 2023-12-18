@@ -205,6 +205,8 @@ export const projectAuthenticatedProcedure = authenticatedProcedure
         !("projectId" in input) ||
         typeof input.projectId != "string"
       ) {
+        console.log(input);
+
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Expected a project ID or internal name.",

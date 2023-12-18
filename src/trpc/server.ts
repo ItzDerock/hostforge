@@ -2,7 +2,7 @@
 
 import {
   TRPCClientError,
-  createTRPCProxyClient,
+  createTRPCClient,
   loggerLink,
   unstable_httpBatchStreamLink,
 } from "@trpc/client";
@@ -13,7 +13,7 @@ import { type AppRouter } from "~/server/api/root";
 import logger from "~/server/utils/logger";
 import { getUrl, transformer } from "./shared";
 
-export const api = createTRPCProxyClient<AppRouter>({
+export const api = createTRPCClient<AppRouter>({
   transformer,
   links: [
     loggerLink({

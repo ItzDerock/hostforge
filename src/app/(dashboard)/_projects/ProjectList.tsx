@@ -92,6 +92,14 @@ export function ProjectList({ defaultValue }: { defaultValue: Projects }) {
         {sortedProjects.map((project, key) => (
           <Project key={key} project={project} />
         ))}
+
+        {sortedProjects.length === 0 && (
+          <div className="col-span-2 py-16">
+            <p className="text-center text-primary-foreground/70">
+              You don&apos;t have any projects yet. Create one to get started.
+            </p>
+          </div>
+        )}
       </div>
     </>
   );

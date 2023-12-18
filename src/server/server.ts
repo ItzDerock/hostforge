@@ -1,23 +1,23 @@
-import "dotenv/config";
-import next from "next";
-import { env } from "~/env";
-import { createServer } from "http";
-import logger from "./utils/logger";
-import { WebSocketServer } from "ws";
+import { nodeHTTPRequestHandler } from "@trpc/server/adapters/node-http";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
+import "dotenv/config";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import { mkdir, stat } from "fs/promises";
+import { createServer } from "http";
+import next from "next";
+import path from "path";
+import { WebSocketServer } from "ws";
+import { env } from "~/env";
+import { version } from "../../package.json";
 import { appRouter } from "./api/root";
 import { createTRPCContext } from "./api/trpc";
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { db } from "./db";
-import { mkdir, stat } from "fs/promises";
-import path from "path";
-import { version } from "../../package.json";
 import { stats } from "./modules/stats";
-import { nodeHTTPRequestHandler } from "@trpc/server/adapters/node-http";
-import {
-  createOpenApiHttpHandler,
-  generateOpenApiDocument,
-} from "trpc-openapi";
+import logger from "./utils/logger";
+// import {
+//   createOpenApiHttpHandler,
+//   generateOpenApiDocument,
+// } from "trpc-openapi";
 
 // check if database folder exists
 try {
@@ -40,7 +40,7 @@ if (env.NODE_ENV === "production") {
 }
 
 // start statistics
-stats.start();
+void stats.start();
 
 // initialize the next app
 const app = next({
@@ -53,24 +53,24 @@ const app = next({
 await app.prepare();
 
 // create openapi documentation if in development
-const openAPIDocument =
-  env.NODE_ENV === "development"
-    ? JSON.stringify(
-        generateOpenApiDocument(appRouter, {
-          title: "Hostforge API Documentation",
-          version,
-          baseUrl: `http://${env.HOSTNAME}:${env.PORT}`,
-        }),
-      )
-    : null;
+// const openAPIDocument =
+//   env.NODE_ENV === "development"
+//     ? JSON.stringify(
+//         generateOpenApiDocument(appRouter, {
+//           title: "Hostforge API Documentation",
+//           version,
+//           baseUrl: `http://${env.HOSTNAME}:${env.PORT}`,
+//         }),
+//       )
+//     : null;
 
 // get the handles
 const getHandler = app.getRequestHandler();
 const upgradeHandler = app.getUpgradeHandler();
-const openAPIHandle = createOpenApiHttpHandler({
-  router: appRouter,
-  createContext: createTRPCContext,
-});
+// const openAPIHandle = createOpenApiHttpHandler({
+//   router: appRouter,
+//   createContext: createTRPCContext,
+// });
 
 // create the http server
 const server = createServer((req, res) => {
@@ -95,16 +95,16 @@ const server = createServer((req, res) => {
   }
 
   // handle openAPI routes
-  if (req.url?.startsWith("/api/")) {
-    return void openAPIHandle(req, res);
-  }
+  // if (req.url?.startsWith("/api/")) {
+  //   return void openAPIHandle(req, res);
+  // }
 
   // serve openapi documentation
-  if (req.url?.startsWith("/openapi.json") && openAPIDocument) {
-    res.setHeader("Content-Type", "application/json");
-    res.end(openAPIDocument);
-    return;
-  }
+  // if (req.url?.startsWith("/openapi.json") && openAPIDocument) {
+  //   res.setHeader("Content-Type", "application/json");
+  //   res.end(openAPIDocument);
+  //   return;
+  // }
 
   getHandler(req, res).catch((error) => {
     logger.error(error);

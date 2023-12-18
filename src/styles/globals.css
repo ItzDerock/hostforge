@@ -36,35 +36,36 @@
   }
 
   .dark {
-    --background: 22.5 66.67% 2.35%;
-    --foreground: 20 100% 94.12%;
+    --background: 240 10% 4%;
+    /* --background: 240 6% 10%; Dark blue-grey background */
+    --foreground: 200 10% 90%; /* Light grey text */
 
-    --primary: 19.5 100% 60.78%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 19 93% 43%; /* Keep original orange */
+    --primary-foreground: 0 0% 100%; /* White on orange */
 
-    --card: 22.5 66.67% 2.35%;
-    --card-foreground: 20 100% 94.12%;
+    --card: 240 6% 10%; /* Slightly lighter background for cards */
+    --card-foreground: inherit; /* Same text color as foreground */
 
-    --popover: 22.5 66.67% 2.35%;
-    --popover-foreground: 20 100% 94.12%;
+    --popover: 22.5 66.67% 2.35%; /* Same card background for popovers */
+    --popover-foreground: inherit; /* Same text color as foreground */
 
-    --secondary: 19.71 64.81% 21.18%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 19.71 64.81% 21.18%; /* Slightly more muted orange */
+    --secondary-foreground: 0 0% 100%; /* White on secondary orange */
 
-    --muted: 25.71 11.48% 11.96%;
-    --muted-foreground: 15 1.61% 51.37%;
+    --muted: 25.71 11.48% 11.96%; /* Slightly lighter grey for muted elements */
+    --muted-foreground: 15 1.61% 51.37%; /* Slightly darker text for muted elements */
 
-    --accent: 19.71 64.81% 21.18%;
-    --accent-foreground: 20 100% 94.12%;
+    --accent: 19.71 64.81% 21.18%; /* Same as secondary orange for consistency */
+    --accent-foreground: inherit; /* Same text color as foreground */
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%; /* Red alert color */
+    --destructive-foreground: 210 40% 98%; /* White on red for high contrast */
 
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 19.5 100% 60.78%;
+    --border: 0 0% 18%; /* Same border color */
+    --input: 0 0% 18%; /* Same input border color */
+    --ring: 19.5 100% 60.78%; /* Same orange for focus ring */
 
-    --radius: 0.5rem;
+    --radius: 0.5rem; /* Same radius for rounded corners */
   }
 }
 

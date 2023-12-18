@@ -1,5 +1,6 @@
 "use client";
 
+import { type LucideIcon } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { AnimatedNumber } from "~/components/AnimatedPercent";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -8,7 +9,7 @@ import styles from "./StatCard.module.css";
 export function StatCard<T extends Record<string, unknown>>(props: {
   title: string;
 
-  icon: React.FC<{ className: string }>;
+  icon: React.FC<{ className: string }> | LucideIcon;
   data: T[];
   dataKey: keyof T & string;
 

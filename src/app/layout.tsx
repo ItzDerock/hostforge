@@ -2,9 +2,10 @@ import "~/styles/globals.css";
 
 import { Inter } from "next/font/google";
 import { cookies } from "next/headers";
-import { TRPCReactProvider } from "~/trpc/react";
 import { ThemeProvider } from "~/components/contexts/ThemeProvider";
 import { ToastProvider } from "~/components/contexts/ToastProvider";
+import { TRPCReactProvider } from "~/trpc/react";
+import Footer from "./_footer/Footer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,7 +30,11 @@ export default function RootLayout({
       >
         <TRPCReactProvider cookies={cookies().toString()}>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-            <ToastProvider>{children}</ToastProvider>
+            <ToastProvider>
+              {children}
+
+              <Footer />
+            </ToastProvider>
           </ThemeProvider>
         </TRPCReactProvider>
       </body>

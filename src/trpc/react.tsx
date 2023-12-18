@@ -2,20 +2,19 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-  type HTTPBatchStreamLinkOptions,
+  createWSClient,
   loggerLink,
+  splitLink,
   unstable_httpBatchStreamLink,
   wsLink,
-  createWSClient,
-  splitLink,
-  httpLink,
+  type HTTPBatchStreamLinkOptions,
 } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import { useState } from "react";
 
 import { type AppRouter } from "~/server/api/root";
-import { getUrl, transformer } from "./shared";
 import { authLink } from "./links";
+import { getUrl, transformer } from "./shared";
 
 export const api = createTRPCReact<AppRouter>();
 
@@ -66,6 +65,10 @@ export function TRPCReactProvider(props: {
           true: wsLink({
             client: createWSClient({
               url: getUrl().replace("http", "ws"),
+              lazy: {
+                enabled: true,
+                closeMs: 5_000,
+              },
             }),
           }),
 

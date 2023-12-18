@@ -7,18 +7,19 @@
  * need to use are documented accordingly near the end.
  */
 import { TRPCError, initTRPC } from "@trpc/server";
-import { type NextRequest } from "next/server.js";
+import cookie from "cookie";
+import type Dockerode from "dockerode";
+import { eq, or } from "drizzle-orm";
+import { type IncomingMessage, type ServerResponse } from "http";
+import ipaddr from "ipaddr.js";
 import superjson from "superjson";
-import { ZodError } from "zod";
+import { ZodError, z } from "zod";
 import { db } from "~/server/db";
 import { Session } from "../auth/Session";
-import ipaddr from "ipaddr.js";
-import { IncomingMessage, ServerResponse } from "http";
-import logger from "../utils/logger";
-import cookie from "cookie";
+import { projects } from "../db/schema";
 import { getDockerInstance } from "../docker";
-import Dockerode from "dockerode";
-import { OpenApiMeta, generateOpenApiDocument } from "trpc-openapi";
+import logger from "../utils/logger";
+// import { OpenApiMeta, generateOpenApiDocument } from "trpc-openapi";
 
 export type ExtendedRequest = IncomingMessage & {
   cookies: Record<string, string>;
@@ -101,7 +102,7 @@ export const createTRPCContext = async (opts: {
   const cookies = ((opts.req as ExtendedRequest).cookies = cookie.parse(
     opts.req.headers.cookie ?? "",
   ));
-  const sessionToken = cookies["sessionToken"];
+  const sessionToken = cookies.sessionToken;
 
   // fetch session data from token
   const session: Session | null = sessionToken
@@ -127,7 +128,7 @@ export const createTRPCContext = async (opts: {
  * errors on the backend.
  */
 export const t = initTRPC
-  .meta<OpenApiMeta>()
+  // .meta<OpenApiMeta>()
   .context<typeof createTRPCContext>()
   .create({
     transformer: superjson,
@@ -188,3 +189,55 @@ export const authenticatedProcedure = t.procedure.use(
     });
   }),
 );
+
+/**
+ * Project-related procedures
+ *
+ * Abstracts away finding a project by ID or internal name, and returns the project object.
+ * REMINDER: if you override `input`, you must include `projectId` in the new input object.
+ */
+export const projectAuthenticatedProcedure = authenticatedProcedure
+  .use(
+    t.middleware(async ({ ctx, input, next }) => {
+      if (
+        !input ||
+        typeof input != "object" ||
+        !("projectId" in input) ||
+        typeof input.projectId != "string"
+      ) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Expected a project ID or internal name.",
+        });
+      }
+
+      const [project] = await ctx.db
+        .select({
+          id: projects.id,
+          friendlyName: projects.friendlyName,
+          internalName: projects.internalName,
+          createdAt: projects.createdAt,
+        })
+        .from(projects)
+        .where(
+          or(
+            eq(projects.id, input.projectId),
+            eq(projects.internalName, input.projectId),
+          ),
+        )
+        .limit(1);
+
+      if (!project)
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Project not found or insufficient permissions.",
+        });
+
+      return next({
+        ctx: {
+          project: project,
+        },
+      });
+    }),
+  )
+  .input(z.object({ projectId: z.string() }));

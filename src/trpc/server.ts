@@ -1,3 +1,5 @@
+"use server";
+
 import {
   TRPCClientError,
   createTRPCProxyClient,
@@ -5,11 +7,11 @@ import {
   unstable_httpBatchStreamLink,
 } from "@trpc/client";
 
-import { type AppRouter } from "~/server/api/root";
-import { getUrl, transformer } from "./shared";
-import { cookies, headers } from "next/headers";
-import logger from "~/server/utils/logger";
 import chalk from "chalk";
+import { cookies, headers } from "next/headers";
+import { type AppRouter } from "~/server/api/root";
+import logger from "~/server/utils/logger";
+import { getUrl, transformer } from "./shared";
 
 export const api = createTRPCProxyClient<AppRouter>({
   transformer,

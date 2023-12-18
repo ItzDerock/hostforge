@@ -36,7 +36,7 @@ export function Project({ project }: { project: Project }) {
         {/* Name and health */}
         <div>
           <CardTitle className="font-semibold">
-            <Link href={`/projects/${project.internalName}`}>
+            <Link href={`/project/${project.internalName}`}>
               {project.friendlyName}{" "}
               <FaArrowUpRightFromSquare className="inline-block h-[10px]" />
             </Link>

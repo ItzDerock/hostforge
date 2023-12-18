@@ -1,11 +1,11 @@
+import { between, count, lte } from "drizzle-orm";
 import EventEmitter from "events";
-import TypedEmitter from "typed-emitter";
 import osu from "node-os-utils";
 import os from "os";
-import baseLogger from "../../utils/logger";
+import type TypedEmitter from "typed-emitter";
 import { db } from "~/server/db";
 import { systemStats } from "~/server/db/schema";
-import { between, lte } from "drizzle-orm";
+import baseLogger from "../../utils/logger";
 
 export type BasicServerStats = {
   collectedAt: Date;
@@ -73,7 +73,7 @@ type StatEvents = {
    */
   newListener: (
     event: string | symbol,
-    listener: (...args: any[]) => void,
+    listener: (...args: unknown[]) => void,
   ) => void;
 
   /**
@@ -81,7 +81,7 @@ type StatEvents = {
    */
   removeListener: (
     event: string | symbol,
-    listener: (...args: any[]) => void,
+    listener: (...args: unknown[]) => void,
   ) => void;
 };
 
@@ -130,13 +130,13 @@ export class StatManager {
   private liveInterval: NodeJS.Timeout | null = null;
 
   constructor() {
-    this.update().then(() => this.updateDatabase());
+    void this.update().then(() => this.updateDatabase());
 
     // whenever a new listener is added, start the live interval
     this.events.on("newListener", (event) => {
       if (event === "onUpdate") {
-        this.liveInterval ??= setInterval(async () => {
-          await this.update();
+        this.liveInterval ??= setInterval(() => {
+          void this.update();
         }, 3 * 1000);
       }
     });
@@ -152,16 +152,37 @@ export class StatManager {
     });
   }
 
-  start() {
+  async start() {
     this.logger.info("Starting hourly stat collection.");
     // collect stats every hour
     setInterval(
-      async () => {
-        await this.update();
-        await this.updateDatabase();
+      () => {
+        void this.update().then(() => this.updateDatabase());
       },
       60 * 60 * 1000,
     );
+
+    // fill data with some initial datapoints if empty
+    const [data] = await db
+      .select({ value: count() })
+      .from(systemStats)
+      .where(lte(systemStats.timestamp, Date.now() - 60 * 60 * 1000))
+      .execute();
+
+    if (data?.value ?? 1 > 2) {
+      return;
+    }
+
+    this.logger.info("Initial stat collection needed, filling database.");
+    for (let i = 0; i < 3; i++) {
+      await this.update();
+      await this.updateDatabase();
+
+      // wait 5 seconds between each update
+      await new Promise((r) => setTimeout(r, 5 * 1000));
+    }
+
+    this.logger.info("Finished initial stat collection.");
   }
 
   /**
@@ -266,6 +287,7 @@ export class StatManager {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
 export const stats = (((globalThis as any).statsManager as
   | StatManager
   | undefined) ??= new StatManager());

@@ -2,7 +2,7 @@
 
 import { useForm } from "@mantine/form";
 import { useQuery } from "@tanstack/react-query";
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { toast } from "sonner";
 import { FormInputGroup } from "~/components/FormInput";
 import { Button } from "~/components/ui/button";
@@ -67,31 +67,25 @@ export function CreateProjectButton() {
     },
   });
 
-  const fetchComposeFile = useQuery(
-    ["fetchComposeFile", form.values.composeURL],
-    async () => {
+  const fetchComposeFile = useQuery({
+    queryKey: ["fetchComposeFile", form.values.composeURL],
+    queryFn: async () => {
       const response = await fetch(form.values.composeURL);
       return await response.text();
     },
-    {
-      enabled: false,
-      cacheTime: 0,
-      retry: false,
-      onSuccess(data) {
-        form.setFieldValue("composeFile", data);
-        toast.success("Fetched Docker Compose file");
-      },
-      onError(error) {
-        toast.error("Failed to fetch Docker Compose file");
-        console.error(error);
-      },
-    },
-  );
+    enabled: false,
+    // cacheTime: 0,
+    retry: false,
+  });
 
-  // reset fetchComposeFile when the URL changes
-  React.useEffect(() => {
-    fetchComposeFile.remove();
-  }, [form.values.composeURL]);
+  useEffect(() => {
+    if (fetchComposeFile.isError) {
+      toast.error("Failed to fetch Docker Compose file");
+    } else if (fetchComposeFile.isSuccess) {
+      form.setFieldValue("composeFile", fetchComposeFile.data);
+      toast.success("Fetched Docker Compose file");
+    }
+  }, [fetchComposeFile, form]);
 
   return (
     <Dialog>
@@ -220,7 +214,7 @@ export function CreateProjectButton() {
           <Button
             type="submit"
             form="create-project-form"
-            isLoading={create.isLoading}
+            isLoading={create.isPending}
           >
             Create Project
           </Button>

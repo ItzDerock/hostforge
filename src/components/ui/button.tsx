@@ -1,8 +1,9 @@
-import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "~/utils/utils";
+import { type LucideIcon } from "lucide-react";
+import * as React from "react";
 import { CgSpinner } from "react-icons/cg";
+import { cn } from "~/utils/utils";
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
@@ -40,6 +41,7 @@ export interface ButtonProps
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   isLoading?: boolean;
+  icon?: LucideIcon;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -51,11 +53,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       asChild = false,
       children,
       isLoading,
+      icon: Icon,
       ...props
     },
     ref,
   ) => {
     const Comp = asChild ? Slot : "button";
+    const Child = asChild ? "span" : React.Fragment;
+
     return (
       <Comp
         className={cn(
@@ -64,10 +69,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         )}
         ref={ref}
         {...props}
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         disabled={isLoading || props.disabled}
       >
-        {isLoading && <CgSpinner className="mr-2 animate-spin" />}
-        {children}
+        <Child>
+          {isLoading && <CgSpinner className="mr-2 animate-spin" />}
+          {Icon && !isLoading && <Icon className="mr-2" size={18} />}
+
+          {children}
+        </Child>
       </Comp>
     );
   },

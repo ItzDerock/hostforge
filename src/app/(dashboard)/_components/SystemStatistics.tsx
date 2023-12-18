@@ -1,12 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  FaEthernet,
-  FaHardDrive,
-  FaMemory,
-  FaMicrochip,
-} from "react-icons/fa6";
+// import {
+//   FaEthernet,
+//   FaHardDrive,
+//   FaMemory,
+//   FaMicrochip,
+// } from "react-icons/fa6";
+import { Cpu, HardDrive, MemoryStick, Router } from "lucide-react";
 import { api } from "~/trpc/react";
 import { type RouterOutputs } from "~/trpc/shared";
 import { StatCard } from "./StatCard";
@@ -44,7 +45,7 @@ export function SystemStatistics(props: {
         value={data.cpu.usage}
         unit="%"
         subvalue={`of ${data.cpu.cores} CPUs`}
-        icon={FaMicrochip}
+        icon={Cpu}
         data={historicalData}
         dataKey="cpuUsage"
       />
@@ -57,7 +58,7 @@ export function SystemStatistics(props: {
         subvalue={`${data.memory.used.toFixed(2)} / ${data.memory.total.toFixed(
           2,
         )} GB`}
-        icon={FaMemory}
+        icon={MemoryStick}
         data={historicalData}
         dataKey="memoryUsage"
       />
@@ -69,7 +70,7 @@ export function SystemStatistics(props: {
         subvalue={`${data.storage.used.toFixed(
           2,
         )} / ${data.storage.total.toFixed(2)} GB`}
-        icon={FaHardDrive}
+        icon={HardDrive}
         data={historicalData}
         dataKey="diskUsage"
       />
@@ -85,7 +86,7 @@ export function SystemStatistics(props: {
         // secondaryUnit="Mbps"
         secondarySubvalue="RX / Mbps"
         // misc
-        icon={FaEthernet}
+        icon={Router}
         data={historicalData}
         dataKey="network"
       />

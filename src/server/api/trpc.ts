@@ -9,14 +9,12 @@
 import { TRPCError, initTRPC } from "@trpc/server";
 import cookie from "cookie";
 import type Dockerode from "dockerode";
-import { eq, or } from "drizzle-orm";
 import { type IncomingMessage, type ServerResponse } from "http";
 import ipaddr from "ipaddr.js";
 import superjson from "superjson";
-import { ZodError, z } from "zod";
+import { ZodError } from "zod";
 import { db } from "~/server/db";
 import { Session } from "../auth/Session";
-import { projects } from "../db/schema";
 import { getDockerInstance } from "../docker";
 import logger from "../utils/logger";
 // import { OpenApiMeta, generateOpenApiDocument } from "trpc-openapi";
@@ -196,50 +194,50 @@ export const authenticatedProcedure = t.procedure.use(
  * Abstracts away finding a project by ID or internal name, and returns the project object.
  * REMINDER: if you override `input`, you must include `projectId` in the new input object.
  */
-export const projectAuthenticatedProcedure = authenticatedProcedure
-  .use(
-    t.middleware(async ({ ctx, input, next }) => {
-      if (
-        !input ||
-        typeof input != "object" ||
-        !("projectId" in input) ||
-        typeof input.projectId != "string"
-      ) {
-        console.log(input);
+// export const projectAuthenticatedProcedure = authenticatedProcedure
+//   .use(
+//     t.middleware(async ({ ctx, input, next }) => {
+//       if (
+//         !input ||
+//         typeof input != "object" ||
+//         !("projectId" in input) ||
+//         typeof input.projectId != "string"
+//       ) {
+//         console.log(input);
 
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Expected a project ID or internal name.",
-        });
-      }
+//         throw new TRPCError({
+//           code: "NOT_FOUND",
+//           message: "Expected a project ID or internal name.",
+//         });
+//       }
 
-      const [project] = await ctx.db
-        .select({
-          id: projects.id,
-          friendlyName: projects.friendlyName,
-          internalName: projects.internalName,
-          createdAt: projects.createdAt,
-        })
-        .from(projects)
-        .where(
-          or(
-            eq(projects.id, input.projectId),
-            eq(projects.internalName, input.projectId),
-          ),
-        )
-        .limit(1);
+//       const [project] = await ctx.db
+//         .select({
+//           id: projects.id,
+//           friendlyName: projects.friendlyName,
+//           internalName: projects.internalName,
+//           createdAt: projects.createdAt,
+//         })
+//         .from(projects)
+//         .where(
+//           or(
+//             eq(projects.id, input.projectId),
+//             eq(projects.internalName, input.projectId),
+//           ),
+//         )
+//         .limit(1);
 
-      if (!project)
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Project not found or insufficient permissions.",
-        });
+//       if (!project)
+//         throw new TRPCError({
+//           code: "NOT_FOUND",
+//           message: "Project not found or insufficient permissions.",
+//         });
 
-      return next({
-        ctx: {
-          project: project,
-        },
-      });
-    }),
-  )
-  .input(z.object({ projectId: z.string() }));
+//       return next({
+//         ctx: {
+//           project: project,
+//         },
+//       });
+//     }),
+//   )
+//   .input(z.object({ projectId: z.string() }));

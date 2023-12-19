@@ -1,9 +1,10 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { service } from "~/server/db/schema";
-import { projectAuthenticatedProcedure } from "../../trpc";
+import { projectMiddleware } from "../../middleware/project";
+import { authenticatedProcedure } from "../../trpc";
 
-export const getProject = projectAuthenticatedProcedure
+export const getProject = authenticatedProcedure
   .meta({
     openapi: {
       method: "GET",
@@ -11,6 +12,8 @@ export const getProject = projectAuthenticatedProcedure
       summary: "Get project",
     },
   })
+  .input(z.object({ projectId: z.string() }))
+  .use(projectMiddleware)
   .output(z.unknown())
   .query(async ({ ctx }) => {
     const projServices = await ctx.db

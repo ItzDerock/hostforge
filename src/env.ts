@@ -23,6 +23,11 @@ export const env = createEnv({
       .transform((str) => parseInt(str)),
 
     STORAGE_PATH: z.string().default("/var/lib/hostforge"),
+
+    REDEPLOY_SECRET_BYTES: z
+      .string()
+      .default("32")
+      .transform((str) => parseInt(str)),
   },
 
   /**

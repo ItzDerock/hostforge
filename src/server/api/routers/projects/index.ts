@@ -4,8 +4,11 @@ import { z } from "zod";
 import { projects, service } from "~/server/db/schema";
 import { authenticatedProcedure, createTRPCRouter } from "../../trpc";
 import { getProject } from "./project";
+import { serviceRouter } from "./service";
 
 export const projectRouter = createTRPCRouter({
+  services: serviceRouter,
+
   list: authenticatedProcedure
     .meta({
       openapi: {

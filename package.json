@@ -16,6 +16,7 @@
     "fetch-compose-types": "curl -s https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json | json2ts > src/server/docker/compose.d.ts"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.3.2",
     "@mantine/form": "^7.3.2",
     "@nicktomlin/codemirror-lang-yaml-lite": "^0.0.3",
     "@prisma/migrate": "^5.7.0",
@@ -54,6 +55,7 @@
     "node-os-utils": "^1.3.7",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-hook-form": "^7.49.2",
     "react-icons": "^4.12.0",
     "react-simple-code-editor": "^0.13.1",
     "recharts": "^2.10.3",

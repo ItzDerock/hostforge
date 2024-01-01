@@ -1,19 +1,20 @@
-import { sql, relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
-  text,
   blob,
-  integer,
-  sqliteTable,
   index,
+  integer,
   real,
+  sqliteTable,
+  text,
+  unique,
 } from "drizzle-orm/sqlite-core";
 import {
-  DockerDeployMode,
-  DockerRestartCondition,
-  DockerVolumeType,
-  ServiceBuildMethod,
-  ServicePortType,
-  ServiceSource,
+  type DockerDeployMode,
+  type DockerRestartCondition,
+  type DockerVolumeType,
+  type ServiceBuildMethod,
+  type ServicePortType,
+  type ServiceSource,
 } from "./types";
 
 // util
@@ -125,68 +126,78 @@ export const projects = sqliteTable("projects", {
  * Represents a service running in a project
  * TODO: individual user permissions
  */
-export const service = sqliteTable("service", {
-  id: text("id").default(uuidv7).primaryKey(),
-  projectId: text("project_id")
-    .notNull()
-    .references(() => projects.id),
+export const service = sqliteTable(
+  "service",
+  {
+    id: text("id").default(uuidv7).primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id),
 
-  name: text("name").notNull(),
+    name: text("name").notNull(),
 
-  // service configuration
-  source: integer("source").$type<ServiceSource>().notNull(),
-  redeploySecret: text("redeploy_secret").notNull(),
-  environment: text("environment"),
+    // service configuration
+    source: integer("source").$type<ServiceSource>().notNull(),
+    redeploySecret: text("redeploy_secret").notNull(),
+    environment: text("environment"),
 
-  // for docker source
-  dockerImage: text("docker_image"),
-  dockerRegistryUsername: text("docker_registry_username"),
-  dockerRegistryPassword: text("docker_registry_password"),
+    // for docker source
+    dockerImage: text("docker_image"),
+    dockerRegistryUsername: text("docker_registry_username"),
+    dockerRegistryPassword: text("docker_registry_password"),
 
-  // for github source
-  githubUrl: text("github_url"),
-  githubBranch: text("github_branch"),
+    // for github source
+    githubUrl: text("github_url"),
+    githubBranch: text("github_branch"),
 
-  // for git source
-  gitUrl: text("git_url"),
-  gitBranch: text("git_branch"),
+    // for git source
+    gitUrl: text("git_url"),
+    gitBranch: text("git_branch"),
 
-  // for github/git
-  buildMethod: integer("build_method").$type<ServiceBuildMethod>(),
-  buildPath: text("build_path"),
+    // for github/git
+    buildMethod: integer("build_method").$type<ServiceBuildMethod>(),
+    buildPath: text("build_path"),
 
-  // deployment settings
-  command: text("command"),
-  entrypoint: text("entrypoint"),
-  replicas: integer("replicas").default(1).notNull(),
-  maxReplicasPerNode: integer("max_replicas_per_node"),
-  deployMode: integer("deploy_mode").$type<DockerDeployMode>(),
-  zeroDowntime: integer("zero_downtime").default(0).notNull(),
+    // deployment settings
+    command: text("command"),
+    entrypoint: text("entrypoint"),
+    replicas: integer("replicas").default(1).notNull(),
+    maxReplicasPerNode: integer("max_replicas_per_node"),
+    deployMode: integer("deploy_mode").$type<DockerDeployMode>(),
+    zeroDowntime: integer("zero_downtime").default(0).notNull(),
 
-  // deployment usage limits
-  max_cpu: real("max_cpu"),
-  max_memory: text("max_memory"),
-  max_pids: integer("max_pids"),
+    // deployment usage limits
+    max_cpu: real("max_cpu"),
+    max_memory: text("max_memory"),
+    max_pids: integer("max_pids"),
 
-  // restart policy
-  restart: integer("restart").$type<DockerRestartCondition>(),
-  restartDelay: text("restart_delay"),
-  restartMaxAttempts: integer("restart_max_attempts"),
+    // restart policy
+    restart: integer("restart").$type<DockerRestartCondition>(),
+    restartDelay: text("restart_delay"),
+    restartMaxAttempts: integer("restart_max_attempts"),
 
-  // healthcheck
-  healtcheckEnabled: integer("healthcheck_enabled").default(0).notNull(),
-  healthcheckCommand: text("healthcheck_command"),
-  healthcheckInterval: text("healthcheck_interval"),
-  healthcheckTimeout: text("healthcheck_timeout"),
-  healthcheckRetries: integer("healthcheck_retries"),
-  healthcheckStartPeriod: text("healthcheck_start_period"),
+    // healthcheck
+    healtcheckEnabled: integer("healthcheck_enabled").default(0).notNull(),
+    healthcheckCommand: text("healthcheck_command"),
+    healthcheckInterval: text("healthcheck_interval"),
+    healthcheckTimeout: text("healthcheck_timeout"),
+    healthcheckRetries: integer("healthcheck_retries"),
+    healthcheckStartPeriod: text("healthcheck_start_period"),
 
-  // logging
-  loggingMaxSize: text("logging_max_size"),
-  loggingMaxFiles: integer("logging_max_files"),
+    // logging
+    loggingMaxSize: text("logging_max_size"),
+    loggingMaxFiles: integer("logging_max_files"),
 
-  createdAt: integer("created_at").default(now).notNull(),
-});
+    createdAt: integer("created_at").default(now).notNull(),
+  },
+  (table) => ({
+    name_project_idx: index("name_project_idx").on(table.name, table.projectId),
+    name_project_unq: unique("name_project_unq").on(
+      table.name,
+      table.projectId,
+    ),
+  }),
+);
 
 // relations
 export const projectRelations = relations(projects, ({ one, many }) => ({
@@ -195,6 +206,18 @@ export const projectRelations = relations(projects, ({ one, many }) => ({
     references: [users.id],
   }),
   services: many(service),
+}));
+
+export const serviceRelations = relations(service, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [service.projectId],
+    references: [projects.id],
+  }),
+  domains: many(serviceDomain),
+  ports: many(servicePort),
+  sysctls: many(serviceSysctl),
+  volumes: many(serviceVolume),
+  ulimits: many(serviceUlimit),
 }));
 
 /**

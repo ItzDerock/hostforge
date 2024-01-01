@@ -9,6 +9,13 @@ import { type RouterOutputs } from "~/trpc/shared";
 import { ProjectContextProvider } from "../_context/ProjectContext";
 import { CreateService } from "./CreateService";
 
+const STATUS_ICON_COLORS = {
+  Healthy: "bg-green-500 border-green-400",
+  Partial: "bg-yellow-500 border-yellow-400",
+  Unhealthy: "bg-red-500 border-red-400",
+  Unknown: "bg-gray-500 border-gray-400",
+} as const;
+
 export function ProjectLayout(props: {
   project: RouterOutputs["projects"]["get"];
   children: React.ReactNode;
@@ -84,14 +91,16 @@ export function ProjectLayout(props: {
             >
               <div className="flex flex-row items-center gap-1">
                 <div
-                  className={`mr-1 inline-block h-3 w-3 rounded-full bg-${
-                    service.stats?.ServiceStatus?.RunningTasks ==
-                    service.stats?.ServiceStatus?.DesiredTasks
-                      ? "green"
-                      : service.stats?.ServiceStatus?.RunningTasks ?? 0 > 0
-                        ? "yellow"
-                        : "red"
-                  }-500`}
+                  className={`mr-1 inline-block h-3 w-3 rounded-full border-2 ${
+                    service.stats?.ServiceStatus?.RunningTasks == undefined
+                      ? STATUS_ICON_COLORS.Unknown
+                      : service.stats?.ServiceStatus?.RunningTasks ==
+                          service.stats?.ServiceStatus?.DesiredTasks
+                        ? STATUS_ICON_COLORS.Healthy
+                        : service.stats?.ServiceStatus?.RunningTasks ?? 0 > 0
+                          ? STATUS_ICON_COLORS.Partial
+                          : STATUS_ICON_COLORS.Unhealthy
+                  }`}
                 />
                 <span>{service.name}</span>
               </div>

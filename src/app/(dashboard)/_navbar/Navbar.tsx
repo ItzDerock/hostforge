@@ -8,6 +8,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 
 import { Settings } from "lucide-react";
+import Link from "next/link";
 import { api } from "~/trpc/server";
 
 export default async function Navbar() {
@@ -16,7 +17,9 @@ export default async function Navbar() {
   return (
     <nav className="py-4">
       <div className="mx-auto flex h-12 flex-row items-center gap-4">
-        <div>Hostforge</div>
+        <div>
+          <Link href="/">Hostforge</Link>{" "}
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -1,5 +1,6 @@
 import assert from "assert";
 import { randomBytes } from "crypto";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { env } from "~/env";
 import { projectMiddleware } from "~/server/api/middleware/project";
@@ -46,5 +47,22 @@ export const serviceRouter = createTRPCRouter({
       assert(data?.id);
 
       return data.id;
+    }),
+
+  delete: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "DELETE",
+        path: "/api/projects/:projectId/services/:serviceId",
+        summary: "Delete service",
+      },
+    })
+    .input(z.object({ projectId: z.string(), serviceId: z.string() }))
+    .use(projectMiddleware)
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .delete(service)
+        .where(eq(service.id, input.serviceId))
+        .execute();
     }),
 });

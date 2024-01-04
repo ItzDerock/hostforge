@@ -42,7 +42,11 @@ export const serviceRouter = createTRPCRouter({
         .returning({
           id: service.id,
         })
-        .execute();
+        .execute()
+        .catch((err) => {
+          console.error(err);
+          throw err;
+        });
 
       assert(data?.id);
 

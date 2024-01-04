@@ -52,6 +52,7 @@ export const env = createEnv({
     PORT: process.env.PORT,
     NEXT_PUBLIC_BUILD_COMMIT_SHA: process.env.NEXT_PUBLIC_BUILD_COMMIT_SHA,
     STORAGE_PATH: process.env.STORAGE_PATH,
+    REDEPLOY_SECRET_BYTES: process.env.REDEPLOY_SECRET_BYTES,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

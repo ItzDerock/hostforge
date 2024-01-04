@@ -7,6 +7,7 @@ import {
   unstable_httpBatchStreamLink,
 } from "@trpc/client";
 
+import { TRPCError } from "@trpc/server";
 import chalk from "chalk";
 import { cookies, headers } from "next/headers";
 import { type AppRouter } from "~/server/api/root";
@@ -29,7 +30,7 @@ export const api = createTRPCClient<AppRouter>({
         if (data.direction === "up") return;
 
         // log errors
-        if (data.result instanceof Error) {
+        if (data.result instanceof Error || data.result instanceof TRPCError) {
           // 4xx errors should not be logged as an error
           if (data.result instanceof TRPCClientError) {
             // this is used to check if the user is logged in, so we dont want to log it

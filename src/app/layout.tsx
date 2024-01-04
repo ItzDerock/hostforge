@@ -1,15 +1,16 @@
 import "~/styles/globals.css";
 
-import { Inter } from "next/font/google";
+import { Outfit } from "next/font/google";
 import { cookies } from "next/headers";
 import { ThemeProvider } from "~/components/contexts/ThemeProvider";
 import { ToastProvider } from "~/components/contexts/ToastProvider";
 import { TRPCReactProvider } from "~/trpc/react";
 import Footer from "./_footer/Footer";
 
-const inter = Inter({
+const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-sans",
+  weight: ["100", "300", "400", "500", "700", "900"],
 });
 
 export const metadata = {
@@ -26,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`font-sans ${inter.variable} min-h-screen min-w-full p-4`}
+        className={`font-sans ${outfit.variable} min-h-screen min-w-full p-4`}
       >
         <TRPCReactProvider cookies={cookies().toString()}>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>

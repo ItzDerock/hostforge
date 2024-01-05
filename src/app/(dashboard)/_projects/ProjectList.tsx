@@ -88,7 +88,7 @@ export function ProjectList({ defaultValue }: { defaultValue: Projects }) {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-8">
+      <div className="mt-4 grid gap-8 md:grid-cols-2">
         {sortedProjects.map((project, key) => (
           <Project key={key} project={project} />
         ))}

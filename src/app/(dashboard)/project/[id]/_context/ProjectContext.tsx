@@ -3,7 +3,12 @@
 import { createContext, useContext } from "react";
 import { type RouterOutputs } from "~/trpc/shared";
 
-type ProjectContextType = RouterOutputs["projects"]["get"];
+export type BasicServiceDetails =
+  RouterOutputs["projects"]["get"]["services"][number];
+export type ProjectContextType = RouterOutputs["projects"]["get"] & {
+  path: string;
+  selectedService?: BasicServiceDetails;
+};
 
 const ProjectContext = createContext<ProjectContextType>(
   {} as unknown as ProjectContextType,

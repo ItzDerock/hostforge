@@ -44,7 +44,7 @@ export default function LoginForm() {
   });
 
   return (
-    <Card className="mx-auto w-80">
+    <Card className="m-auto h-fit w-80">
       <CardHeader>
         <CardTitle>🔥 Hostforge</CardTitle>
         <CardDescription>Log into your account to start.</CardDescription>

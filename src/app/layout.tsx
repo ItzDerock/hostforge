@@ -5,7 +5,6 @@ import { cookies } from "next/headers";
 import { ThemeProvider } from "~/components/contexts/ThemeProvider";
 import { ToastProvider } from "~/components/contexts/ToastProvider";
 import { TRPCReactProvider } from "~/trpc/react";
-import Footer from "./_footer/Footer";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -26,16 +25,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body
-        className={`font-sans ${outfit.variable} min-h-screen min-w-full p-4`}
-      >
+      <body className={`font-sans ${outfit.variable} min-h-screen min-w-full`}>
         <TRPCReactProvider cookies={cookies().toString()}>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-            <ToastProvider>
-              {children}
-
-              <Footer />
-            </ToastProvider>
+            <ToastProvider>{children}</ToastProvider>
           </ThemeProvider>
         </TRPCReactProvider>
       </body>

@@ -29,9 +29,10 @@ export default function LoginForm() {
       router.push("/#");
     },
 
-    onError: (error) => {
-      console.error(error);
-      toast.error(error.message, { id: toastLoading });
+    trpc: {
+      context: {
+        toastId: toastLoading,
+      },
     },
   });
 
@@ -95,7 +96,7 @@ export default function LoginForm() {
           className="w-full"
           type="submit"
           form="loginform"
-          isLoading={login.isLoading}
+          isLoading={login.isPending}
         >
           Log In
         </Button>

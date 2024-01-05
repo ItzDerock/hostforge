@@ -1,8 +1,7 @@
-import { drizzle } from "drizzle-orm/better-sqlite3";
 import SQLite3 from "better-sqlite3";
+import { drizzle } from "drizzle-orm/better-sqlite3";
 import { join } from "path";
 import { env } from "~/env";
-import logger from "../utils/logger";
 
 const globalForDB = globalThis as unknown as {
   db: ReturnType<typeof createDatabaseInstance>;
@@ -24,6 +23,7 @@ function createDatabaseInstance() {
         "./exts/sqlite-uuidv7",
       ),
   );
+
   return drizzle(sqlite);
 }
 

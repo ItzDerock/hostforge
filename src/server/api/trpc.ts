@@ -176,6 +176,8 @@ export const authenticatedProcedure = t.procedure.use(
     if (!ctx.session) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
+        // NOTE: if you change this, you must also change it in ~/trpc/react.ts
+        cause: new Error("User is not logged in."),
         message: "You must be logged in to perform this action.",
       });
     }
@@ -187,57 +189,3 @@ export const authenticatedProcedure = t.procedure.use(
     });
   }),
 );
-
-/**
- * Project-related procedures
- *
- * Abstracts away finding a project by ID or internal name, and returns the project object.
- * REMINDER: if you override `input`, you must include `projectId` in the new input object.
- */
-// export const projectAuthenticatedProcedure = authenticatedProcedure
-//   .use(
-//     t.middleware(async ({ ctx, input, next }) => {
-//       if (
-//         !input ||
-//         typeof input != "object" ||
-//         !("projectId" in input) ||
-//         typeof input.projectId != "string"
-//       ) {
-//         console.log(input);
-
-//         throw new TRPCError({
-//           code: "NOT_FOUND",
-//           message: "Expected a project ID or internal name.",
-//         });
-//       }
-
-//       const [project] = await ctx.db
-//         .select({
-//           id: projects.id,
-//           friendlyName: projects.friendlyName,
-//           internalName: projects.internalName,
-//           createdAt: projects.createdAt,
-//         })
-//         .from(projects)
-//         .where(
-//           or(
-//             eq(projects.id, input.projectId),
-//             eq(projects.internalName, input.projectId),
-//           ),
-//         )
-//         .limit(1);
-
-//       if (!project)
-//         throw new TRPCError({
-//           code: "NOT_FOUND",
-//           message: "Project not found or insufficient permissions.",
-//         });
-
-//       return next({
-//         ctx: {
-//           project: project,
-//         },
-//       });
-//     }),
-//   )
-//   .input(z.object({ projectId: z.string() }));

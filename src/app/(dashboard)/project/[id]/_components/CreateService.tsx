@@ -76,7 +76,10 @@ export function CreateService() {
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit((data) =>
-                mutate.mutate({ name: data.name, projectId: project.id }),
+                mutate.mutate({
+                  name: data.name,
+                  projectId: project.internalName,
+                }),
               )}
             >
               <FormField

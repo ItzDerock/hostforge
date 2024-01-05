@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  TRPCClientError,
   createWSClient,
   loggerLink,
   splitLink,
@@ -12,8 +13,9 @@ import {
 import { createTRPCReact } from "@trpc/react-query";
 import { useState } from "react";
 
+import { useRouter } from "next/navigation";
 import { type AppRouter } from "~/server/api/root";
-import { authLink } from "./links";
+import { authLink, toastLink } from "./links";
 import { getUrl, transformer } from "./shared";
 
 export const api = createTRPCReact<AppRouter>();
@@ -40,7 +42,32 @@ export function TRPCReactProvider(props: {
   children: React.ReactNode;
   cookies: string;
 }) {
-  const [queryClient] = useState(() => new QueryClient());
+  const router = useRouter();
+
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            retry: (failureCount, error) => {
+              if (!(error instanceof TRPCClientError)) return false;
+
+              // check if is an unauthorized error
+              if (
+                error.cause &&
+                error.cause.message === "User is not logged in."
+              ) {
+                router.push("/login");
+                return false;
+              }
+
+              // retry 3 times, then give up
+              return failureCount < 3;
+            },
+          },
+        },
+      }),
+  );
 
   const [trpcClient] = useState(() =>
     api.createClient({
@@ -52,15 +79,13 @@ export function TRPCReactProvider(props: {
             (op.direction === "down" && op.result instanceof Error),
         }),
 
+        toastLink,
         authLink(sharedLinkOptions(props.cookies)),
 
         splitLink({
           condition(op) {
             return op.type === "subscription";
           },
-
-          // true: httpLink(sharedLinkOptions(props.cookies)),
-          // false: unstable_httpBatchStreamLink(sharedLinkOptions(props.cookies)),
 
           true: wsLink({
             client: createWSClient({
@@ -74,15 +99,6 @@ export function TRPCReactProvider(props: {
 
           false: unstable_httpBatchStreamLink(sharedLinkOptions(props.cookies)),
         }),
-
-        // authLink(sharedLinkOptions(props.cookies)),
-        // wsLink({
-        //   client: createWSClient({
-        //     url: getUrl().replace("http", "ws"),
-        //   }),
-        // }),
-        // wsLink(sharedLinkOptions(props.cookies)),
-        // unstable_httpBatchStreamLink(sharedLinkOptions(props.cookies)),
       ],
     }),
   );

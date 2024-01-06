@@ -6,9 +6,9 @@ import { useParams } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { api } from "~/trpc/react";
 import { type RouterOutputs } from "~/trpc/shared";
-import { ProjectContextProvider } from "../_context/ProjectContext";
-import { CreateService } from "./CreateService";
-import { ServiceCard } from "./ServiceCard";
+import { CreateService } from "./_components/CreateService";
+import { ServiceCard } from "./_components/ServiceCard";
+import { ProjectContextProvider } from "./_context/ProjectContext";
 
 export function ProjectLayout(props: {
   project: RouterOutputs["projects"]["get"];
@@ -44,7 +44,7 @@ export function ProjectLayout(props: {
             : undefined,
       }}
     >
-      <h1 className="text-3xl font-bold">
+      <h1 className="text-3xl font-bold tracking-tight">
         {project.data.friendlyName}{" "}
         <span className="text-nowrap text-sm font-normal text-muted-foreground">
           ({project.data.internalName})

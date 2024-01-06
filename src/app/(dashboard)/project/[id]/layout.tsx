@@ -1,5 +1,5 @@
 import { api } from "~/trpc/server";
-import { ProjectLayout } from "./_components/ProjectLayout";
+import { ProjectLayout } from "./ProjectLayout";
 
 export default async function ProjectPage(props: {
   params: { id: string };

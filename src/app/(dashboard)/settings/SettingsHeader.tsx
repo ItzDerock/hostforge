@@ -2,6 +2,8 @@
 
 import { usePathname } from "next/navigation";
 
+const trimTrailingSlash = (path: string) => path.replace(/\/$/, "");
+
 type SidebarNavItem = {
   title: string;
   description: string;
@@ -10,7 +12,9 @@ type SidebarNavItem = {
 
 export function SettingsHeader(props: { items: SidebarNavItem[] }) {
   const path = usePathname();
-  const active = props.items.find((item) => item.href === path);
+  const active = props.items.find(
+    (item) => trimTrailingSlash(item.href) === path,
+  );
 
   return (
     <div>

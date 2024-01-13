@@ -8,7 +8,6 @@
  */
 import { TRPCError, initTRPC } from "@trpc/server";
 import cookie from "cookie";
-import type Dockerode from "dockerode";
 import { type IncomingMessage, type ServerResponse } from "http";
 import ipaddr from "ipaddr.js";
 import superjson from "superjson";
@@ -16,6 +15,7 @@ import { ZodError } from "zod";
 import { db } from "~/server/db";
 import { Session } from "../auth/Session";
 import { getDockerInstance } from "../docker";
+import { type Docker } from "../docker/docker";
 import logger from "../utils/logger";
 // import { OpenApiMeta, generateOpenApiDocument } from "trpc-openapi";
 
@@ -35,7 +35,7 @@ interface CreateContextOptions {
   request: ExtendedRequest;
   response?: ServerResponse;
   session: Session | null;
-  docker: Dockerode;
+  docker: Docker;
 }
 
 /**

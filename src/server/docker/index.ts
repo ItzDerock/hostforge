@@ -1,5 +1,6 @@
-import Docker from "dockerode";
+import { Docker } from "./docker";
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function getDockerInstance() {
   return new Docker(); // TODO: configurable host
 }

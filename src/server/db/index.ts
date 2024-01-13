@@ -2,6 +2,8 @@ import SQLite3 from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { join } from "path";
 import { env } from "~/env";
+import logger from "../utils/logger";
+import * as schema from "./schema";
 
 const globalForDB = globalThis as unknown as {
   db: ReturnType<typeof createDatabaseInstance>;
@@ -24,7 +26,14 @@ function createDatabaseInstance() {
       ),
   );
 
-  return drizzle(sqlite);
+  return drizzle(sqlite, {
+    schema,
+    logger: {
+      logQuery(query) {
+        logger.child({ module: "database" }).debug(query);
+      },
+    },
+  });
 }
 
 export const db = (globalForDB.db ??= createDatabaseInstance());

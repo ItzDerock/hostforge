@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { projects, service } from "~/server/db/schema";
 import { authenticatedProcedure, createTRPCRouter } from "../../trpc";
+import { deployProject } from "./deploy";
 import { getProject } from "./project";
 import { serviceRouter } from "./service";
 
@@ -78,4 +79,5 @@ export const projectRouter = createTRPCRouter({
     }),
 
   get: getProject,
+  deploy: deployProject,
 });

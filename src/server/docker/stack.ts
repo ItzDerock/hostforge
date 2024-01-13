@@ -20,7 +20,7 @@ import {
   type Ulimits,
 } from "./compose";
 
-type Service = typeof service.$inferSelect & {
+export type Service = typeof service.$inferSelect & {
   domains: (typeof serviceDomain.$inferSelect)[];
   ports: (typeof servicePort.$inferSelect)[];
   sysctls: (typeof serviceSysctl.$inferSelect)[];
@@ -30,12 +30,14 @@ type Service = typeof service.$inferSelect & {
   /**
    * The final image to use for the service (after building)
    */
-  finalizedDockerImage: string;
+  finalizedDockerImage?: string;
 };
 
 /**
  * Builds the docker stack file (as a JSON) for the given services and project.
+ * Currently no async operations are performed, but this may change in the future.
  */
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function buildDockerStackFile(
   services: Service[],
 ): Promise<ComposeSpecification> {
@@ -45,7 +47,7 @@ export async function buildDockerStackFile(
   for (const service of services) {
     swarmServices[service.name] = {
       // TODO: cap_add, cap_drop
-      command: service.command,
+      command: service.command ?? undefined,
       deploy: {
         replicas: service.replicas,
         endpoint_mode: "vip", // maybe dnsrr support?
@@ -56,9 +58,6 @@ export async function buildDockerStackFile(
         placement: {
           max_replicas_per_node: service.maxReplicasPerNode ?? undefined,
         },
-        // @ts-expect-error for some reason this is not in the types - https://docs.docker.com/compose/compose-file/compose-file-v3/#replicas
-        replicas: service.replicas,
-
         resources: {
           limits: {
             cpus: service.max_cpu ?? undefined,
@@ -88,15 +87,9 @@ export async function buildDockerStackFile(
         },
       },
 
-      entrypoint: service.entrypoint,
+      entrypoint: service.entrypoint ?? undefined,
       environment: service.environment ? parse(service.environment) : undefined,
-      image: service.finalizedDockerImage,
-      // ports: service.ports.map(
-      //   (port) =>
-      //     `${port.externalPort}:${port.internalPort}${
-      //       port.portType === ServicePortType.UDP ? "/udp" : ""
-      //     }`,
-      // ),
+      image: service.finalizedDockerImage ?? service.dockerImage ?? undefined,
       ports: service.ports.map((port) => ({
         mode:
           port.type !== null ? DOCKER_DEPLOY_MODE_MAP[port.type] : undefined,
@@ -162,5 +155,6 @@ export async function buildDockerStackFile(
 
   return {
     version: "3.8",
+    services: swarmServices,
   };
 }

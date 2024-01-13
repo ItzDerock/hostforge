@@ -1,12 +1,13 @@
 "use client";
 
-import { Home, Settings2, UploadCloud } from "lucide-react";
+import { Home, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { api } from "~/trpc/react";
 import { type RouterOutputs } from "~/trpc/shared";
 import { CreateService } from "./_components/CreateService";
+import { DeployChanges } from "./_components/DeployChanges";
 import { ServiceCard } from "./_components/ServiceCard";
 import { ProjectContextProvider } from "./_context/ProjectContext";
 
@@ -31,62 +32,68 @@ export function ProjectLayout(props: {
         s.stats?.ServiceStatus?.DesiredTasks,
     ).length ?? 0;
 
+  const selectedService =
+    typeof params.serviceid === "string"
+      ? project.data.services.find((service) =>
+          [service.id, service.name].includes(params.serviceid as string),
+        )
+      : undefined;
+
   return (
     <ProjectContextProvider
       data={{
         ...project.data,
         path: projectPath,
-        selectedService:
-          typeof params.serviceId === "string"
-            ? project.data.services.find((service) =>
-                [service.id, service.name].includes(params.serviceId as string),
-              )
-            : undefined,
+        selectedService,
       }}
     >
-      <h1 className="text-3xl font-bold tracking-tight">
-        {project.data.friendlyName}{" "}
-        <span className="text-nowrap text-sm font-normal text-muted-foreground">
-          ({project.data.internalName})
-        </span>
-      </h1>
-      <h2 className="text-muted-foreground">
-        {/* green dot = healthy, yellow = partial, red = all off */}
-        <span
-          className={`mr-1 inline-block h-3 w-3 rounded-full bg-${
-            healthy == project.data.services.length
-              ? "green"
-              : healthy > 0
-                ? "yellow"
-                : "red"
-          }-500`}
-        />
-        {healthy}/{project.data.services.length} Healthy Services
-      </h2>
+      <div className="text-sm text-muted-foreground">
+        Project &gt; {project.data.internalName}
+        {selectedService && <>&gt; {selectedService.name}</>}
+      </div>
 
-      <div className="mt-4 flex flex-row flex-wrap gap-4">
+      <div className="flex flex-row flex-wrap content-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {project.data.friendlyName}{" "}
+          </h1>
+          <h2 className="text-muted-foreground">
+            {/* green dot = healthy, yellow = partial, red = all off */}
+            <span
+              className={`mr-1 inline-block h-3 w-3 rounded-full bg-${
+                healthy == project.data.services.length
+                  ? "green"
+                  : healthy > 0
+                    ? "yellow"
+                    : "red"
+              }-500`}
+            />
+            {healthy}/{project.data.services.length} Healthy Services
+          </h2>
+        </div>
+
+        <div className="flex flex-row flex-wrap content-center gap-4">
+          {/* deploy changes */}
+          <DeployChanges />
+
+          {/* new */}
+          <CreateService />
+
+          {/* settings */}
+          <Button variant="outline" icon={Settings2}>
+            <Link href={`${projectPath}/settings`}>Settings</Link>
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex flex-row gap-4 border-b-2 border-b-border py-4">
         {/* home */}
         <Link href={projectPath}>
-          <Button variant="outline" icon={Home}>
+          <Button variant="outline" icon={Home} className="h-full">
             Home
           </Button>
         </Link>
 
-        {/* deploy changes */}
-        <Button variant="outline" icon={UploadCloud}>
-          Deploy Changes
-        </Button>
-
-        {/* new */}
-        <CreateService />
-
-        {/* settings */}
-        <Button variant="outline" icon={Settings2}>
-          <Link href={`${projectPath}/settings`}>Settings</Link>
-        </Button>
-      </div>
-
-      <div className="flex flex-row gap-4 border-b-2 border-b-border py-4">
         {/* services */}
         <div className="flex flex-grow flex-row flex-wrap gap-2">
           {project.data.services.map((service) => (

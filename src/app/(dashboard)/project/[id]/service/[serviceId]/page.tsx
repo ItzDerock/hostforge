@@ -1,13 +1,13 @@
-import { DeleteButton } from "./_components/DeleteButton";
+"use client";
 
-export default function ServicePage({
-  params: { serviceId },
-}: {
-  params: { serviceId: string };
-}) {
-  return (
-    <div>
-      Hello world from {serviceId} <DeleteButton serviceId={serviceId} />
-    </div>
-  );
+import { usePathname, useRouter } from "next/navigation";
+
+export default function ServicePage() {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // redirect to ./home
+  router.push(pathname + "/home");
+
+  return <div>Redirecting you...</div>;
 }

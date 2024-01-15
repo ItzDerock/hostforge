@@ -6,7 +6,17 @@ import { type RouterOutputs } from "~/trpc/shared";
 export type BasicServiceDetails =
   RouterOutputs["projects"]["get"]["services"][number];
 export type ProjectContextType = RouterOutputs["projects"]["get"] & {
+  /**
+   * Base project path
+   * Example: `/project/123`
+   */
   path: string;
+
+  /**
+   * Base service path
+   * Example: `/project/123/service/456`
+   */
+  servicePath: string;
   selectedService?: BasicServiceDetails;
 };
 

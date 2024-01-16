@@ -3,6 +3,13 @@ import { eq, or } from "drizzle-orm";
 import { type db } from "~/server/db";
 import { projects } from "~/server/db/schema";
 
+export type BasicProjectDetails = {
+  id: string;
+  friendlyName: string;
+  internalName: string;
+  createdAt: number;
+};
+
 export const projectMiddleware = experimental_standaloneMiddleware<{
   ctx: { db: typeof db };
   input: { projectId: string };
@@ -38,7 +45,7 @@ export const projectMiddleware = experimental_standaloneMiddleware<{
 
   return next({
     ctx: {
-      project: project,
+      project: project as BasicProjectDetails,
     },
   });
 });

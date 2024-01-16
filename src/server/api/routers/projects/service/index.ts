@@ -8,8 +8,11 @@ import { authenticatedProcedure, createTRPCRouter } from "~/server/api/trpc";
 import { service } from "~/server/db/schema";
 import { ServiceSource } from "~/server/db/types";
 import { zDockerName } from "~/server/utils/zod";
+import { getServiceContainers } from "./containers";
 
 export const serviceRouter = createTRPCRouter({
+  containers: getServiceContainers,
+
   create: authenticatedProcedure
     .meta({
       openapi: {

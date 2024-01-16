@@ -1,5 +1,6 @@
 "use client";
 
+import { HomeIcon } from "lucide-react";
 import { SettingsHeader } from "~/app/(dashboard)/settings/SettingsHeader";
 import { SidebarNav } from "~/components/SidebarNav";
 import { Separator } from "~/components/ui/separator";
@@ -10,6 +11,7 @@ const sidebarNavItems = [
     title: "Home",
     description: "Quick overview of all containers for this project.",
     href: "/",
+    icon: HomeIcon,
   },
   {
     title: "Sessions",

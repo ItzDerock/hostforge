@@ -24,7 +24,13 @@ const logger = createLogger({
           if (others[SPLAT]) {
             const splat = others[SPLAT] as unknown[];
             if (splat.length > 0) {
-              return base + " " + splat.map((s) => util.inspect(s)).join("\n");
+              const formattedSplat = splat
+                .map((s) => util.inspect(s, { colors: true, showHidden: true }))
+                .flatMap((s) => s.split("\n"))
+                .map((s) => `    ${s}`)
+                .join("\n");
+
+              return base + "\n" + formattedSplat;
             }
           }
 

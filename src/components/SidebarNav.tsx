@@ -35,10 +35,15 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
       )}
       {...props}
     >
-      {items.map((item, i) =>
-        item.type === "divider" ? (
+      {items.map((item, i) => {
+        const isActive =
+          item.type !== "divider"
+            ? pathname === item.href.replace(/\/$/, "")
+            : false;
+
+        return item.type === "divider" ? (
           <p
-            className="pb-2 pt-4 text-xs tracking-wide text-muted-foreground"
+            className="pb-1.5 pl-2 pt-4 text-xs tracking-wide text-muted-foreground"
             key={i}
           >
             {item.title}
@@ -49,21 +54,21 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
             href={item.href}
             className={cn(
               buttonVariants({ variant: "ghost" }),
-              pathname === item.href.replace(/\/$/, "")
+              isActive
                 ? "bg-muted hover:bg-muted"
                 : "hover:bg-transparent hover:underline",
               "justify-start",
             )}
           >
             {item.icon && (
-              <div className="mr-2 rounded-md bg-card p-1.5">
+              <div className="mr-2 rounded-md bg-border p-1.5">
                 <item.icon size={16} strokeWidth={1.5} />
               </div>
             )}
             {item.title}
           </Link>
-        ),
-      )}
+        );
+      })}
     </nav>
   );
 }

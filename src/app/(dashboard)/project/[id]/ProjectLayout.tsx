@@ -17,6 +17,7 @@ export function ProjectLayout(props: {
 }) {
   const params = useParams();
   const projectPath = `/project/${params.id as string}`;
+  const servicePath = `${projectPath}/service/${params.serviceId as string}`;
 
   const project = api.projects.get.useQuery(
     { projectId: props.project.id },
@@ -33,9 +34,9 @@ export function ProjectLayout(props: {
     ).length ?? 0;
 
   const selectedService =
-    typeof params.serviceid === "string"
+    typeof params.serviceId === "string"
       ? project.data.services.find((service) =>
-          [service.id, service.name].includes(params.serviceid as string),
+          [service.id, service.name].includes(params.serviceId as string),
         )
       : undefined;
 
@@ -44,6 +45,7 @@ export function ProjectLayout(props: {
       data={{
         ...project.data,
         path: projectPath,
+        servicePath,
         selectedService,
       }}
     >

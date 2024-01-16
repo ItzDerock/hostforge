@@ -155,6 +155,21 @@ export async function buildDockerStackFile(
 
   return {
     version: "3.8",
-    services: swarmServices,
+    services: cleanObject(swarmServices),
   };
+}
+
+/**
+ * Small utility function to clean out keys with null value from an object.
+ * Useful because sometimes docker will treat `null` as '', causing issues.
+ */
+export function cleanObject<T extends Record<string, unknown>>(obj: T): T {
+  for (const key in obj) {
+    if (obj[key] === null) delete obj[key];
+    if (typeof obj[key] === "object")
+      // @ts-expect-error - idk how to type this any better
+      obj[key] = cleanObject(obj[key] as Record<string, unknown>) as unknown;
+  }
+
+  return obj;
 }

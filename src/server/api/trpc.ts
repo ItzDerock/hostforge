@@ -17,6 +17,7 @@ import { Session } from "../auth/Session";
 import { getDockerInstance } from "../docker";
 import { type Docker } from "../docker/docker";
 import logger from "../utils/logger";
+import { loggerMiddleware } from "./middleware/logger";
 // import { OpenApiMeta, generateOpenApiDocument } from "trpc-openapi";
 
 export type ExtendedRequest = IncomingMessage & {
@@ -163,7 +164,7 @@ export const createTRPCRouter = t.router;
  * guarantee that a user querying is authorized, but you can still access user session data if they
  * are logged in.
  */
-export const publicProcedure = t.procedure;
+export const publicProcedure = t.procedure.use(loggerMiddleware);
 
 /**
  * Authenticated procedure
@@ -171,7 +172,7 @@ export const publicProcedure = t.procedure;
  * This is the base piece you use to build new queries and mutations on your tRPC API. It guarantees
  * that a user querying is authorized, and you can access user session data.
  */
-export const authenticatedProcedure = t.procedure.use(
+export const authenticatedProcedure = t.procedure.use(loggerMiddleware).use(
   t.middleware(({ ctx, next }) => {
     if (!ctx.session) {
       throw new TRPCError({

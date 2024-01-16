@@ -70,4 +70,11 @@ export class Docker extends Dockerode {
       });
     });
   }
+
+  // /**
+  //  * Lists all containers on all nodes.
+  //  */
+  // public async listContainersOnAllNodes() {
+  //   this.listTasks
+  // }
 }

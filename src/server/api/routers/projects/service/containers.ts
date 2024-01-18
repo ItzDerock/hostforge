@@ -107,6 +107,42 @@ export const getServiceContainers = authenticatedProcedure
       nodesPromise,
     ]);
 
+    const allContainers = tasks
+      .sort((a, b) => {
+        // order in descending order of creation
+        if (a.CreatedAt && b.CreatedAt) {
+          return (
+            new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
+          );
+        } else {
+          return 0;
+        }
+      })
+      .map((task) => {
+        // find the associated container
+        const container = containers.find(
+          (container) =>
+            container.Id === task.Status?.ContainerStatus?.ContainerID,
+        );
+
+        const taskUpdatedAt = new Date(task.UpdatedAt ?? 0).getTime();
+        const containerCreatedAt = new Date(container?.Created ?? 0).getTime();
+
+        return {
+          status: container?.Status,
+          state: container?.State,
+          taskState: task.Status?.State,
+
+          containerId: task.Status?.ContainerStatus?.ContainerID ?? "",
+          containerCreatedAt,
+          taskUpdatedAt,
+
+          error: task.Status?.Err,
+          node: nodes.find((node) => node.ID === task.NodeID)?.Description
+            ?.Hostname,
+        };
+      });
+
     // format stats
     const formatted = {
       serviceId: service.ID,
@@ -116,43 +152,7 @@ export const getServiceContainers = authenticatedProcedure
         desired: service.Spec?.Mode?.Replicated?.Replicas ?? 0,
       },
 
-      containers: tasks
-        .sort((a, b) => {
-          // order in descending order of creation
-          if (a.CreatedAt && b.CreatedAt) {
-            return (
-              new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
-            );
-          } else {
-            return 0;
-          }
-        })
-        .map((task) => {
-          // find the associated container
-          const container = containers.find(
-            (container) =>
-              container.Id === task.Status?.ContainerStatus?.ContainerID,
-          );
-
-          const taskUpdatedAt = new Date(task.UpdatedAt ?? 0).getTime();
-          const containerCreatedAt = new Date(
-            container?.Created ?? 0,
-          ).getTime();
-
-          return {
-            status: container?.Status,
-            state: container?.State,
-            taskState: task.Status?.State,
-
-            containerId: task.Status?.ContainerStatus?.ContainerID ?? "",
-            containerCreatedAt,
-            taskUpdatedAt,
-
-            error: task.Status?.Err,
-            node: nodes.find((node) => node.ID === task.NodeID)?.Description
-              ?.Hostname,
-          };
-        }),
+      containers: allContainers,
     };
 
     // return formatted;

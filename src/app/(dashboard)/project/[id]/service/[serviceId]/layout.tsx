@@ -71,7 +71,7 @@ const sidebarNavItems = [
   {
     title: "Advanced",
     description: "Advanced settings",
-    href: "/replication",
+    href: "/advanced",
     icon: ServerCogIcon,
   },
 ] as const;

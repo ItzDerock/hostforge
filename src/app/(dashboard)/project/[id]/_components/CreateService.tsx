@@ -15,18 +15,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "~/components/ui/form";
+import { Form } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
-import { Required } from "~/components/ui/required";
-import { useForm } from "~/hooks/forms";
+import { FormField, useForm } from "~/hooks/forms";
 import { zDockerName } from "~/server/utils/zod";
 import { api } from "~/trpc/react";
 import { useProject } from "../_context/ProjectContext";
@@ -85,20 +76,11 @@ export function CreateService() {
               <FormField
                 control={form.control}
                 name="name"
+                friendlyName="Service Name"
+                description="This is the name of the service as it will appear in the Docker Compose file. It must be a valid Docker name."
+                required
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Service Name <Required />
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="my-service" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      This is the name of the service as it will appear in the
-                      Docker Compose file. It must be a valid Docker name.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
+                  <Input placeholder="my-service" {...field} />
                 )}
               />
 

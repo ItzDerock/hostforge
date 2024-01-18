@@ -18,7 +18,7 @@ export const loggerMiddleware = experimental_standaloneMiddleware().create(
           `${result.error.code} on ${chalk.yellow(type)}: ${chalk.yellow(
             path,
           )}`,
-          result.error,
+          result.error.message,
         );
       }
     }

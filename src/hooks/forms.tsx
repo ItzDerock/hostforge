@@ -8,8 +8,10 @@ import {
   type FieldValues,
   type Path,
   type UseFormProps,
+  type UseFormReturn,
 } from "react-hook-form";
 import { type z } from "zod";
+import { Button } from "~/components/ui/button";
 import {
   FormControl,
   FormDescription,
@@ -18,7 +20,9 @@ import {
   FormMessage,
   FormField as UIFormField,
 } from "~/components/ui/form";
+import { Input } from "~/components/ui/input";
 import { Required } from "~/components/ui/required";
+import { cn } from "~/utils/utils";
 
 // type UseFormData<TFieldValues, TContext> = UseFormProps<TFieldValues
 
@@ -60,7 +64,7 @@ export function useForm<TSchema extends z.Schema<any>, TContext = any>(
  * @param props
  * @returns
  */
-export function FormField<
+export function SimpleFormField<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TContext extends Path<TFieldValues> = Path<unknown>,
@@ -70,20 +74,23 @@ export function FormField<
   friendlyName: string | ReactNode;
   description?: string | ReactNode;
   required?: boolean;
-  render: ControllerProps<TFieldValues, TContext>["render"];
+  render?: ControllerProps<TFieldValues, TContext>["render"];
+  className?: string;
 }) {
+  const render = props.render ?? (({ field }) => <Input {...field} />);
+
   return (
     <UIFormField
       control={props.control}
       name={props.name}
       render={({ field }) => (
-        <FormItem>
+        <FormItem className={props.className}>
           <FormLabel>
             {props.friendlyName}
             {props.required && <Required />}
           </FormLabel>
           <FormControl>
-            {props.render({
+            {render({
               //@ts-expect-error i cant type this any better
               field,
               formState: props.control._formState,
@@ -100,5 +107,30 @@ export function FormField<
         </FormItem>
       )}
     />
+  );
+}
+
+export function FormSubmit({
+  form,
+  className,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  form: UseFormReturn<z.infer<any>>;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex flex-row items-center gap-2", className)}>
+      <Button type="submit" isLoading={form.formState.isSubmitting}>
+        Save
+      </Button>
+      {/* unsaved changes indicator */}
+      <p
+        className={`text-sm text-red-500 duration-200 animate-in fade-in ${
+          form.formState.isDirty ? "opacity-100" : "invisible opacity-0"
+        }`}
+      >
+        You have unsaved changes!
+      </p>
+    </div>
   );
 }

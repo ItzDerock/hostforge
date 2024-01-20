@@ -4,14 +4,48 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { env } from "~/env";
 import { projectMiddleware } from "~/server/api/middleware/project";
+import { serviceMiddleware } from "~/server/api/middleware/service";
 import { authenticatedProcedure, createTRPCRouter } from "~/server/api/trpc";
 import { service } from "~/server/db/schema";
-import { ServiceSource } from "~/server/db/types";
+import { DOCKER_DEPLOY_MODE_MAP, ServiceSource } from "~/server/db/types";
 import { zDockerName } from "~/server/utils/zod";
 import { getServiceContainers } from "./containers";
 
 export const serviceRouter = createTRPCRouter({
   containers: getServiceContainers,
+
+  get: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: "/api/projects/:projectId/services/:serviceId",
+        summary: "Get service",
+      },
+    })
+    .input(z.object({ projectId: z.string(), serviceId: z.string() }))
+    .use(projectMiddleware)
+    .use(serviceMiddleware)
+    .query(async ({ ctx }) => {
+      const fullServiceData = await ctx.db.query.service.findFirst({
+        where: eq(service.id, ctx.service.id),
+        with: {
+          domains: true,
+          ports: true,
+          volumes: true,
+          project: true,
+          sysctls: true,
+          ulimits: true,
+        },
+      });
+
+      assert(fullServiceData);
+
+      return {
+        ...fullServiceData,
+        zeroDowntime: fullServiceData.zeroDowntime === 1,
+        deployMode: DOCKER_DEPLOY_MODE_MAP[fullServiceData.deployMode],
+      };
+    }),
 
   create: authenticatedProcedure
     .meta({

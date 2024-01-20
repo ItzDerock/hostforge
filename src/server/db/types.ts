@@ -82,7 +82,7 @@ export enum DockerDeployMode {
 export const DOCKER_DEPLOY_MODE_MAP = {
   [DockerDeployMode.Global]: "global",
   [DockerDeployMode.Replicated]: "replicated",
-};
+} as const;
 
 export enum DockerRestartCondition {
   /**

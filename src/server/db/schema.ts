@@ -9,7 +9,7 @@ import {
   unique,
 } from "drizzle-orm/sqlite-core";
 import {
-  type DockerDeployMode,
+  DockerDeployMode,
   type DockerRestartCondition,
   type DockerVolumeType,
   type ServiceBuildMethod,
@@ -163,7 +163,10 @@ export const service = sqliteTable(
     entrypoint: text("entrypoint"),
     replicas: integer("replicas").default(1).notNull(),
     maxReplicasPerNode: integer("max_replicas_per_node"),
-    deployMode: integer("deploy_mode").$type<DockerDeployMode>(),
+    deployMode: integer("deploy_mode")
+      .$type<DockerDeployMode>()
+      .default(DockerDeployMode.Replicated)
+      .notNull(),
     zeroDowntime: integer("zero_downtime").default(0).notNull(),
 
     // deployment usage limits

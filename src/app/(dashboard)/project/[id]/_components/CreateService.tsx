@@ -17,7 +17,7 @@ import {
 } from "~/components/ui/dialog";
 import { Form } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
-import { FormField, useForm } from "~/hooks/forms";
+import { SimpleFormField, useForm } from "~/hooks/forms";
 import { zDockerName } from "~/server/utils/zod";
 import { api } from "~/trpc/react";
 import { useProject } from "../_context/ProjectContext";
@@ -73,7 +73,7 @@ export function CreateService() {
                 }),
               )}
             >
-              <FormField
+              <SimpleFormField
                 control={form.control}
                 name="name"
                 friendlyName="Service Name"

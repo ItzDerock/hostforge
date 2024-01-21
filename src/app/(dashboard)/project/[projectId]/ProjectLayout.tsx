@@ -16,7 +16,7 @@ export function ProjectLayout(props: {
   children: React.ReactNode;
 }) {
   const params = useParams();
-  const projectPath = `/project/${params.id as string}`;
+  const projectPath = `/project/${params.projectId as string}`;
   const servicePath = `${projectPath}/service/${params.serviceId as string}`;
 
   const project = api.projects.get.useQuery(

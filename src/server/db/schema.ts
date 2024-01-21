@@ -156,7 +156,7 @@ export const service = sqliteTable(
 
     // for github/git
     buildMethod: integer("build_method").$type<ServiceBuildMethod>(),
-    buildPath: text("build_path"),
+    buildPath: text("build_path").default("/").notNull(),
 
     // deployment settings
     command: text("command"),

@@ -17,12 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { Switch } from "~/components/ui/switch";
 import { FormSubmit, SimpleFormField, useForm } from "~/hooks/forms";
 import { DOCKER_DEPLOY_MODE_MAP, DockerDeployMode } from "~/server/db/types";
-import { useService } from "../_hooks/service";
+import { type RouterOutputs } from "~/trpc/shared";
 
 const formValidator = z.object({
-  replicas: z.number().int().positive(),
+  replicas: z.coerce.number().int().positive(),
   maxReplicasPerNode: z.number().int().positive().nullable(),
   deployMode: z.enum(["replicated", "global"]).nullable(),
   zeroDowntime: z.boolean().nullable(),
@@ -30,16 +31,19 @@ const formValidator = z.object({
   command: z.string().optional().nullable(),
 });
 
-export default function DeploymentSettings() {
-  const { data: service } = useService();
+export default function DeploymentSettings({
+  service,
+}: {
+  service: RouterOutputs["projects"]["services"]["get"];
+}) {
   const form = useForm(formValidator, {
     defaultValues: {
-      replicas: service?.replicas,
-      maxReplicasPerNode: service?.maxReplicasPerNode,
-      deployMode: service?.deployMode,
-      zeroDowntime: service?.zeroDowntime,
-      entrypoint: service?.entrypoint,
-      command: service?.command,
+      replicas: service.replicas,
+      maxReplicasPerNode: service.maxReplicasPerNode,
+      deployMode: service.deployMode,
+      zeroDowntime: service.zeroDowntime,
+      entrypoint: service.entrypoint,
+      command: service.command,
     },
   });
 
@@ -127,6 +131,7 @@ export default function DeploymentSettings() {
           name="zeroDowntime"
           friendlyName="Zero Downtime"
           description="When enabled, old containers will stay running until the new containers are online, alowing for zero-downtime deployments."
+          render={({ field }) => <Switch {...field} className="!my-4 block" />}
         />
 
         <FormSubmit form={form} className="col-span-2" />

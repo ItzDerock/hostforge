@@ -37,10 +37,12 @@ export function useForm<TSchema extends z.Schema<any>, TContext = any>(
   schema: TSchema,
   props: UseFormProps<z.infer<TSchema>, TContext> = {},
 ) {
-  return useFormHook<z.infer<TSchema>>({
+  const form = useFormHook<z.infer<TSchema>>({
     ...props,
     resolver: zodResolver(schema),
   });
+
+  return form;
 }
 
 /**

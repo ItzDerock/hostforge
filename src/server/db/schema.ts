@@ -10,7 +10,7 @@ import {
 } from "drizzle-orm/sqlite-core";
 import {
   DockerDeployMode,
-  type DockerRestartCondition,
+  DockerRestartCondition,
   type DockerVolumeType,
   type ServiceBuildMethod,
   type ServicePortType,
@@ -147,7 +147,9 @@ export const service = sqliteTable(
     dockerRegistryPassword: text("docker_registry_password"),
 
     // for github source
-    githubUrl: text("github_url"),
+    // https://github.com/{username}/{repo}
+    githubUsername: text("github_username"),
+    githubRepository: text("github_repository"),
     githubBranch: text("github_branch"),
 
     // for git source
@@ -170,26 +172,34 @@ export const service = sqliteTable(
     zeroDowntime: integer("zero_downtime").default(0).notNull(),
 
     // deployment usage limits
-    max_cpu: real("max_cpu"),
-    max_memory: text("max_memory"),
-    max_pids: integer("max_pids"),
+    max_cpu: real("max_cpu").default(0).notNull(),
+    max_memory: text("max_memory").default("0").notNull(),
+    max_pids: integer("max_pids").default(0).notNull(),
 
     // restart policy
-    restart: integer("restart").$type<DockerRestartCondition>(),
-    restartDelay: text("restart_delay"),
-    restartMaxAttempts: integer("restart_max_attempts"),
+    restart: integer("restart")
+      .$type<DockerRestartCondition>()
+      .default(DockerRestartCondition.OnFailure)
+      .notNull(),
+
+    // format: https://docs.docker.com/compose/compose-file/compose-file-v3/#specifying-durations
+    restartDelay: text("restart_delay").default("5s"),
+    restartMaxAttempts: integer("restart_max_attempts").default(-1).notNull(),
 
     // healthcheck
-    healtcheckEnabled: integer("healthcheck_enabled").default(0).notNull(),
+    healthcheckEnabled: integer("healthcheck_enabled").default(0).notNull(),
     healthcheckCommand: text("healthcheck_command"),
-    healthcheckInterval: text("healthcheck_interval"),
-    healthcheckTimeout: text("healthcheck_timeout"),
-    healthcheckRetries: integer("healthcheck_retries"),
-    healthcheckStartPeriod: text("healthcheck_start_period"),
+    healthcheckInterval: text("healthcheck_interval").default("30s").notNull(),
+    healthcheckTimeout: text("healthcheck_timeout").default("30s").notNull(),
+    healthcheckRetries: integer("healthcheck_retries").default(3).notNull(),
+    healthcheckStartPeriod: text("healthcheck_start_period")
+      .default("0s")
+      .notNull(),
 
     // logging
-    loggingMaxSize: text("logging_max_size"),
-    loggingMaxFiles: integer("logging_max_files"),
+    // https://docs.docker.com/config/containers/logging/json-file/#options
+    loggingMaxSize: text("logging_max_size").default("-1").notNull(),
+    loggingMaxFiles: integer("logging_max_files").default(1).notNull(),
 
     createdAt: integer("created_at").default(now).notNull(),
   },

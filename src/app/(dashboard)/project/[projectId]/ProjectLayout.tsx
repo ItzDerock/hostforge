@@ -97,7 +97,7 @@ export function ProjectLayout(props: {
         </Link>
 
         {/* services */}
-        <div className="flex flex-grow flex-row flex-wrap gap-2">
+        <div className="flex flex-grow flex-row flex-wrap gap-2 align-middle">
           {project.data.services.map((service) => (
             <ServiceCard service={service} key={service.id} />
           ))}

@@ -34,10 +34,7 @@ export const api = createTRPCClient<AppRouter>({
           // 4xx errors should not be logged as an error
           if (data.result instanceof TRPCClientError) {
             // this is used to check if the user is logged in, so we dont want to log it
-            if (
-              data.result.data?.httpStatus === 401 &&
-              data.path === "auth.me"
-            ) {
+            if (data.result.data?.httpStatus === 401) {
               return;
             }
 

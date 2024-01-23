@@ -60,7 +60,7 @@ export async function buildDockerStackFile(
         },
         resources: {
           limits: {
-            cpus: service.max_cpu ?? undefined,
+            cpus: service.max_cpu?.toString() ?? undefined,
             memory: service.max_memory ?? undefined,
             pids: service.max_pids ?? undefined,
           },
@@ -99,7 +99,7 @@ export async function buildDockerStackFile(
       })),
 
       healthcheck: {
-        disable: service.healtcheckEnabled === 0,
+        disable: service.healthcheckEnabled === 0,
         test: service.healthcheckCommand ?? undefined,
         interval: service.healthcheckInterval ?? undefined,
         timeout: service.healthcheckTimeout ?? undefined,
@@ -154,7 +154,10 @@ export async function buildDockerStackFile(
   }
 
   return {
-    version: "3.8",
+    // No version field as 3.x and 2.x are considered legacy
+    // https://docs.docker.com/compose/compose-file/04-version-and-name/
+    // docs state that version is purely for backwards compatibility
+    // version: "3.9",
     services: cleanObject(swarmServices),
   };
 }

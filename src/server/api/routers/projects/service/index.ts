@@ -8,7 +8,11 @@ import { projectMiddleware } from "~/server/api/middleware/project";
 import { serviceMiddleware } from "~/server/api/middleware/service";
 import { authenticatedProcedure, createTRPCRouter } from "~/server/api/trpc";
 import { service } from "~/server/db/schema";
-import { DOCKER_DEPLOY_MODE_MAP, ServiceSource } from "~/server/db/types";
+import {
+  DOCKER_DEPLOY_MODE_MAP,
+  DockerDeployMode,
+  ServiceSource,
+} from "~/server/db/types";
 import { zDockerDuration, zDockerImage, zDockerName } from "~/server/utils/zod";
 import { getServiceContainers } from "./containers";
 
@@ -74,6 +78,18 @@ export const serviceRouter = createTRPCRouter({
                   message: "Must be a valid git url. (Regex failed)",
                 },
               ),
+            deployMode: z
+              .nativeEnum(DockerDeployMode)
+              // or "replicated" | "global" and transform into 1 or 2
+              .or(
+                z
+                  .enum(["replicated", "global"])
+                  .transform((val) =>
+                    val === "replicated"
+                      ? DockerDeployMode.Replicated
+                      : DockerDeployMode.Global,
+                  ),
+              ),
             zeroDowntime: z.boolean().transform((val) => (val ? 1 : 0)),
             restartDelay: zDockerDuration,
             healthcheckEnabled: z.boolean().transform((val) => (val ? 1 : 0)),
@@ -98,13 +114,20 @@ export const serviceRouter = createTRPCRouter({
     .use(projectMiddleware)
     .use(serviceMiddleware)
     .mutation(async ({ ctx, input }) => {
+      // gotta keep TS happy, can't delete properties from input directly
+      const queryUpdate: Omit<typeof input, "projectId" | "serviceId"> & {
+        projectId?: string;
+        serviceId?: string;
+        id?: string;
+      } = structuredClone(input);
+
+      delete queryUpdate.projectId;
+      delete queryUpdate.serviceId;
+      delete queryUpdate.id;
+
       await ctx.db
         .update(service)
-        .set({
-          ...input,
-          projectId: undefined,
-          id: undefined,
-        })
+        .set(queryUpdate)
         .where(eq(service.id, ctx.service.id))
         .execute();
 

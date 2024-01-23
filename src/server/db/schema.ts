@@ -184,7 +184,7 @@ export const service = sqliteTable(
 
     // format: https://docs.docker.com/compose/compose-file/compose-file-v3/#specifying-durations
     restartDelay: text("restart_delay").default("5s"),
-    restartMaxAttempts: integer("restart_max_attempts").default(-1).notNull(),
+    restartMaxAttempts: integer("restart_max_attempts"),
 
     // healthcheck
     healthcheckEnabled: integer("healthcheck_enabled").default(0).notNull(),

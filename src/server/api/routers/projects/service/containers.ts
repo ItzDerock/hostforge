@@ -4,6 +4,50 @@ import { projectMiddleware } from "~/server/api/middleware/project";
 import { serviceMiddleware } from "~/server/api/middleware/service";
 import { authenticatedProcedure } from "~/server/api/trpc";
 import { type paths as DockerAPITypes } from "~/server/docker/types";
+import logger from "~/server/utils/logger";
+import { isDefined } from "~/utils/utils";
+
+const zContainerDetails = z.object({
+  containerId: z.string(),
+  containerCreatedAt: z.number(),
+
+  error: z.string().optional(),
+  node: z.string().optional(),
+
+  cpu: z.number().optional(),
+  memory: z.number().optional(),
+  network: z
+    .object({
+      tx: z.number().optional(),
+      rx: z.number().optional(),
+    })
+    .optional(),
+});
+
+const zTaskDetails = z.object({
+  taskMessage: z.string().optional(),
+  taskState: z
+    .enum([
+      "complete",
+      "new",
+      "allocated",
+      "pending",
+      "assigned",
+      "accepted",
+      "preparing",
+      "ready",
+      "starting",
+      "running",
+      "shutdown",
+      "failed",
+      "rejected",
+      "remove",
+      "orphaned",
+    ])
+    .optional(),
+
+  slot: z.number(),
+});
 
 const getServiceContainersOutput = z.object({
   replication: z.object({
@@ -11,44 +55,18 @@ const getServiceContainersOutput = z.object({
     desired: z.number(),
   }),
 
-  containers: z.array(
+  latest: z.array(
     z.object({
-      status: z
-        .string({
-          description:
-            "Same as [].Status https://docs.docker.com/engine/api/v1.43/#tag/Container/operation/ContainerList",
-        })
-        .optional(),
-      state: z
-        .string({
-          description:
-            "Same as [].State https://docs.docker.com/engine/api/v1.43/#tag/Container/operation/ContainerList",
-        })
-        .optional(),
-      taskState: z.enum([
-        "complete",
-        "new",
-        "allocated",
-        "pending",
-        "assigned",
-        "accepted",
-        "preparing",
-        "ready",
-        "starting",
-        "running",
-        "shutdown",
-        "failed",
-        "rejected",
-        "remove",
-        "orphaned",
-      ]),
+      slot: z.number(),
+      container: zContainerDetails.optional(),
+      task: zTaskDetails,
 
-      containerId: z.string(),
-      containerCreatedAt: z.number(),
-      taskUpdatedAt: z.number(),
-
-      error: z.string().optional(),
-      node: z.string().optional(),
+      previous: z.array(
+        z.object({
+          container: zContainerDetails.optional(),
+          task: zTaskDetails,
+        }),
+      ),
     }),
   ),
 });
@@ -68,10 +86,9 @@ export const getServiceContainers = authenticatedProcedure
     }),
   )
   .output(getServiceContainersOutput)
-  // .output(z.unknown())
   .use(projectMiddleware)
   .use(serviceMiddleware)
-  .query(async ({ ctx, input }) => {
+  .query(async ({ ctx }) => {
     // get docker service stats
     const service = (await ctx.docker
       .getService(`${ctx.project.internalName}_${ctx.service.name}`)
@@ -88,13 +105,26 @@ export const getServiceContainers = authenticatedProcedure
     });
 
     // and find the current task ID for this service
-    const tasksPromise = ctx.docker.listTasks({
-      filters: {
-        service: [service.ID],
-      },
-    }) as Promise<
-      DockerAPITypes["/tasks"]["get"]["responses"]["200"]["schema"]
-    >;
+    const tasksPromise = (
+      ctx.docker.listTasks({
+        filters: {
+          service: [service.ID],
+        },
+      }) as Promise<
+        DockerAPITypes["/tasks"]["get"]["responses"]["200"]["schema"]
+      >
+    ).then((tasks) =>
+      tasks.sort((a, b) => {
+        // latest tasks go first
+        if (a.UpdatedAt && b.UpdatedAt) {
+          return (
+            new Date(b.UpdatedAt).getTime() - new Date(a.UpdatedAt).getTime()
+          );
+        } else {
+          return 0;
+        }
+      }),
+    );
 
     // and list all nodes
     const nodesPromise = ctx.docker.listNodes() as Promise<
@@ -107,56 +137,90 @@ export const getServiceContainers = authenticatedProcedure
       nodesPromise,
     ]);
 
-    const allContainers = tasks
-      .sort((a, b) => {
-        // order in descending order of creation
-        if (a.CreatedAt && b.CreatedAt) {
-          return (
-            new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
-          );
-        } else {
-          return 0;
-        }
-      })
-      .map((task) => {
-        // find the associated container
+    // format the tasks into { container, task } objects
+    const tasksWithContainers = await Promise.all(
+      tasks.map(async (task) => {
         const container = containers.find(
           (container) =>
             container.Id === task.Status?.ContainerStatus?.ContainerID,
         );
 
-        const taskUpdatedAt = new Date(task.UpdatedAt ?? 0).getTime();
-        const containerCreatedAt = new Date(container?.Created ?? 0).getTime();
+        if (task.Slot === undefined) {
+          logger.warn("Task has no slot: ", task);
+          return;
+        }
+
+        const containerStats =
+          task.Status?.ContainerStatus?.ContainerID === undefined
+            ? null
+            : await ctx.docker
+                .getContainer(task.Status.ContainerStatus.ContainerID)
+                .stats({ "one-shot": true, stream: false });
 
         return {
-          status: container?.Status,
-          state: container?.State,
-          taskState: task.Status?.State,
+          slot: task.Slot,
 
-          containerId: task.Status?.ContainerStatus?.ContainerID ?? "",
-          containerCreatedAt,
-          taskUpdatedAt,
+          container: containerStats
+            ? {
+                containerId: task.Status?.ContainerStatus?.ContainerID ?? "",
+                containerCreatedAt: new Date(
+                  container ? container.Created * 1000 : task.CreatedAt ?? 0,
+                ).getTime(),
+                error: task.Status?.Err,
+                node: nodes.find((node) => node.ID === task.NodeID)?.Description
+                  ?.Hostname,
 
-          error: task.Status?.Err,
-          node: nodes.find((node) => node.ID === task.NodeID)?.Description
-            ?.Hostname,
-        };
-      });
+                cpu: containerStats?.cpu_stats?.cpu_usage?.total_usage,
+                memory: containerStats?.memory_stats?.usage,
+                network: {
+                  tx: containerStats?.networks?.eth0?.tx_bytes,
+                  rx: containerStats?.networks?.eth0?.rx_bytes,
+                },
+              }
+            : undefined,
 
-    // format stats
-    const formatted = {
-      serviceId: service.ID,
+          task: {
+            taskMessage: task.Status?.Message,
+            taskState: task.Status?.State,
+            slot: task.Slot,
+          },
+        } satisfies Omit<
+          z.infer<typeof getServiceContainersOutput>["latest"][number],
+          "previous"
+        >;
+      }),
+    ).then((tasks) => tasks.filter(isDefined));
 
+    // find the latest task for each slot
+    const latestTasks: Record<
+      number,
+      (typeof tasksWithContainers)[number]
+      // DockerAPITypes["/tasks"]["get"]["responses"]["200"]["schema"][0]
+    > = {};
+
+    for (const task of tasksWithContainers) {
+      if (!task) continue;
+
+      if (!latestTasks[task.slot]) {
+        latestTasks[task.slot] = task;
+      }
+    }
+
+    const result = Object.values(latestTasks).map((task) => {
+      return {
+        ...task,
+        previous: tasksWithContainers
+          .filter((t) => t.slot === task.slot)
+          .slice(1),
+      };
+    });
+
+    return getServiceContainersOutput.parse({
       replication: {
         running: service.Spec?.Mode?.Replicated?.Replicas ?? 0,
         desired: service.Spec?.Mode?.Replicated?.Replicas ?? 0,
       },
 
-      containers: allContainers,
-    };
-
-    // return formatted;
-
-    // I don't feel like writing a lot of assert's because for some reason all the types are `| undefined` and I don't know why
-    return getServiceContainersOutput.parse(formatted);
+      latest: result,
+    });
   });

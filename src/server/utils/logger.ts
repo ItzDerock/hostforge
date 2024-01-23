@@ -25,7 +25,11 @@ const logger = createLogger({
             const splat = others[SPLAT] as unknown[];
             if (splat.length > 0) {
               const formattedSplat = splat
-                .map((s) => util.inspect(s, { colors: true, showHidden: true }))
+                .map((s) =>
+                  typeof s === "string"
+                    ? s
+                    : util.inspect(s, { colors: true, showHidden: true }),
+                )
                 .flatMap((s) => s.split("\n"))
                 .map((s) => `    ${s}`)
                 .join("\n");

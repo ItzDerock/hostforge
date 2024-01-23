@@ -4,6 +4,13 @@ import Dockerode from "dockerode";
 import logger from "../utils/logger";
 
 export class Docker extends Dockerode {
+  static buildContainerPrefixFromName(
+    projectName: string,
+    serviceName: string,
+  ) {
+    return `${projectName}_${serviceName}`;
+  }
+
   private log = logger.child({ module: "docker" });
 
   /**

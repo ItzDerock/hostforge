@@ -20,13 +20,14 @@ import {
 import { Switch } from "~/components/ui/switch";
 import { FormSubmit, SimpleFormField, useForm } from "~/hooks/forms";
 import { DOCKER_DEPLOY_MODE_MAP, DockerDeployMode } from "~/server/db/types";
+import { api } from "~/trpc/react";
 import { type RouterOutputs } from "~/trpc/shared";
 
 const formValidator = z.object({
   replicas: z.coerce.number().int().positive(),
   maxReplicasPerNode: z.number().int().positive().nullable(),
-  deployMode: z.enum(["replicated", "global"]).nullable(),
-  zeroDowntime: z.boolean().nullable(),
+  deployMode: z.enum(["replicated", "global"]),
+  zeroDowntime: z.boolean(),
   entrypoint: z.string().optional().nullable(),
   command: z.string().optional().nullable(),
 });
@@ -36,6 +37,7 @@ export default function DeploymentSettings({
 }: {
   service: RouterOutputs["projects"]["services"]["get"];
 }) {
+  const update = api.projects.services.update.useMutation();
   const form = useForm(formValidator, {
     defaultValues: {
       replicas: service.replicas,
@@ -51,8 +53,11 @@ export default function DeploymentSettings({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(async (data) => {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          console.log(data);
+          return update.mutateAsync({
+            serviceId: service.id,
+            projectId: service.projectId,
+            ...data,
+          });
         })}
         className="grid grid-cols-2 gap-4"
       >

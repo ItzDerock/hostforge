@@ -2,6 +2,7 @@
 
 import { formatDistanceToNowStrict } from "date-fns";
 import { ClipboardIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { CgSpinner } from "react-icons/cg";
 import { FaGear } from "react-icons/fa6";
 import { toast } from "sonner";
@@ -17,16 +18,28 @@ import { TableCell, TableRow } from "~/components/ui/table";
 import { type RouterOutputs } from "~/trpc/shared";
 
 export function ContainerEntry({
-  data: { container, previous, task, slot },
+  data: { container, previous, task },
 }: {
   data: RouterOutputs["projects"]["services"]["containers"]["latest"][number];
 }) {
   const mainContainer = container ?? previous[0]?.container;
-  const isRedeploying = container === undefined;
+  const isRedeploying =
+    container === undefined || task.taskState === "starting";
+
+  const [uptimeText, setUptimeText] = useState<string | null>(null);
+  useEffect(() => {
+    if (!mainContainer) return;
+    const interval = setInterval(() => {
+      setUptimeText(
+        formatDistanceToNowStrict(mainContainer.containerCreatedAt),
+      );
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [mainContainer]);
 
   return (
     <>
-      <TableRow key={slot}>
+      <TableRow className="!border-b-0">
         <TableCell
           className="cursor-pointer font-mono text-sm text-muted-foreground"
           onClick={() => {
@@ -65,30 +78,17 @@ export function ContainerEntry({
                 strokeWidth={1.5}
                 className="py-auto mr-2 inline-block animate-spin stroke-muted-foreground"
               />
-              Redeploying
-              {previous[0]?.container?.error && (
-                <span>
-                  {" "}
-                  (previous container errored with:{" "}
-                  {previous[0]?.container?.error})
-                </span>
-              )}
+              Container Deploying
             </span>
           ) : (
-            task.taskState ?? task.taskMessage ?? "unknown"
-          )}
-
-          {container?.error && (
-            <span className="text-red-500">
-              {" "}
-              (errored with: {container.error})
+            <span className="capitalize">
+              {task.taskState ?? task.taskMessage ?? "unknown"}
             </span>
           )}
         </TableCell>
+
+        <TableCell>{uptimeText ?? "N/A"}</TableCell>
         <TableCell>{mainContainer?.node ?? "unknown"}</TableCell>
-        <TableCell>
-          {formatDistanceToNowStrict(mainContainer?.containerCreatedAt ?? 0)}
-        </TableCell>
         <TableCell>{mainContainer?.cpu ?? "?"}</TableCell>
         <TableCell>{mainContainer?.memory ?? "?"}</TableCell>
         <TableCell>
@@ -110,6 +110,23 @@ export function ContainerEntry({
           </DropdownMenu>
         </TableCell>
       </TableRow>
+
+      {container?.error !== undefined ||
+      previous[0]?.container?.error !== undefined ? (
+        <TableRow className="hover:bg-inherit">
+          <TableCell></TableCell>
+          <TableCell colSpan={8} className="mb-4 text-red-500">
+            {container?.error
+              ? "Container exited with:"
+              : "Previous container exited with:"}{" "}
+            <br />
+            <pre className="whitespace-pre-wrap font-mono text-xs">
+              {container?.error ?? previous[0]?.container?.error}
+            </pre>
+            <br />
+          </TableCell>
+        </TableRow>
+      ) : undefined}
     </>
   );
 }

@@ -110,7 +110,8 @@ export async function buildDockerStackFile(
       logging: {
         driver: "json-file",
         options: {
-          "max-size": service.loggingMaxSize,
+          "max-size":
+            service.loggingMaxSize === "-1" ? null : service.loggingMaxSize,
           "max-file": service.loggingMaxFiles,
         },
       },

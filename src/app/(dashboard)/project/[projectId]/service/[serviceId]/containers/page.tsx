@@ -30,11 +30,11 @@ export default function Containers() {
       <TableHeader>
         <TableRow>
           <TableHead className="w-36">Container ID</TableHead>
-          <TableHead className="w-full">Status</TableHead>
-          <TableHead>Node</TableHead>
+          <TableHead className="w-[80%]">Status</TableHead>
           <TableHead>Uptime</TableHead>
-          <TableHead>CPU Usage</TableHead>
-          <TableHead>Memory Usage</TableHead>
+          <TableHead>Node</TableHead>
+          <TableHead>CPU</TableHead>
+          <TableHead>Memory</TableHead>
           <TableHead>Network (RX/TX)</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>

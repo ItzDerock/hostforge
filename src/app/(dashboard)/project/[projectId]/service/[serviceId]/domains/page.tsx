@@ -1,7 +1,9 @@
+import DomainsList from "./DomainsList";
+
 export default function DomainsPage() {
   return (
     <div>
-      <Form
+      <DomainsList />
     </div>
-  )
+  );
 }

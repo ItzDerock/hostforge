@@ -115,10 +115,12 @@ export function SimpleFormField<
 export function FormSubmit({
   form,
   className,
+  hideUnsavedChangesIndicator,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   form: UseFormReturn<z.infer<any>>;
   className?: string;
+  hideUnsavedChangesIndicator?: boolean;
 }) {
   return (
     <div className={cn("flex flex-row items-center gap-2", className)}>
@@ -126,13 +128,28 @@ export function FormSubmit({
         Save
       </Button>
       {/* unsaved changes indicator */}
-      <p
-        className={`text-sm text-red-500 duration-200 animate-in fade-in ${
-          form.formState.isDirty ? "opacity-100" : "invisible opacity-0"
-        }`}
-      >
-        You have unsaved changes!
-      </p>
+      {!hideUnsavedChangesIndicator && (
+        <FormUnsavedChangesIndicator form={form} />
+      )}
     </div>
+  );
+}
+
+export function FormUnsavedChangesIndicator({
+  form,
+  className,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  form: UseFormReturn<z.infer<any>>;
+  className?: string;
+}) {
+  return (
+    <p
+      className={`text-sm text-red-500 duration-200 animate-in fade-in ${
+        form.formState.isDirty ? "opacity-100" : "invisible opacity-0"
+      } ${className}`}
+    >
+      You have unsaved changes!
+    </p>
   );
 }

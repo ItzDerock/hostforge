@@ -97,12 +97,12 @@ export default function DomainsList(
               )}
             />
             {/* toggle */}
-            {/* <SimpleFormField
+            <SimpleFormField
               control={form.control}
               name={`domains.${index}.forceSSL`}
               friendlyName="Use HTTPS"
               render={({ field }) => <Switch {...field} className="block" />}
-            /> */}
+            />
 
             <SimpleFormField
               control={form.control}

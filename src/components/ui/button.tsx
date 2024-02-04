@@ -60,6 +60,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const Comp = asChild ? Slot : "button";
     const Child = asChild ? "span" : React.Fragment;
+    const iconPadding = children ? " mr-2" : "";
 
     return (
       <Comp
@@ -73,8 +74,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isLoading || props.disabled}
       >
         <Child>
-          {isLoading && <CgSpinner className="mr-2 animate-spin" />}
-          {Icon && !isLoading && <Icon className="mr-2" size={18} />}
+          {isLoading && <CgSpinner className={"animate-spin" + iconPadding} />}
+          {Icon && !isLoading && <Icon className={iconPadding} size={18} />}
 
           {children}
         </Child>

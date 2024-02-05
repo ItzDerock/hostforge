@@ -18,3 +18,10 @@ export const zDockerDuration = z
   .regex(/(?:[\d.]+h)?(?:[\d.]+m)?(?:[\d.]+s)?/, {
     message: "Must be a valid duration. (Regex failed)",
   });
+
+export const zDomain = z
+  .string()
+  .regex(
+    /(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]/,
+    { message: "Invalid domain name. (Regex)" },
+  );

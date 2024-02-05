@@ -169,12 +169,14 @@ export const service = sqliteTable(
       .$type<DockerDeployMode>()
       .default(DockerDeployMode.Replicated)
       .notNull(),
-    zeroDowntime: integer("zero_downtime").default(0).notNull(),
+    zeroDowntime: integer("zero_downtime", { mode: "boolean" })
+      .default(false)
+      .notNull(),
 
     // deployment usage limits
     max_cpu: real("max_cpu").default(0).notNull(),
     max_memory: text("max_memory").default("0").notNull(),
-    max_pids: integer("max_pids").default(0).notNull(),
+    max_pids: integer("max_pids", { mode: "boolean" }).default(false).notNull(),
 
     // restart policy
     restart: integer("restart")
@@ -187,7 +189,9 @@ export const service = sqliteTable(
     restartMaxAttempts: integer("restart_max_attempts"),
 
     // healthcheck
-    healthcheckEnabled: integer("healthcheck_enabled").default(0).notNull(),
+    healthcheckEnabled: integer("healthcheck_enabled", { mode: "boolean" })
+      .default(false)
+      .notNull(),
     healthcheckCommand: text("healthcheck_command"),
     healthcheckInterval: text("healthcheck_interval").default("30s").notNull(),
     healthcheckTimeout: text("healthcheck_timeout").default("30s").notNull(),
@@ -244,8 +248,8 @@ export const serviceDomain = sqliteTable("service_domain", {
 
   domain: text("domain").notNull(),
   internalPort: integer("internal_port").notNull(),
-  https: integer("https").default(0).notNull(),
-  forceSSL: integer("force_ssl").default(0).notNull(),
+  https: integer("https", { mode: "boolean" }).default(false).notNull(),
+  forceSSL: integer("force_ssl", { mode: "boolean" }).default(false).notNull(),
 });
 
 export const serviceDomainRelations = relations(serviceDomain, ({ one }) => ({

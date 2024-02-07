@@ -114,8 +114,8 @@ dependencies:
     specifier: ^1.9.6
     version: 1.9.6
   framer-motion:
-    specifier: ^10.17.6
-    version: 10.17.6(react-dom@18.2.0)(react@18.2.0)
+    specifier: ^11.0.3
+    version: 11.0.3(react-dom@18.2.0)(react@18.2.0)
   ipaddr.js:
     specifier: ^2.1.0
     version: 2.1.0
@@ -5046,8 +5046,8 @@ packages:
       map-cache: 0.2.2
     dev: true
 
-  /framer-motion@10.17.6(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-WPPm0vLGTbhLOsD7v1fEv3yjX1RrmzsVI3CZ6dpBJvVb7wKMA6mpZsQzTYiSUDz/YIlvTUHHY0Jum7iEHnLHDA==}
+  /framer-motion@11.0.3(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-6x2poQpIWBdbZwLd73w6cKZ1I9IEPIU94C6/Swp1Zt3LJ+sB5bPe1E2wC6EH5hSISXNkMJ4afH7AdwS7MrtkWw==}
     peerDependencies:
       react: ^18.0.0
       react-dom: ^18.0.0

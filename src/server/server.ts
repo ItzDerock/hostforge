@@ -146,6 +146,7 @@ server.on("upgrade", (req, socket, head) => {
 });
 
 // start the server
+logger.debug(`Attempting to listen on ${env.HOSTNAME}:${env.PORT}`);
 server.listen(env.PORT, env.HOSTNAME, () => {
   logger.info(`🚀 Hostforge`);
   logger.info(`│  Server listening on ${env.HOSTNAME}:${env.PORT}`);

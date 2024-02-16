@@ -17,7 +17,7 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", "Segoe UI", "sans-serif"],
+        sans: ["var(--font-sans)", "Segoe UI", "sans"],
       },
       colors: {
         border: "hsl(var(--border))",

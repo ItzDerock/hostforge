@@ -3,13 +3,15 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, CogIcon, TrashIcon } from "lucide-react";
 import { forwardRef, useState } from "react";
-import { type UseFieldArrayReturn, type UseFormReturn } from "react-hook-form";
+import { useFormContext, type UseFieldArrayReturn } from "react-hook-form";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Switch } from "~/components/ui/switch";
 import { SimpleFormField } from "~/hooks/forms";
+import { type DomainsListForm } from "../DomainsList";
 
 type FieldData = {
+  id: string; // internal ID for react-form-hook
   domainId: string;
   domain: string;
   internalPort: number;
@@ -20,47 +22,29 @@ type FieldData = {
 const DomainEntry = forwardRef<
   HTMLDivElement,
   {
-    form: UseFormReturn<
-      {
-        domains: FieldData[];
-      },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      any,
-      undefined
-    >;
-
-    domains: UseFieldArrayReturn<
-      {
-        domains: FieldData[];
-      },
-      "domains",
-      "id"
-    >;
-
     field: FieldData;
     index: number;
+    domains: UseFieldArrayReturn<DomainsListForm, "domains", "id">;
   }
->(({ form, domains, field, index }, ref) => {
+>(({ field, index, domains }, ref) => {
+  const form = useFormContext();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <motion.div
       ref={ref}
-      layout
+      // layout
       initial={{ opacity: 0, scale: 0.5 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.5 }}
       transition={{
         duration: 0.4,
         type: "spring",
+        bounce: 0.15,
       }}
       key={field.domainId}
     >
       <Card className="p-4">
-        <h1>
-          Rendering {field.domainId ?? "undefined???"} at index {index}
-        </h1>
-
         <div className="flex flex-row gap-4">
           <SimpleFormField
             control={form.control}
@@ -92,6 +76,7 @@ const DomainEntry = forwardRef<
           <div className="flex flex-row gap-2 pt-8">
             <Button
               variant="secondary"
+              type="button"
               icon={CogIcon}
               className="mr-2"
               onClick={() => {
@@ -101,8 +86,10 @@ const DomainEntry = forwardRef<
 
             <Button
               variant="destructive"
+              type="button"
               icon={TrashIcon}
               onClick={() => {
+                console.log("remove domain: ", field.domainId);
                 domains.remove(index);
               }}
             />
@@ -111,31 +98,21 @@ const DomainEntry = forwardRef<
 
         <AnimatePresence>
           {isOpen && (
-            <motion.div className="flex flex-col gap-4">
+            <motion.div className="mt-4 grid grid-cols-2 rounded-md bg-background p-8">
+              <h1 className="col-span-2 pb-4">Advanced Settings</h1>
+
               <SimpleFormField
                 control={form.control}
-                name={`domains.${index}.https`}
-                friendlyName="HTTPS"
+                name={`domains.${index}.forceSSL`}
+                friendlyName="Force SSL"
                 render={({ field }) => (
                   <div className="pt-2">
-                    <Switch {...field} className="mx-auto block" />
+                    <Switch {...field} className="mr-auto block" />
                   </div>
                 )}
               />
 
-              <SimpleFormField
-                control={form.control}
-                name={`domains.${index}.domain`}
-                friendlyName="Domain"
-                className="flex-1"
-              />
-
-              <SimpleFormField
-                control={form.control}
-                name={`domains.${index}.internalPort`}
-                friendlyName="Internal Port"
-                className="w-60"
-              />
+              {/* TODO: allow custom SSL certificates */}
             </motion.div>
           )}
         </AnimatePresence>

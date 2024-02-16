@@ -155,7 +155,17 @@ export const getServiceContainers = authenticatedProcedure
             ? null
             : await ctx.docker
                 .getContainer(task.Status.ContainerStatus.ContainerID)
-                .stats({ "one-shot": true, stream: false });
+                .stats({ "one-shot": true, stream: false })
+                .catch((err) => {
+                  if (
+                    typeof err === "object" &&
+                    "statusCode" in err &&
+                    // TODO: figure out why TS isn't happy
+                    err.statusCode === 404
+                  )
+                    return null;
+                  throw err;
+                });
 
         return {
           slot: task.Slot,

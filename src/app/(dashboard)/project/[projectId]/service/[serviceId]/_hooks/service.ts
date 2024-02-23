@@ -27,13 +27,8 @@ export function useService(
     },
     {
       initialData:
-        // use(
-        //   apiServer.projects.services.get.query({
-        //       projectId: project.id,
-        //       serviceId: serviceId,
-        //     })
-        // ),
         defaultData instanceof Promise ? use(defaultData) : defaultData,
+      staleTime: 30_000,
     },
   );
 }

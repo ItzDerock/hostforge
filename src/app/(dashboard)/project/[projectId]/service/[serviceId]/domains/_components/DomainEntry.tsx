@@ -12,7 +12,7 @@ import { type DomainsListForm } from "../DomainsList";
 
 type FieldData = {
   id: string; // internal ID for react-form-hook
-  domainId: string;
+  domainId?: string;
   domain: string;
   internalPort: number;
   https: boolean;

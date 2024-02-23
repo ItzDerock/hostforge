@@ -11,6 +11,7 @@ import { Button } from "~/components/ui/button";
 import { Form } from "~/components/ui/form";
 import { FormSubmit } from "~/hooks/forms";
 import { api } from "~/trpc/react";
+import { type RouterOutputs } from "~/trpc/shared";
 import { useService } from "../_hooks/service";
 import DomainEntry from "./_components/DomainEntry";
 
@@ -34,14 +35,18 @@ const formValidator = z.object({
 
 export type DomainsListForm = z.infer<typeof formValidator>;
 
-export default function DomainsList() {
-  const service = useService();
+export default function DomainsList({
+  defaultData,
+}: {
+  defaultData: RouterOutputs["projects"]["services"]["get"];
+}) {
+  const service = useService(undefined, defaultData);
   const updateDomain = api.projects.services.updateDomain.useMutation();
   const deleteDomain = api.projects.services.deleteDomain.useMutation();
 
   const form = useForm<z.infer<typeof formValidator>>({
     defaultValues: {
-      domains: [],
+      domains: service.data?.domains,
     },
 
     resolver: zodResolver(formValidator),

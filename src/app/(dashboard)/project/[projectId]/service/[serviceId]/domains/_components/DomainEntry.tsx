@@ -1,39 +1,35 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowRight, CogIcon, TrashIcon } from "lucide-react";
-import { forwardRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { forwardRef } from "react";
 import { useFormContext, type UseFieldArrayReturn } from "react-hook-form";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Switch } from "~/components/ui/switch";
 import { SimpleFormField } from "~/hooks/forms";
+import { useProject } from "../../../../_context/ProjectContext";
 import { type DomainsListForm } from "../DomainsList";
-
-type FieldData = {
-  id: string; // internal ID for react-form-hook
-  domainId?: string;
-  domain: string;
-  internalPort: number;
-  https: boolean;
-  forceSSL: boolean;
-};
 
 const DomainEntry = forwardRef<
   HTMLDivElement,
   {
-    field: FieldData;
+    field: DomainsListForm["domains"][number] & {
+      id: string; // react-hook-form adds this
+    };
     index: number;
     domains: UseFieldArrayReturn<DomainsListForm, "domains", "id">;
   }
 >(({ field, index, domains }, ref) => {
   const form = useFormContext();
-  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const project = useProject();
 
   return (
     <motion.div
       ref={ref}
-      // layout
       initial={{ opacity: 0, scale: 0.5 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.5 }}
@@ -80,7 +76,16 @@ const DomainEntry = forwardRef<
               icon={CogIcon}
               className="mr-2"
               onClick={() => {
-                setIsOpen(!isOpen);
+                const domains = pathname.trim().endsWith("/domains")
+                  ? pathname.trim()
+                  : pathname.replace(/\/[A-z0-9]*?$/, ``);
+
+                console.log(`${domains}/${field.domainId ?? field.id}`);
+                router.push(
+                  `${project.servicePath}/domains/${
+                    field.domainId ?? field.id
+                  }`,
+                );
               }}
             />
 
@@ -95,27 +100,6 @@ const DomainEntry = forwardRef<
             />
           </div>
         </div>
-
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div className="mt-4 grid grid-cols-2 rounded-md bg-background p-8">
-              <h1 className="col-span-2 pb-4">Advanced Settings</h1>
-
-              <SimpleFormField
-                control={form.control}
-                name={`domains.${index}.forceSSL`}
-                friendlyName="Force SSL"
-                render={({ field }) => (
-                  <div className="pt-2">
-                    <Switch {...field} className="mr-auto block" />
-                  </div>
-                )}
-              />
-
-              {/* TODO: allow custom SSL certificates */}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </Card>
     </motion.div>
   );

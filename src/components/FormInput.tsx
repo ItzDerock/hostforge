@@ -1,4 +1,4 @@
-import { GetInputProps, UseFormReturnType } from "@mantine/form/lib/types";
+import { type UseFormReturnType } from "@mantine/form/lib/types";
 import { Label } from "./ui/label";
 import { Required } from "./ui/required";
 

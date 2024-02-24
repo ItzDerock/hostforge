@@ -1,9 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { PlusIcon } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { uuidv7 } from "uuidv7";
 import { z } from "zod";
@@ -37,8 +37,10 @@ export type DomainsListForm = z.infer<typeof formValidator>;
 
 export default function DomainsList({
   defaultData,
+  children,
 }: {
   defaultData: RouterOutputs["projects"]["services"]["get"];
+  children: ReactNode;
 }) {
   const service = useService(undefined, defaultData);
   const updateDomain = api.projects.services.updateDomain.useMutation();
@@ -64,11 +66,6 @@ export default function DomainsList({
       service.data?.domains.map((d) => ({ ...d, domainId: d.id })) ?? [],
     );
   }, [form, service.data?.domains]);
-
-  console.log(
-    "Rendering fields with ids: ",
-    domainsForm.fields.map((field) => field.id),
-  );
 
   return (
     <Form {...form}>
@@ -153,8 +150,6 @@ export default function DomainsList({
                 internalPort: 8080,
               };
 
-              console.log("add domain: ", domain.domainId);
-
               domainsForm.append(domain);
             }}
           >
@@ -164,6 +159,8 @@ export default function DomainsList({
           {/* <FormUnsavedChangesIndicator form={form} /> */}
         </motion.div>
         {/* </AnimatePresence> */}
+
+        <AnimatePresence>{children}</AnimatePresence>
       </form>
     </Form>
   );

@@ -122,11 +122,13 @@ export function FormSubmit({
   hideUnsavedChangesIndicator?: boolean;
 }) {
   return (
-    <div className={cn("flex flex-row items-center gap-2", className)}>
+    <div className={cn("flex flex-row items-center gap-4", className)}>
       <Button type="submit" isLoading={form.formState.isSubmitting}>
         Save
       </Button>
-      <Button
+
+      {/* does not work for some reason */}
+      {/* <Button
         type="reset"
         variant="secondary"
         disabled={form.formState.isSubmitting || !form.formState.isDirty}
@@ -135,7 +137,7 @@ export function FormSubmit({
         }}
       >
         Reset
-      </Button>
+      </Button> */}
       {/* unsaved changes indicator */}
       {!hideUnsavedChangesIndicator && (
         <FormUnsavedChangesIndicator form={form.control} />

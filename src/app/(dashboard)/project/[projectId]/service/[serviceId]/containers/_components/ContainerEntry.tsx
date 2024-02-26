@@ -26,7 +26,11 @@ export function ContainerEntry({
   const isRedeploying =
     container === undefined || task.taskState === "starting";
 
-  const [uptimeText, setUptimeText] = useState<string | null>(null);
+  const [uptimeText, setUptimeText] = useState<string | null>(
+    mainContainer
+      ? formatDistanceToNowStrict(mainContainer.containerCreatedAt)
+      : null,
+  );
   useEffect(() => {
     if (!mainContainer) return;
     const interval = setInterval(() => {
@@ -34,6 +38,7 @@ export function ContainerEntry({
         formatDistanceToNowStrict(mainContainer.containerCreatedAt),
       );
     }, 1000);
+
     return () => clearInterval(interval);
   }, [mainContainer]);
 

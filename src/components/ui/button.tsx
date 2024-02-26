@@ -61,17 +61,29 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button";
     const Child = asChild ? "span" : React.Fragment;
     const iconPadding = children ? " mr-2" : "";
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+    const disabled = isLoading || props.disabled;
+
+    // override onClick if disabled
+    if (disabled) {
+      props.onClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      };
+    }
+
+    // handle disabled ourselves, since disabled also hides it from screen readers and we don't want that
+    delete props.disabled;
 
     return (
       <Comp
         className={cn(
           buttonVariants({ variant, size, className }),
-          isLoading && "cursor-not-allowed brightness-75 filter",
+          disabled && "!cursor-not-allowed brightness-75 filter",
         )}
+        aria-disabled={disabled}
         ref={ref}
         {...props}
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-        disabled={isLoading || props.disabled}
       >
         <Child>
           {isLoading && <CgSpinner className={"animate-spin" + iconPadding} />}

@@ -38,7 +38,22 @@ const DomainEntry = forwardRef<
         type: "spring",
         bounce: 0.15,
       }}
-      key={field.domainId}
+      key={field.domainId ?? field.id}
+      onAnimationComplete={(def) => {
+        // https://github.com/orgs/react-hook-form/discussions/11379
+        // this took me FOREVER to figure out
+        // basically we need to re-remove the field if it's the last one (and it is exit animation)
+
+        if (
+          index === domains.fields.length - 1 &&
+          // check if it's the exit animation
+          typeof def !== "string" &&
+          "opacity" in def &&
+          def.opacity === 0
+        ) {
+          domains.remove(index);
+        }
+      }}
     >
       <Card className="p-4">
         <div className="flex flex-row gap-4">
@@ -94,7 +109,6 @@ const DomainEntry = forwardRef<
               type="button"
               icon={TrashIcon}
               onClick={() => {
-                console.log("remove domain: ", field.domainId);
                 domains.remove(index);
               }}
             />

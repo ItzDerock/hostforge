@@ -23,7 +23,10 @@ export default function DomainPage() {
   );
 
   return (
-    <div className="flex flex-col gap-4 pt-4">
+    <form
+      className="flex flex-col gap-4 pt-4"
+      onSubmit={(e) => e.preventDefault()}
+    >
       <SimpleFormField
         control={form.control}
         friendlyName="Force HTTPS"
@@ -37,6 +40,6 @@ export default function DomainPage() {
         name={`domains.${index}.forceSSL`}
         render={({ field }) => <Switch {...field} className="my-4 block" />}
       />
-    </div>
+    </form>
   );
 }

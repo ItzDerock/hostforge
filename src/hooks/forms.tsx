@@ -1,7 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AnimatePresence, motion } from "framer-motion";
 import { type ReactNode } from "react";
 import {
   useForm as useFormHook,
+  useFormState,
   type Control,
   type ControllerProps,
   type FieldPath,
@@ -85,7 +87,7 @@ export function SimpleFormField<
     <UIFormField
       control={props.control}
       name={props.name}
-      render={({ field }) => (
+      render={({ field, fieldState, formState }) => (
         <FormItem className={props.className}>
           <FormLabel>
             {props.friendlyName}
@@ -95,11 +97,8 @@ export function SimpleFormField<
             {render({
               //@ts-expect-error i cant type this any better
               field,
-              formState: props.control._formState,
-              fieldState: props.control.getFieldState(
-                props.name,
-                props.control._formState,
-              ),
+              fieldState,
+              formState,
             })}
           </FormControl>
           {props.description && (
@@ -127,29 +126,47 @@ export function FormSubmit({
       <Button type="submit" isLoading={form.formState.isSubmitting}>
         Save
       </Button>
+      <Button
+        type="reset"
+        variant="secondary"
+        disabled={form.formState.isSubmitting || !form.formState.isDirty}
+        onClick={() => {
+          form.reset();
+        }}
+      >
+        Reset
+      </Button>
       {/* unsaved changes indicator */}
       {!hideUnsavedChangesIndicator && (
-        <FormUnsavedChangesIndicator form={form} />
+        <FormUnsavedChangesIndicator form={form.control} />
       )}
     </div>
   );
 }
 
 export function FormUnsavedChangesIndicator({
-  form,
+  form: control,
   className,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  form: UseFormReturn<z.infer<any>>;
+  form?: UseFormReturn<z.infer<any>>["control"];
   className?: string;
 }) {
+  const form = useFormState({ control });
+
   return (
-    <p
-      className={`text-sm text-red-500 duration-200 animate-in fade-in ${
-        form.formState.isDirty ? "opacity-100" : "invisible opacity-0"
-      } ${className}`}
-    >
-      You have unsaved changes!
-    </p>
+    <AnimatePresence>
+      {form.isDirty && (
+        <motion.p
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className={`text-sm text-red-500 ${className}`}
+        >
+          You have unsaved changes!
+        </motion.p>
+      )}
+    </AnimatePresence>
   );
 }

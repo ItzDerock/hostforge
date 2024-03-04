@@ -92,7 +92,30 @@ export const getServiceContainers = authenticatedProcedure
     // get docker service stats
     const service = (await ctx.docker
       .getService(`${ctx.project.internalName}_${ctx.service.name}`)
-      .inspect()) as DockerAPITypes["/services/{id}"]["get"]["responses"]["200"]["schema"];
+      .inspect()
+      .catch((err: unknown) => {
+        if (
+          typeof err === "object" &&
+          err &&
+          "statusCode" in err &&
+          err.statusCode === 404
+        )
+          return null;
+
+        throw err;
+      })) as
+      | DockerAPITypes["/services/{id}"]["get"]["responses"]["200"]["schema"]
+      | null;
+
+    if (!service)
+      return {
+        replication: {
+          running: 0,
+          desired: 0,
+        },
+
+        latest: [],
+      };
 
     assert(service.ID, "Unable to retrieve service ID.");
 
@@ -156,11 +179,11 @@ export const getServiceContainers = authenticatedProcedure
             : await ctx.docker
                 .getContainer(task.Status.ContainerStatus.ContainerID)
                 .stats({ "one-shot": true, stream: false })
-                .catch((err) => {
+                .catch((err: unknown) => {
                   if (
                     typeof err === "object" &&
+                    err &&
                     "statusCode" in err &&
-                    // TODO: figure out why TS isn't happy
                     err.statusCode === 404
                   )
                     return null;

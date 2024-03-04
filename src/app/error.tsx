@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { Button, buttonVariants } from "~/components/ui/button";
+import { Card } from "~/components/ui/card";
 
 export default function Error({
   error,
@@ -26,9 +27,19 @@ export default function Error({
     <div className="flex h-screen w-screen flex-col content-center justify-center text-center align-middle">
       <div className="m-8 mx-auto h-fit max-w-lg space-y-2">
         <h1 className="text-3xl font-bold">Error</h1>
-        <h2>
-          An unexpected error has occured: <br /> {error.message}
-        </h2>
+
+        {error.message.includes("connect ENOENT /var/run/docker.sock") ? (
+          <Card className="p-4">
+            <h2>Docker is not running on the server.</h2>
+            <p className="text-sm">
+              Please start the Docker daemon and reload the page.
+            </p>
+          </Card>
+        ) : (
+          <h2>
+            An unexpected error has occured: <br /> {error.message}
+          </h2>
+        )}
 
         {/* show stacktrace if development */}
         {process && process.env.NODE_ENV === "development" && (

@@ -50,10 +50,11 @@ export default function ContainersPage({
           <ContainerEntry data={data} key={data.slot} />
         ))}
 
-        {project.services.length === 0 && (
+        {containers.data && containers.data.latest.length === 0 && (
           <TableRow>
-            <TableCell colSpan={4} className="text-center">
-              No services
+            <TableCell colSpan={8} className="text-center align-middle">
+              No containers running. Try hitting the Deploy Changes button to
+              deploy the service.
             </TableCell>
           </TableRow>
         )}

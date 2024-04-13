@@ -17,7 +17,7 @@ export default function Error({
   if (
     error.stack &&
     error.stack.split("\n")[0] ===
-      "TRPCClientError: You must be logged in to perform this action."
+    "TRPCClientError: You must be logged in to perform this action."
   ) {
     console.log("redirecting to login");
     return redirect("/login");
@@ -33,6 +33,13 @@ export default function Error({
             <h2>Docker is not running on the server.</h2>
             <p className="text-sm">
               Please start the Docker daemon and reload the page.
+            </p>
+          </Card>
+        ) : error.message.includes("This node is not a swarm manager.") ? (
+          <Card className="p-4">
+            <h2>Docker is not running in swarm mode.</h2>
+            <p className="text-sm">
+              Check our wiki for instructions on how to resolve this issue.
             </p>
           </Card>
         ) : (

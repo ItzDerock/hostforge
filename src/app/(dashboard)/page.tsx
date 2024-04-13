@@ -26,7 +26,7 @@ export default async function DashboardHome() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-primary-foreground/70">
+          <p className="text-primary-foreground/75">
             <Check className="mr-2 inline-block" />
             Hostforge is up to date. (v1.0.0)
             <br />

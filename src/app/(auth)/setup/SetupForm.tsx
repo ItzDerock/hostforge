@@ -1,21 +1,20 @@
 "use client";
 
-import { useForm } from "@mantine/form";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import {
   Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
 } from "~/components/ui/card";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import { Required } from "~/components/ui/required";
+import { Form } from "~/components/ui/form";
+import { SimpleFormField, useForm } from "~/hooks/forms";
 import { api } from "~/trpc/react";
 
 export function SetupForm() {
@@ -27,7 +26,7 @@ export function SetupForm() {
   >();
   const setupInstance = api.setup.setup.useMutation({
     onSuccess: () => {
-      router.push("/dashboard");
+      router.push("/login");
       toast.success("Successfully setup instance!", { id: toastLoading });
     },
 
@@ -36,22 +35,19 @@ export function SetupForm() {
     },
   });
 
-  const form = useForm({
-    initialValues: {
-      username: "",
-      password: "",
-    },
-
-    validate: {
-      password: (value) => value.length === 0 && "Password is required",
-      username: (value) => value.length === 0 && "Username is required",
-    },
-  });
+  const form = useForm(
+    z.object({
+      username: z.string().min(3),
+      password: z.string().min(3),
+    }),
+  );
 
   return (
     <Card className="m-auto h-fit max-w-xl">
       <CardHeader>
-        <CardTitle>Setup Hostforge 🚀</CardTitle>
+        <CardTitle>
+          Setup Hostforge <span className="animate-shake">🚀</span>
+        </CardTitle>
         <CardDescription>
           Welcome to Hostforge — a modern self-hosted platform for deploying and
           managing your own applications.
@@ -61,43 +57,41 @@ export function SetupForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form
-          id="setupform"
-          className="flex flex-col gap-4"
-          onSubmit={form.onSubmit((data) => {
-            setToastLoading(toast.loading("Setting up instance..."));
-            setupInstance.mutate(data);
-          })}
-        >
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="username">
-              Username
-              <Required />
-            </Label>
-            <Input {...form.getInputProps("username")} id="username" />
-            {form.errors.username && (
-              <div className="text-red-500">{form.errors.username}</div>
-            )}
-          </div>
+        <Form {...form}>
+          <form
+            id="setupform"
+            className="space-y-2"
+            onSubmit={form.handleSubmit(async (data) => {
+              setToastLoading(toast.loading("Setting up instance..."));
+              await setupInstance.mutateAsync(data);
+            })}
+          >
+            <SimpleFormField
+              control={form.control}
+              name="username"
+              friendlyName="Username"
+              description="The username for the admin Hostforge user."
+              required
+            />
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="password">
-              Password
-              <Required />
-            </Label>
-            <Input
-              {...form.getInputProps("password")}
-              id="password"
+            <SimpleFormField
+              control={form.control}
+              name="password"
+              friendlyName="Password"
+              description="The password for the admin Hostforge user."
+              required
               type="password"
             />
-            {form.errors.password && (
-              <div className="text-red-500">{form.errors.password}</div>
-            )}
-          </div>
-        </form>
+          </form>
+        </Form>
       </CardContent>
       <CardFooter>
-        <Button className="w-full" type="submit" form="setupform">
+        <Button
+          className="w-full"
+          type="submit"
+          form="setupform"
+          isLoading={form.formState.isSubmitting}
+        >
           Submit
         </Button>
       </CardFooter>

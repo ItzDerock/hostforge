@@ -25,8 +25,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  console.log(outfit);
-
   return (
     <html lang="en">
       <body className={`font-sans ${outfit.variable} min-h-screen min-w-full`}>

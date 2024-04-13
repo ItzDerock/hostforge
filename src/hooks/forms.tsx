@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
-import { type ReactNode } from "react";
+import { type PropsWithChildren, type ReactNode } from "react";
 import {
   useForm as useFormHook,
   useFormState,
@@ -80,8 +80,10 @@ export function SimpleFormField<
   required?: boolean;
   render?: ControllerProps<TFieldValues, TContext>["render"];
   className?: string;
+  type?: PropsWithChildren<HTMLInputElement>["type"];
 }) {
-  const render = props.render ?? (({ field }) => <Input {...field} />);
+  const render =
+    props.render ?? (({ field }) => <Input {...field} type={props.type} />);
 
   return (
     <UIFormField

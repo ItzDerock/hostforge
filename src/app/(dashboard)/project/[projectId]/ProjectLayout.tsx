@@ -103,7 +103,7 @@ export function ProjectLayout(props: {
           ))}
 
           {project.data.services.length == 0 && (
-            <span className="text-muted-foreground">No services found.</span>
+            <span className="my-auto text-muted-foreground">No services.</span>
           )}
         </div>
       </div>

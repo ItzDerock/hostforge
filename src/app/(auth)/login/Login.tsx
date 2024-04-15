@@ -27,6 +27,7 @@ export default function LoginForm() {
     onSuccess: (data) => {
       toast.success("Successfully logged in!", { id: toastLoading });
       router.push("/#");
+      router.refresh();
     },
 
     trpc: {

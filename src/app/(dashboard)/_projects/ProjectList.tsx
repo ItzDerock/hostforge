@@ -14,7 +14,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { api } from "~/trpc/react";
 import { type RouterOutputs } from "~/trpc/shared";
-import { CreateProjectButton } from "./CreateProject";
+import { CreateProjectButton } from "./CreateProject/CreateProject";
 import { Project } from "./Project";
 
 type Projects = RouterOutputs["projects"]["list"];

@@ -62,7 +62,7 @@ export async function buildDockerStackFile(
           limits: {
             cpus: service.max_cpu?.toString() ?? undefined,
             memory: service.max_memory ?? undefined,
-            pids: service.max_pids ?? undefined,
+            // pids: service.max_pids ?? undefined,
           },
         },
 

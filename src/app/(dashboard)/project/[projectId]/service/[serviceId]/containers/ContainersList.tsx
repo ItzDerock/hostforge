@@ -52,9 +52,9 @@ export default function ContainersPage({
 
         {containers.data && containers.data.latest.length === 0 && (
           <TableRow>
-            <TableCell colSpan={8} className="text-center align-middle">
-              No containers running. Try hitting the Deploy Changes button to
-              deploy the service.
+            <TableCell colSpan={8} className="h-24 text-center align-middle">
+              No containers running. Try hitting the{" "}
+              <strong>Deploy Changes</strong> button to deploy the service.
             </TableCell>
           </TableRow>
         )}

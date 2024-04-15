@@ -61,7 +61,7 @@ export default function DeploymentSettings({
         })}
         className="grid grid-cols-2 gap-4"
       >
-        <h1 className="col-span-2">Deployment</h1>
+        <h1 className="col-span-2 text-lg">Deployment</h1>
 
         <SimpleFormField
           control={form.control}
@@ -138,6 +138,15 @@ export default function DeploymentSettings({
           description="When enabled, old containers will stay running until the new containers are online, alowing for zero-downtime deployments."
           render={({ field }) => <Switch {...field} className="!my-4 block" />}
         />
+
+        {/* <h1 className="col-span-2 text-lg">Resource Limits</h1>
+
+        <SimpleFormField
+          control={form.control}
+          name="max_memory"
+          friendlyName="Memory Limit"
+          description="The maximum amount of memory that this service can use. Example: 512M, 4G"
+        /> */}
 
         <FormSubmit form={form} className="col-span-2" />
       </form>

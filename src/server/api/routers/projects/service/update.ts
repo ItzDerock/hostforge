@@ -61,6 +61,13 @@ export const updateServiceProcedure = authenticatedProcedure
               message: "Must be an integer plus a modifier (k, m, or g).",
             }),
           loggingMaxFiles: (schema) => schema.loggingMaxFiles.positive(),
+
+          // float as string
+          max_cpu: z.coerce.number().default(0),
+          max_memory: z
+            .string()
+            .regex(/^\d+(\.\d+)?[kmgKMG]?$/)
+            .default("0"),
         })
           .omit({
             id: true,

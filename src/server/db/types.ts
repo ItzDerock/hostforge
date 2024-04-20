@@ -1,3 +1,6 @@
+// NOTE TO DEVELOPERS: The order of items CANNOT change as they are stored as integers based on the enum index in the database.
+// IF YOU ADD A NEW ITEM, YOU MUST ADD IT TO THE END OF THE ENUM.
+
 /**
  * Sources for services.
  * MUST KEEP THIS ORDER since it is stored as an integer in the database based on the enum index.
@@ -21,6 +24,7 @@ export enum ServiceSource {
 
 /**
  * Represents the build method for a service
+ * MUST KEEP THIS ORDER since it is stored as an integer in the database based on the enum index.
  */
 export enum ServiceBuildMethod {
   /**
@@ -123,3 +127,5 @@ export enum DockerVolumeType {
    */
   Tmpfs,
 }
+
+// export enum

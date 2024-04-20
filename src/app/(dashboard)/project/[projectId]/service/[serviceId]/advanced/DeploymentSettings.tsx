@@ -30,6 +30,9 @@ const formValidator = z.object({
   zeroDowntime: z.boolean(),
   entrypoint: z.string().optional().nullable(),
   command: z.string().optional().nullable(),
+
+  max_memory: z.string().optional(),
+  max_cpu: z.coerce.number().optional(),
 });
 
 export default function DeploymentSettings({
@@ -46,6 +49,8 @@ export default function DeploymentSettings({
       zeroDowntime: service.zeroDowntime,
       entrypoint: service.entrypoint,
       command: service.command,
+      max_memory: service.max_memory,
+      max_cpu: service.max_cpu,
     },
   });
 
@@ -53,11 +58,15 @@ export default function DeploymentSettings({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(async (data) => {
-          return update.mutateAsync({
-            serviceId: service.id,
-            projectId: service.projectId,
-            ...data,
-          });
+          try {
+            await update.mutateAsync({
+              serviceId: service.id,
+              projectId: service.projectId,
+              ...data,
+            });
+
+            form.reset(data, { keepValues: true, keepDirty: false });
+          } catch (error) {}
         })}
         className="grid grid-cols-2 gap-4"
       >
@@ -139,14 +148,21 @@ export default function DeploymentSettings({
           render={({ field }) => <Switch {...field} className="!my-4 block" />}
         />
 
-        {/* <h1 className="col-span-2 text-lg">Resource Limits</h1>
+        <h1 className="col-span-2 text-lg">Resource Limits and Reservations</h1>
 
         <SimpleFormField
           control={form.control}
           name="max_memory"
           friendlyName="Memory Limit"
-          description="The maximum amount of memory that this service can use. Example: 512M, 4G"
-        /> */}
+          description="The maximum amount of memory that this service can use. Set to `0` for no limit. Example: 512M, 4G"
+        />
+
+        <SimpleFormField
+          control={form.control}
+          name="max_cpu"
+          friendlyName="CPU Limit"
+          description="The maximum CPU usage that this service can use. Set to `0` for no limit. Example: 1 = 1 core, 0.5 = 50% of a core, etc."
+        />
 
         <FormSubmit form={form} className="col-span-2" />
       </form>

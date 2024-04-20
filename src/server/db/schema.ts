@@ -11,8 +11,8 @@ import {
 import {
   DockerDeployMode,
   DockerRestartCondition,
+  ServiceBuildMethod,
   type DockerVolumeType,
-  type ServiceBuildMethod,
   type ServicePortType,
   type ServiceSource,
 } from "./types";
@@ -157,7 +157,11 @@ export const service = sqliteTable(
     gitBranch: text("git_branch"),
 
     // for github/git
-    buildMethod: integer("build_method").$type<ServiceBuildMethod>(),
+    buildMethod: integer("build_method")
+      .$type<ServiceBuildMethod>()
+      .notNull()
+      .default(ServiceBuildMethod.Nixpacks),
+
     buildPath: text("build_path").default("/").notNull(),
 
     // deployment settings
@@ -235,7 +239,22 @@ export const serviceRelations = relations(service, ({ one, many }) => ({
   sysctls: many(serviceSysctl),
   volumes: many(serviceVolume),
   ulimits: many(serviceUlimit),
+  deployments: many(serviceDeployment),
 }));
+
+/**
+ * Service deployments
+ */
+export const serviceDeployment = sqliteTable("service_deployment", {
+  id: text("id").default(uuidv7).primaryKey(),
+  serviceId: text("service_id")
+    .notNull()
+    .references(() => service.id),
+
+  createdAt: integer("created_at").default(now).notNull(),
+
+  //
+});
 
 /**
  * Project domain settings

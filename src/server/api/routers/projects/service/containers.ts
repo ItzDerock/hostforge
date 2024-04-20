@@ -1,10 +1,12 @@
 import assert from "assert";
+import type Dockerode from "dockerode";
 import { z } from "zod";
 import { projectMiddleware } from "~/server/api/middleware/project";
 import { serviceMiddleware } from "~/server/api/middleware/service";
 import { authenticatedProcedure } from "~/server/api/trpc";
 import { type paths as DockerAPITypes } from "~/server/docker/types";
 import logger from "~/server/utils/logger";
+import { docker404ToNull } from "~/server/utils/serverUtils";
 import { isDefined } from "~/utils/utils";
 
 const zContainerDetails = z.object({
@@ -93,17 +95,7 @@ export const getServiceContainers = authenticatedProcedure
     const service = (await ctx.docker
       .getService(`${ctx.project.internalName}_${ctx.service.name}`)
       .inspect()
-      .catch((err: unknown) => {
-        if (
-          typeof err === "object" &&
-          err &&
-          "statusCode" in err &&
-          err.statusCode === 404
-        )
-          return null;
-
-        throw err;
-      })) as
+      .catch(docker404ToNull)) as
       | DockerAPITypes["/services/{id}"]["get"]["responses"]["200"]["schema"]
       | null;
 
@@ -120,12 +112,22 @@ export const getServiceContainers = authenticatedProcedure
     assert(service.ID, "Unable to retrieve service ID.");
 
     // list all the containers related to this service
-    const containersPromise = ctx.docker.listContainers({
-      all: true,
-      filters: {
-        label: [`com.docker.swarm.service.id=${service.ID}`],
-      },
-    });
+    const containersPromise = ctx.docker
+      .listContainers({
+        all: true,
+        filters: {
+          label: [`com.docker.swarm.service.id=${service.ID}`],
+        },
+      })
+      .catch((err: unknown) => {
+        logger.error("Failed to list containers for service", {
+          serviceId: service.ID,
+          label: `com.docker.swarm.service.id=${service.ID}`,
+          error: err,
+        });
+
+        throw new Error("Failed to list containers for service");
+      });
 
     // and find the current task ID for this service
     const tasksPromise = (
@@ -173,22 +175,14 @@ export const getServiceContainers = authenticatedProcedure
           return;
         }
 
-        const containerStats =
-          task.Status?.ContainerStatus?.ContainerID === undefined
-            ? null
-            : await ctx.docker
-                .getContainer(task.Status.ContainerStatus.ContainerID)
-                .stats({ "one-shot": true, stream: false })
-                .catch((err: unknown) => {
-                  if (
-                    typeof err === "object" &&
-                    err &&
-                    "statusCode" in err &&
-                    err.statusCode === 404
-                  )
-                    return null;
-                  throw err;
-                });
+        let containerStats: Dockerode.ContainerStats | null = null;
+
+        if (task.Status?.ContainerStatus?.ContainerID) {
+          containerStats = await ctx.docker
+            .getContainer(task.Status.ContainerStatus.ContainerID)
+            .stats({ "one-shot": true, stream: false })
+            .catch(docker404ToNull);
+        }
 
         return {
           slot: task.Slot,

@@ -1,13 +1,12 @@
-import { eq } from "drizzle-orm";
-import { db } from "../db";
-import { users, sessions } from "../db/schema";
-import { randomBytes } from "crypto";
 import assert from "assert";
-import { env } from "~/env";
+import crypto, { randomBytes } from "crypto";
+import { eq } from "drizzle-orm";
 import { IncomingMessage } from "http";
+import { env } from "~/env";
 import type { ExtendedRequest } from "../api/trpc";
+import { db } from "../db";
+import { sessions, users } from "../db/schema/schema";
 import logger from "../utils/logger";
-import crypto from "crypto";
 
 export type SessionUpdateData = Partial<{
   ua: string;

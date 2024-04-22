@@ -6,7 +6,7 @@ import { env } from "~/env";
 import { projectMiddleware } from "~/server/api/middleware/project";
 import { serviceMiddleware } from "~/server/api/middleware/service";
 import { authenticatedProcedure, createTRPCRouter } from "~/server/api/trpc";
-import { service } from "~/server/db/schema";
+import { serviceGeneration } from "~/server/db/schema";
 import { DOCKER_DEPLOY_MODE_MAP, ServiceSource } from "~/server/db/types";
 import { zDockerName } from "~/server/utils/zod";
 import { getServiceContainers } from "./containers";
@@ -35,7 +35,7 @@ export const serviceRouter = createTRPCRouter({
     .use(serviceMiddleware)
     .query(async ({ ctx }) => {
       const fullServiceData = await ctx.db.query.service.findFirst({
-        where: eq(service.id, ctx.service.id),
+        where: eq(serviceGeneration.id, ctx.service.id),
         with: {
           domains: true,
           ports: true,
@@ -71,7 +71,7 @@ export const serviceRouter = createTRPCRouter({
     .use(projectMiddleware)
     .mutation(async ({ ctx, input }) => {
       const [data] = await ctx.db
-        .insert(service)
+        .insert(serviceGeneration)
         .values({
           name: input.name,
           projectId: ctx.project.id,
@@ -83,7 +83,7 @@ export const serviceRouter = createTRPCRouter({
           dockerImage: "traefik/whoami",
         })
         .returning({
-          id: service.id,
+          id: serviceGeneration.id,
         })
         .execute()
         .catch((err) => {
@@ -108,8 +108,8 @@ export const serviceRouter = createTRPCRouter({
     .use(projectMiddleware)
     .mutation(async ({ ctx, input }) => {
       await ctx.db
-        .delete(service)
-        .where(eq(service.id, input.serviceId))
+        .delete(serviceGeneration)
+        .where(eq(serviceGeneration.id, input.serviceId))
         .execute();
     }),
 });

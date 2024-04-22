@@ -1,7 +1,7 @@
 import assert from "assert";
 import { Queue } from "datastructures-js";
 import { db } from "../db";
-import { serviceDeployment } from "../db/schema";
+import { serviceDeployment } from "../db/schema/schema";
 import { ServiceDeploymentStatus, ServiceSource } from "../db/types";
 import { type Service } from "../docker/stack";
 import logger from "../utils/logger";

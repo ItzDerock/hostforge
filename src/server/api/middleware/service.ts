@@ -23,20 +23,16 @@ export const serviceMiddleware = experimental_standaloneMiddleware<{
     });
   }
 
-  const [serviceDetails] = await ctx.db
-    .select({
-      id: service.id,
-      name: service.name,
-      createdAt: service.createdAt,
-    })
-    .from(service)
-    .where(
-      and(
-        eq(service.projectId, ctx.project.id),
-        or(eq(service.name, input.serviceId), eq(service.id, input.serviceId)),
-      ),
-    )
-    .limit(1);
+  const serviceDetails = await ctx.db.query.service.findFirst({
+    where: and(
+      eq(service.projectId, ctx.project.id),
+      or(eq(service.name, input.serviceId), eq(service.id, input.serviceId)),
+    ),
+
+    with: {
+      latestGeneration: true,
+    },
+  });
 
   if (!serviceDetails)
     throw new TRPCError({

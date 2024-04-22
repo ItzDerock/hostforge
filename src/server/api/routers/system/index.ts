@@ -1,14 +1,14 @@
-import { authenticatedProcedure, createTRPCRouter } from "../../trpc";
 import { observable } from "@trpc/server/observable";
 import { updateTraefik } from "~/server/docker/traefik";
-import { BasicServerStats, stats } from "~/server/modules/stats";
+import { stats, type BasicServerStats } from "~/server/modules/stats";
+import { authenticatedProcedure, createTRPCRouter } from "../../trpc";
 
 export const systemRouter = createTRPCRouter({
-  currentStats: authenticatedProcedure.query(async ({ ctx }) => {
+  currentStats: authenticatedProcedure.query(async () => {
     return stats.getCurrentStats();
   }),
 
-  liveStats: authenticatedProcedure.subscription(async ({ ctx }) => {
+  liveStats: authenticatedProcedure.subscription(() => {
     return observable<BasicServerStats>((observer) => {
       const update = observer.next.bind(observer);
 
@@ -19,14 +19,14 @@ export const systemRouter = createTRPCRouter({
     });
   }),
 
-  history: authenticatedProcedure.query(async ({ ctx }) => {
+  history: authenticatedProcedure.query(async () => {
     return await stats.getStatsInRange(
       new Date(Date.now() - 1000 * 60 * 60 * 24),
     );
   }),
 
   // core container options
-  redeployTraefik: authenticatedProcedure.mutation(async ({ ctx }) => {
+  redeployTraefik: authenticatedProcedure.mutation(() => {
     setTimeout(() => {
       void updateTraefik();
     }, 200);

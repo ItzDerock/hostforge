@@ -1,4 +1,4 @@
-import { type service } from "../../db/schema";
+import { type serviceGeneration } from "../../db/schema/schema";
 import type BuilderLogger from "../utils/BuilderLogger";
 
 export default class BaseBuilder {
@@ -6,7 +6,7 @@ export default class BaseBuilder {
     public readonly configuration: {
       fileLogger: BuilderLogger;
       workDirectory: string;
-      serviceConfiguration: typeof service.$inferSelect;
+      serviceConfiguration: typeof serviceGeneration.$inferSelect;
     },
   ) {}
 

@@ -1,4 +1,4 @@
-import { relations, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import {
   blob,
   index,
@@ -7,6 +7,7 @@ import {
   sqliteTable,
   text,
   unique,
+  type AnySQLiteColumn,
 } from "drizzle-orm/sqlite-core";
 import {
   DockerDeployMode,
@@ -16,11 +17,16 @@ import {
   type ServiceDeploymentStatus,
   type ServicePortType,
   type ServiceSource,
-} from "./types";
+} from "../types";
 
 // util
 const uuidv7 = sql`(uuid_generate_v7())`;
 const now = sql<number>`CURRENT_TIMESTAMP`;
+
+// overview of the project schema layout
+// https://drawsql.app/teams/derock/diagrams/hostforge
+// does not include all fields, just the main ones
+// easy to see the relations between tables
 
 /**
  * User table.
@@ -41,11 +47,6 @@ export const users = sqliteTable(
   }),
 );
 
-export const userRelations = relations(users, ({ many }) => ({
-  sessions: many(sessions),
-  mfaRequestSessions: many(MFARequestSessions),
-}));
-
 /**
  * User Session table.
  * Represents a user's session.
@@ -54,6 +55,7 @@ export const sessions = sqliteTable("session", {
   token: text("token").primaryKey(),
   lastUA: text("last_useragent"),
   lastIP: text("last_ip"),
+
   // NOT IN MILLISECONDS!
   lastAccessed: integer("last_accessed", { mode: "timestamp" }),
   createdAt: integer("created_at").default(now).notNull(),
@@ -61,33 +63,6 @@ export const sessions = sqliteTable("session", {
     .notNull()
     .references(() => users.id),
 });
-
-export const sessionRelations = relations(sessions, ({ one }) => ({
-  user: one(users, {
-    fields: [sessions.userId],
-    references: [users.id],
-  }),
-}));
-
-/**
- * MFA Request Session.
- * The intermediate between successful basic/oauth login and a full session for users with MFA enabled
- */
-export const MFARequestSessions = sqliteTable("mfa_request_sessions", {
-  token: text("token").primaryKey(),
-  userId: text("user_id").references(() => users.id),
-  createdAt: integer("created_at").default(now),
-});
-
-export const MFARequestSessionRelations = relations(
-  MFARequestSessions,
-  ({ one }) => ({
-    user: one(users, {
-      fields: [MFARequestSessions.userId],
-      references: [users.id],
-    }),
-  }),
-);
 
 /**
  * System Statistics
@@ -119,8 +94,34 @@ export const projects = sqliteTable("projects", {
   createdAt: integer("created_at").default(now).notNull(),
   ownerId: text("owner_id")
     .notNull()
-    .references(() => users.id),
+    .references(() => users.id, {
+      onDelete: "cascade",
+    }),
 });
+
+/**
+ * Aggregate of service deployments for a project
+ */
+export const projectDeployment = sqliteTable(
+  "project_deployment",
+  {
+    id: text("id").default(uuidv7).primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, {
+        onDelete: "cascade",
+      }),
+
+    deployedAt: integer("deployed_at").default(now).notNull(),
+    status: integer("status").$type<ServiceDeploymentStatus>().notNull(),
+  },
+  (table) => ({
+    proj_deployment_idx: index("proj_deployment_idx").on(
+      table.id,
+      table.projectId,
+    ),
+  }),
+);
 
 /**
  * Project services
@@ -131,11 +132,49 @@ export const service = sqliteTable(
   "service",
   {
     id: text("id").default(uuidv7).primaryKey(),
+    name: text("name").notNull(),
+
     projectId: text("project_id")
       .notNull()
-      .references(() => projects.id),
+      .references(() => projects.id, {
+        onDelete: "cascade",
+      }),
 
-    name: text("name").notNull(),
+    latestGenerationId: text("latest_generation_id")
+      .notNull()
+      .references(() => serviceGeneration.id),
+
+    deployedGenerationId: text("deployed_generation_id")
+      .notNull()
+      .references(() => serviceGeneration.id),
+
+    createdAt: integer("created_at").default(now).notNull(),
+  },
+  (table) => ({
+    name_project_idx: index("name_project_idx").on(table.name, table.projectId),
+    name_project_unq: unique("name_project_unq").on(
+      table.name,
+      table.projectId,
+    ),
+  }),
+);
+
+/**
+ * Configuration at a point in time for a service
+ */
+export const serviceGeneration = sqliteTable(
+  "service_generation",
+  {
+    id: text("id").default(uuidv7).primaryKey(),
+    serviceId: text("service_id")
+      .notNull()
+      .references((): AnySQLiteColumn => service.id, {
+        onDelete: "cascade",
+      }),
+
+    deploymentId: text("deployment_id")
+      .notNull()
+      .references((): AnySQLiteColumn => serviceDeployment.id),
 
     // service configuration
     source: integer("source").$type<ServiceSource>().notNull(),
@@ -174,6 +213,7 @@ export const service = sqliteTable(
       .$type<DockerDeployMode>()
       .default(DockerDeployMode.Replicated)
       .notNull(),
+
     zeroDowntime: integer("zero_downtime", { mode: "boolean" })
       .default(false)
       .notNull(),
@@ -213,48 +253,38 @@ export const service = sqliteTable(
     createdAt: integer("created_at").default(now).notNull(),
   },
   (table) => ({
-    name_project_idx: index("name_project_idx").on(table.name, table.projectId),
-    name_project_unq: unique("name_project_unq").on(
-      table.name,
-      table.projectId,
+    proj_generation_idx: index("proj_generation_idx").on(
+      table.id,
+      table.serviceId,
     ),
   }),
 );
-
-// relations
-export const projectRelations = relations(projects, ({ one, many }) => ({
-  owner: one(users, {
-    fields: [projects.ownerId],
-    references: [users.id],
-  }),
-  services: many(service),
-}));
-
-export const serviceRelations = relations(service, ({ one, many }) => ({
-  project: one(projects, {
-    fields: [service.projectId],
-    references: [projects.id],
-  }),
-  domains: many(serviceDomain),
-  ports: many(servicePort),
-  sysctls: many(serviceSysctl),
-  volumes: many(serviceVolume),
-  ulimits: many(serviceUlimit),
-  deployments: many(serviceDeployment),
-}));
 
 /**
  * Service deployments
  */
 export const serviceDeployment = sqliteTable("service_deployment", {
   id: text("id").default(uuidv7).primaryKey(),
+  projectDeploymentId: text("project_deployment_id")
+    .notNull()
+    .references(() => projectDeployment.id, {
+      onDelete: "cascade",
+    }),
+
   serviceId: text("service_id")
     .notNull()
-    .references(() => service.id),
+    .references(() => serviceGeneration.id, {
+      onDelete: "cascade",
+    }),
 
-  createdAt: integer("created_at").default(now).notNull(),
+  deployedAt: integer("created_at").default(now).notNull(),
+  deployedBy: text("deployed_by").references(() => users.id),
 
+  // logs will be pretty small,
+  // so we can store them as blobs
+  // https://www.sqlite.org/intern-v-extern-blob.html
   buildLogs: blob("build_logs"), // COMPRESSED!
+
   status: integer("status").$type<ServiceDeploymentStatus>().notNull(),
 });
 
@@ -265,20 +295,13 @@ export const serviceDomain = sqliteTable("service_domain", {
   id: text("id").default(uuidv7).primaryKey(),
   serviceId: text("service_id")
     .notNull()
-    .references(() => service.id),
+    .references(() => serviceGeneration.id),
 
   domain: text("domain").notNull(),
   internalPort: integer("internal_port").notNull(),
   https: integer("https", { mode: "boolean" }).default(false).notNull(),
   forceSSL: integer("force_ssl", { mode: "boolean" }).default(false).notNull(),
 });
-
-export const serviceDomainRelations = relations(serviceDomain, ({ one }) => ({
-  service: one(service, {
-    fields: [serviceDomain.serviceId],
-    references: [service.id],
-  }),
-}));
 
 /**
  * Project exposed ports
@@ -287,20 +310,13 @@ export const servicePort = sqliteTable("service_port", {
   id: text("id").default(uuidv7).primaryKey(),
   serviceId: text("service_id")
     .notNull()
-    .references(() => service.id),
+    .references(() => serviceGeneration.id),
 
   internalPort: integer("internal_port").notNull(),
   externalPort: integer("external_port").notNull(),
   portType: integer("port_type").$type<ServicePortType>().notNull(),
   type: integer("type").$type<ServicePortType>().notNull(),
 });
-
-export const servicePortRelations = relations(servicePort, ({ one }) => ({
-  service: one(service, {
-    fields: [servicePort.serviceId],
-    references: [service.id],
-  }),
-}));
 
 /**
  * Project sysctls
@@ -309,18 +325,11 @@ export const serviceSysctl = sqliteTable("service_sysctl", {
   id: text("id").default(uuidv7).primaryKey(),
   serviceId: text("service_id")
     .notNull()
-    .references(() => service.id),
+    .references(() => serviceGeneration.id),
 
   key: text("key").notNull(),
   value: text("value").notNull(),
 });
-
-export const serviceSysctlRelations = relations(serviceSysctl, ({ one }) => ({
-  service: one(service, {
-    fields: [serviceSysctl.serviceId],
-    references: [service.id],
-  }),
-}));
 
 /**
  * Project volumes
@@ -329,19 +338,12 @@ export const serviceVolume = sqliteTable("service_volume", {
   id: text("id").default(uuidv7).primaryKey(),
   serviceId: text("service_id")
     .notNull()
-    .references(() => service.id),
+    .references(() => serviceGeneration.id),
 
   source: text("source"),
   target: text("target").notNull(),
   type: text("type").$type<DockerVolumeType>().notNull(),
 });
-
-export const serviceVolumeRelations = relations(serviceVolume, ({ one }) => ({
-  service: one(service, {
-    fields: [serviceVolume.serviceId],
-    references: [service.id],
-  }),
-}));
 
 /**
  * Project ulimits
@@ -350,16 +352,9 @@ export const serviceUlimit = sqliteTable("service_ulimit", {
   id: text("id").default(uuidv7).primaryKey(),
   serviceId: text("service_id")
     .notNull()
-    .references(() => service.id),
+    .references(() => serviceGeneration.id),
 
   name: text("name").notNull(),
   soft: integer("soft").notNull(),
   hard: integer("hard").notNull(),
 });
-
-export const serviceUlimitRelations = relations(serviceUlimit, ({ one }) => ({
-  service: one(service, {
-    fields: [serviceUlimit.serviceId],
-    references: [service.id],
-  }),
-}));

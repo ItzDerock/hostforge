@@ -4,7 +4,7 @@ import { z } from "zod";
 import { projectMiddleware } from "~/server/api/middleware/project";
 import { serviceMiddleware } from "~/server/api/middleware/service";
 import { authenticatedProcedure } from "~/server/api/trpc";
-import { service, serviceDomain } from "~/server/db/schema";
+import { serviceDomain, serviceGeneration } from "~/server/db/schema";
 import { DockerDeployMode } from "~/server/db/types";
 import { zDockerDuration, zDockerImage, zDomain } from "~/server/utils/zod";
 
@@ -27,7 +27,7 @@ export const updateServiceProcedure = authenticatedProcedure
         serviceId: z.string(),
       })
       .merge(
-        createInsertSchema(service, {
+        createInsertSchema(serviceGeneration, {
           dockerImage: zDockerImage,
           gitUrl: (schema) =>
             schema.gitUrl.regex(
@@ -93,9 +93,9 @@ export const updateServiceProcedure = authenticatedProcedure
     delete queryUpdate.id;
 
     await ctx.db
-      .update(service)
+      .update(serviceGeneration)
       .set(queryUpdate)
-      .where(eq(service.id, ctx.service.id))
+      .where(eq(serviceGeneration.id, ctx.service.id))
       .execute();
 
     return true;

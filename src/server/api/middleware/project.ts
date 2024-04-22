@@ -1,7 +1,6 @@
 import { TRPCError, experimental_standaloneMiddleware } from "@trpc/server";
-import { eq, or } from "drizzle-orm";
 import { type db } from "~/server/db";
-import { projects } from "~/server/db/schema";
+import ProjectManager from "~/server/managers/ProjectManager";
 
 export type BasicProjectDetails = {
   id: string;
@@ -21,21 +20,7 @@ export const projectMiddleware = experimental_standaloneMiddleware<{
     });
   }
 
-  const [project] = await ctx.db
-    .select({
-      id: projects.id,
-      friendlyName: projects.friendlyName,
-      internalName: projects.internalName,
-      createdAt: projects.createdAt,
-    })
-    .from(projects)
-    .where(
-      or(
-        eq(projects.id, input.projectId),
-        eq(projects.internalName, input.projectId),
-      ),
-    )
-    .limit(1);
+  const project = await ProjectManager.findByNameOrId(input.projectId);
 
   if (!project)
     throw new TRPCError({
@@ -45,7 +30,7 @@ export const projectMiddleware = experimental_standaloneMiddleware<{
 
   return next({
     ctx: {
-      project: project as BasicProjectDetails,
+      project: project,
     },
   });
 });

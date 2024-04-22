@@ -1,7 +1,7 @@
 import assert from "assert";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { projects, service } from "~/server/db/schema";
+import { projects, serviceGeneration } from "~/server/db/schema";
 import { authenticatedProcedure, createTRPCRouter } from "../../trpc";
 import { deployProject } from "./deploy";
 import { getProject } from "./project";
@@ -34,11 +34,11 @@ export const projectRouter = createTRPCRouter({
         userProjects.map(async (project) => {
           const projServices = await ctx.db
             .select({
-              id: service.id,
-              name: service.name,
+              id: serviceGeneration.id,
+              name: serviceGeneration.name,
             })
-            .from(service)
-            .where(eq(service.projectId, project.id));
+            .from(serviceGeneration)
+            .where(eq(serviceGeneration.serviceId, project.id));
 
           return {
             ...project,

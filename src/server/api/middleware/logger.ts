@@ -3,6 +3,7 @@ import chalk from "chalk";
 import logger from "~/server/utils/logger";
 
 const log = logger.child({ module: "trpc:server" });
+
 export const loggerMiddleware = experimental_standaloneMiddleware().create(
   async ({ type, path, next }) => {
     const result = await next();

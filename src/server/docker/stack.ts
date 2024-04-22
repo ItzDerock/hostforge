@@ -1,12 +1,12 @@
 import assert from "assert";
 import {
-  type service,
   type serviceDomain,
+  type serviceGeneration,
   type servicePort,
   type serviceSysctl,
   type serviceUlimit,
   type serviceVolume,
-} from "../db/schema";
+} from "../db/schema/schema";
 import {
   DOCKER_DEPLOY_MODE_MAP,
   DOCKER_RESTART_CONDITION_MAP,
@@ -19,7 +19,7 @@ import {
   type Ulimits,
 } from "./compose";
 
-export type Service = typeof service.$inferSelect & {
+export type Service = typeof serviceGeneration.$inferSelect & {
   domains: (typeof serviceDomain.$inferSelect)[];
   ports: (typeof servicePort.$inferSelect)[];
   sysctls: (typeof serviceSysctl.$inferSelect)[];

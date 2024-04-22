@@ -4,7 +4,7 @@ import { mkdirSync } from "fs";
 import { rm, rmdir } from "fs/promises";
 import path from "path";
 import { db } from "../db";
-import { service, serviceDeployment } from "../db/schema";
+import { serviceDeployment, serviceGeneration } from "../db/schema/schema";
 import {
   ServiceBuildMethod,
   ServiceDeploymentStatus,
@@ -122,8 +122,8 @@ export default class BuildTask {
   private async fetchServiceDetails() {
     const [serviceDetails] = await db
       .select()
-      .from(service)
-      .where(eq(service.id, this.serviceId));
+      .from(serviceGeneration)
+      .where(eq(serviceGeneration.id, this.serviceId));
 
     assert(serviceDetails, "Service not found");
 

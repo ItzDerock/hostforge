@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { BuildManager } from "~/server/build/BuildManager";
-import { service } from "~/server/db/schema";
+import { serviceGeneration } from "~/server/db/schema";
 import { buildDockerStackFile } from "~/server/docker/stack";
 import logger from "~/server/utils/logger";
 import { projectMiddleware } from "../../middleware/project";
@@ -23,7 +23,7 @@ export const deployProject = authenticatedProcedure
   .use(projectMiddleware)
   .mutation(async ({ ctx, input }) => {
     const services = await ctx.db.query.service.findMany({
-      where: eq(service.projectId, input.projectId),
+      where: eq(serviceGeneration.serviceId, input.projectId),
 
       with: {
         domains: true,

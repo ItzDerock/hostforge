@@ -1,5 +1,5 @@
 import assert from "assert";
-import type Dockerode from "dockerode";
+import { type ContainerStats } from "dockerode";
 import { z } from "zod";
 import { projectMiddleware } from "~/server/api/middleware/project";
 import { serviceMiddleware } from "~/server/api/middleware/service";
@@ -17,7 +17,8 @@ const zContainerDetails = z.object({
   node: z.string().optional(),
 
   cpu: z.number().optional(),
-  memory: z.number().optional(),
+  totalMemory: z.number().optional(),
+  usedMemory: z.number().optional(),
   network: z
     .object({
       tx: z.number().optional(),
@@ -175,36 +176,74 @@ export const getServiceContainers = authenticatedProcedure
           return;
         }
 
-        let containerStats: Dockerode.ContainerStats | null = null;
+        let containerStats: ContainerStats | null = null;
+        let formattedContainerStats:
+          | z.infer<typeof zContainerDetails>
+          | undefined = undefined;
 
         if (task.Status?.ContainerStatus?.ContainerID) {
           containerStats = await ctx.docker
             .getContainer(task.Status.ContainerStatus.ContainerID)
-            .stats({ "one-shot": true, stream: false })
+            .stats({ stream: false })
             .catch(docker404ToNull);
+        }
+
+        if (containerStats) {
+          // calculate container stats
+          // https://docs.docker.com/engine/api/v1.45/#tag/Container/operation/ContainerStats
+          let usedMemory: number | undefined;
+          let cpuPercent: number | undefined;
+          let totalMemory: number | undefined;
+
+          try {
+            usedMemory =
+              containerStats.memory_stats.usage -
+              (containerStats.memory_stats.stats?.cache || 0);
+            totalMemory = containerStats.memory_stats.limit;
+            const cpuDelta =
+              containerStats.cpu_stats.cpu_usage.total_usage -
+              containerStats.precpu_stats.cpu_usage.total_usage;
+            const systemCpuDelta =
+              containerStats.cpu_stats.system_cpu_usage -
+              containerStats.precpu_stats.system_cpu_usage;
+            const numCpus = containerStats.cpu_stats.online_cpus;
+            cpuPercent = (cpuDelta / systemCpuDelta) * numCpus * 100;
+
+            // if is nan, set to undefined
+            if (isNaN(usedMemory)) usedMemory = undefined;
+            if (isNaN(cpuPercent)) cpuPercent = undefined;
+            if (isNaN(totalMemory)) totalMemory = undefined;
+          } catch (error) {
+            logger.debug(
+              "Failed to calculate container stats. **THIS IS NOT A BUG if the service was recently redeployed.**",
+              error,
+            );
+          }
+
+          formattedContainerStats = {
+            containerId: task.Status?.ContainerStatus?.ContainerID ?? "",
+            containerCreatedAt: new Date(
+              container ? container.Created * 1000 : task.CreatedAt ?? 0,
+            ).getTime(),
+            error: task.Status?.Err,
+            node: nodes.find((node) => node.ID === task.NodeID)?.Description
+              ?.Hostname,
+
+            cpu: cpuPercent,
+            usedMemory,
+            totalMemory,
+
+            network: {
+              tx: containerStats?.networks?.eth0?.tx_bytes,
+              rx: containerStats?.networks?.eth0?.rx_bytes,
+            },
+          };
         }
 
         return {
           slot: task.Slot,
 
-          container: containerStats
-            ? {
-                containerId: task.Status?.ContainerStatus?.ContainerID ?? "",
-                containerCreatedAt: new Date(
-                  container ? container.Created * 1000 : task.CreatedAt ?? 0,
-                ).getTime(),
-                error: task.Status?.Err,
-                node: nodes.find((node) => node.ID === task.NodeID)?.Description
-                  ?.Hostname,
-
-                cpu: containerStats?.cpu_stats?.cpu_usage?.total_usage,
-                memory: containerStats?.memory_stats?.usage,
-                network: {
-                  tx: containerStats?.networks?.eth0?.tx_bytes,
-                  rx: containerStats?.networks?.eth0?.rx_bytes,
-                },
-              }
-            : undefined,
+          container: formattedContainerStats,
 
           task: {
             taskMessage: task.Status?.Message,

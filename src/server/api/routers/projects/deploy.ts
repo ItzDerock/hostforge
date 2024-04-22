@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { BuildManager } from "~/server/build/BuildManager";
 import { service } from "~/server/db/schema";
 import { buildDockerStackFile } from "~/server/docker/stack";
 import logger from "~/server/utils/logger";
@@ -32,6 +33,10 @@ export const deployProject = authenticatedProcedure
         ulimits: true,
       },
     });
+
+    // run builds
+    // TODO: run only if needed
+    await BuildManager.getInstance().runBuilds(services);
 
     const dockerStackFile = await buildDockerStackFile(services);
     logger.debug("deploying stack", { dockerStackFile });

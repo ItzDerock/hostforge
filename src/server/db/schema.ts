@@ -13,6 +13,7 @@ import {
   DockerRestartCondition,
   ServiceBuildMethod,
   type DockerVolumeType,
+  type ServiceDeploymentStatus,
   type ServicePortType,
   type ServiceSource,
 } from "./types";
@@ -253,7 +254,8 @@ export const serviceDeployment = sqliteTable("service_deployment", {
 
   createdAt: integer("created_at").default(now).notNull(),
 
-  //
+  buildLogs: blob("build_logs"), // COMPRESSED!
+  status: integer("status").$type<ServiceDeploymentStatus>().notNull(),
 });
 
 /**

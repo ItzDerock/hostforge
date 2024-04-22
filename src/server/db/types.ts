@@ -128,4 +128,29 @@ export enum DockerVolumeType {
   Tmpfs,
 }
 
-// export enum
+export enum ServiceDeploymentStatus {
+  /**
+   * The service is waiting to be built. This may be because there are other builds in progress.
+   */
+  BuildPending,
+
+  /**
+   * The service is being built.
+   */
+  Building,
+
+  /**
+   * The service is deploying.
+   */
+  Deploying,
+
+  /**
+   * The deployment was successful.
+   */
+  Success,
+
+  /**
+   * The deployment failed.
+   */
+  Failed,
+}

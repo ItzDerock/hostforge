@@ -2,6 +2,7 @@
 
 import { formatDistanceToNowStrict } from "date-fns";
 import { ClipboardIcon } from "lucide-react";
+import prettyBytes from "pretty-bytes";
 import { useEffect, useState } from "react";
 import { CgSpinner } from "react-icons/cg";
 import { FaGear } from "react-icons/fa6";
@@ -94,11 +95,14 @@ export function ContainerEntry({
 
         <TableCell>{uptimeText ?? "N/A"}</TableCell>
         <TableCell>{mainContainer?.node ?? "unknown"}</TableCell>
-        <TableCell>{mainContainer?.cpu ?? "?"}</TableCell>
-        <TableCell>{mainContainer?.memory ?? "?"}</TableCell>
+        <TableCell>{mainContainer?.cpu?.toFixed(2) ?? "?"}%</TableCell>
         <TableCell>
-          {mainContainer?.network?.rx ?? "N/A"} /{" "}
-          {mainContainer?.network?.tx ?? "N/A"}
+          {prettyBytes(mainContainer?.usedMemory ?? 0)} /{" "}
+          {prettyBytes(mainContainer?.totalMemory ?? 0)}
+        </TableCell>
+        <TableCell>
+          {prettyBytes(mainContainer?.network?.rx ?? 0)} /{" "}
+          {prettyBytes(mainContainer?.network?.tx ?? 0)}
         </TableCell>
         <TableCell className="text-right">
           <DropdownMenu>

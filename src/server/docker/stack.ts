@@ -1,5 +1,4 @@
 import assert from "assert";
-import { parse } from "dotenv";
 import {
   type service,
   type serviceDomain,
@@ -78,17 +77,20 @@ export async function buildDockerStackFile(
 
         rollback_config: {
           parallelism: 0,
-          order: service.zeroDowntime === 1 ? "start-first" : "stop-first",
+          order: service.zeroDowntime ? "start-first" : "stop-first",
         },
 
         update_config: {
           parallelism: 0,
-          order: service.zeroDowntime === 1 ? "start-first" : "stop-first",
+          order: service.zeroDowntime ? "start-first" : "stop-first",
         },
       },
 
       entrypoint: service.entrypoint ?? undefined,
-      environment: service.environment ? parse(service.environment) : undefined,
+      // environment: service.environment ? parse(service.environment) : undefined,
+      environment: {
+        EULA: "TRUE",
+      },
       image: service.finalizedDockerImage ?? service.dockerImage ?? undefined,
       ports: service.ports.map((port) => ({
         mode:
@@ -99,7 +101,7 @@ export async function buildDockerStackFile(
       })),
 
       healthcheck: {
-        disable: service.healthcheckEnabled === 0,
+        disable: service.healthcheckEnabled,
         test: service.healthcheckCommand ?? undefined,
         interval: service.healthcheckInterval ?? undefined,
         timeout: service.healthcheckTimeout ?? undefined,

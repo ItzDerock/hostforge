@@ -1,0 +1,2 @@
+Developing on WINDOWS is not supported, and is not planned to be supported. Please use WSL2 or a Linux VM.
+The application may run, but certain features may not work as expected due to the reliance on UNIX-like FHS environment.

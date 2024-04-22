@@ -40,7 +40,7 @@ export default function ContainersPage({
           <TableHead>Uptime</TableHead>
           <TableHead>Node</TableHead>
           <TableHead>CPU</TableHead>
-          <TableHead>Memory</TableHead>
+          <TableHead>Memory (used/limit)</TableHead>
           <TableHead>Network (RX/TX)</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>

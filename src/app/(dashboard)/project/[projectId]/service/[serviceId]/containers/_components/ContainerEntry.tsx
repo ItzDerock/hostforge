@@ -45,7 +45,7 @@ export function ContainerEntry({
 
   return (
     <>
-      <TableRow className="!border-b-0">
+      <TableRow>
         <TableCell
           className="cursor-pointer font-mono text-sm text-muted-foreground"
           onClick={() => {
@@ -95,7 +95,7 @@ export function ContainerEntry({
 
         <TableCell>{uptimeText ?? "N/A"}</TableCell>
         <TableCell>{mainContainer?.node ?? "unknown"}</TableCell>
-        <TableCell>{mainContainer?.cpu?.toFixed(2) ?? "?"}%</TableCell>
+        <TableCell>{mainContainer?.cpu?.toFixed(2) ?? "0.00"}%</TableCell>
         <TableCell>
           {prettyBytes(mainContainer?.usedMemory ?? 0)} /{" "}
           {prettyBytes(mainContainer?.totalMemory ?? 0)}

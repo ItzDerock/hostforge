@@ -7,8 +7,10 @@ import {
   ContainerIcon,
   GlobeIcon,
   HomeIcon,
+  NetworkIcon,
   SaveAllIcon,
   ServerCogIcon,
+  TextIcon,
 } from "lucide-react";
 import { SidebarNav, type SidebarNavProps } from "~/components/SidebarNav";
 import { useProject } from "../../_context/ProjectContext";
@@ -38,6 +40,12 @@ const sidebarNavItems = [
     href: "/deployments",
     icon: CloudyIcon,
   },
+  {
+    title: "Logs",
+    description: "Logs for this service.",
+    href: "/logs",
+    icon: TextIcon,
+  },
 
   {
     type: "divider",
@@ -55,6 +63,12 @@ const sidebarNavItems = [
     description: "Domain settings",
     href: "/domains",
     icon: GlobeIcon,
+  },
+  {
+    title: "Network",
+    description: "Network settings",
+    href: "/network",
+    icon: NetworkIcon,
   },
   {
     title: "Environment",
@@ -88,7 +102,7 @@ export default function ProjectHomeLayout({
   })) as SidebarNavProps["items"];
 
   return (
-    <div className="hidden space-y-6 py-10 md:block">
+    <div className="space-y-6 py-10">
       <div className="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">
         <aside className="lg:w-1/5">
           <SidebarNav items={items} />

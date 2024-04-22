@@ -24,7 +24,7 @@ import { api } from "~/trpc/react";
 import { type RouterOutputs } from "~/trpc/shared";
 
 const formValidator = z.object({
-  replicas: z.coerce.number().int().positive(),
+  replicas: z.coerce.number().int().min(0),
   maxReplicasPerNode: z.number().int().positive().nullable(),
   deployMode: z.enum(["replicated", "global"]),
   zeroDowntime: z.boolean(),

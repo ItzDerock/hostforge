@@ -1,6 +1,7 @@
 import { deterministicString } from "deterministic-object-hash";
 import { and, eq, or } from "drizzle-orm";
 import { create } from "jsondiffpatch";
+import assert from "node:assert";
 import { db } from "../db";
 import { service, serviceGeneration } from "../db/schema";
 import logger from "../utils/logger";
@@ -46,6 +47,22 @@ export default class ServiceManager {
     return data ? new ServiceManager(data) : null;
   }
 
+  public getData() {
+    return this.serviceData;
+  }
+
+  public async getDataWithGenerations() {
+    return {
+      ...this.serviceData,
+      latestGeneration:
+        this.serviceData.latestGeneration ??
+        (await this.fetchLatestGeneration()),
+      deployedGeneration:
+        this.serviceData.deployedGeneration ??
+        (await this.fetchDeployedGeneration()),
+    };
+  }
+
   /**
    * Returns a list of changed parameters between the current deployed service and the latest generation.
    */
@@ -65,6 +82,44 @@ export default class ServiceManager {
 
     // compare the two
     return ServiceManager.JSON_DIFF.diff(deployed, latest);
+  }
+
+  /**
+   * Clones the latest generation and sets the original generation as the deployed generation.
+   */
+  public async deriveNewGeneration() {
+    // do as much as possible on the database
+    await db.transaction(async (trx) => {
+      // clone the latest generation
+      const originalLatestGeneration =
+        await trx.query.serviceGeneration.findFirst({
+          where: eq(serviceGeneration.id, this.serviceData.latestGenerationId),
+        });
+
+      assert(originalLatestGeneration, "Could not find latest generation??");
+
+      // delete the ID so we can insert it again
+      originalLatestGeneration.deploymentId = null;
+      // @ts-expect-error i dont feel like typing it as optional
+      delete originalLatestGeneration.id;
+
+      // insert the cloned generation
+      const [clonedLatestGeneration] = await trx
+        .insert(serviceGeneration)
+        .values(originalLatestGeneration)
+        .returning({ id: serviceGeneration.id });
+
+      assert(clonedLatestGeneration, "Cloned generation was null!");
+
+      // update the service's latest gen to point to the cloned generation
+      // and set the deployed gen to the original
+      await trx.update(service).set({
+        latestGenerationId: clonedLatestGeneration.id,
+        deployedGenerationId: this.serviceData.latestGenerationId,
+      });
+    });
+
+    await this.refetch();
   }
 
   /**
@@ -96,5 +151,17 @@ export default class ServiceManager {
       await db.query.serviceGeneration.findFirst({
         where: eq(serviceGeneration.id, this.serviceData.deployedGenerationId),
       }));
+  }
+
+  /**
+   * Refetches the latest data from the database.
+   */
+  private async refetch() {
+    const data = await db.query.service.findFirst({
+      where: eq(service.id, this.serviceData.id),
+    });
+
+    assert(data, "Could not find service in database");
+    this.serviceData = data;
   }
 }

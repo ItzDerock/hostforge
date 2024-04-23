@@ -166,15 +166,18 @@ export const serviceGeneration = sqliteTable(
   "service_generation",
   {
     id: text("id").default(uuidv7).primaryKey(),
+
+    // If a new relation is added, make sure it is properly cloned
+    // inside of ServiceManager#cloneGeneration
     serviceId: text("service_id")
       .notNull()
       .references((): AnySQLiteColumn => service.id, {
         onDelete: "cascade",
       }),
 
-    deploymentId: text("deployment_id")
-      .notNull()
-      .references((): AnySQLiteColumn => serviceDeployment.id),
+    deploymentId: text("deployment_id").references(
+      (): AnySQLiteColumn => serviceDeployment.id,
+    ),
 
     // service configuration
     source: integer("source").$type<ServiceSource>().notNull(),

@@ -22,6 +22,7 @@
           pkgs.nodePackages.typescript
           pkgs.nodePackages.typescript-language-server
           pkgs.nixpacks
+          pkgs.bashInteractive
         ];
       };
     });

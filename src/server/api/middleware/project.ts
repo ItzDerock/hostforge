@@ -1,6 +1,6 @@
 import { TRPCError, experimental_standaloneMiddleware } from "@trpc/server";
 import { type db } from "~/server/db";
-import ProjectManager from "~/server/managers/ProjectManager";
+import ProjectManager from "~/server/managers/Project";
 
 export type BasicProjectDetails = {
   id: string;

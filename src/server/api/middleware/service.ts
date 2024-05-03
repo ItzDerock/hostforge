@@ -1,11 +1,10 @@
 import { TRPCError, experimental_standaloneMiddleware } from "@trpc/server";
-import { and, eq, or } from "drizzle-orm";
 import { type db } from "~/server/db";
-import { service } from "~/server/db/schema";
-import { type BasicProjectDetails } from "./project";
+import type ProjectManager from "~/server/managers/Project";
+import ServiceManager from "~/server/managers/Service";
 
 export const serviceMiddleware = experimental_standaloneMiddleware<{
-  ctx: { db: typeof db; project: BasicProjectDetails };
+  ctx: { db: typeof db; project: ProjectManager };
   input: { serviceId: string };
 }>().create(async ({ ctx, input, next }) => {
   if (typeof input.serviceId != "string") {
@@ -15,7 +14,7 @@ export const serviceMiddleware = experimental_standaloneMiddleware<{
     });
   }
 
-  if (typeof ctx.project?.id != "string") {
+  if (typeof ctx.project != "object") {
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message:
@@ -23,16 +22,10 @@ export const serviceMiddleware = experimental_standaloneMiddleware<{
     });
   }
 
-  const serviceDetails = await ctx.db.query.service.findFirst({
-    where: and(
-      eq(service.projectId, ctx.project.id),
-      or(eq(service.name, input.serviceId), eq(service.id, input.serviceId)),
-    ),
-
-    with: {
-      latestGeneration: true,
-    },
-  });
+  const serviceDetails = await ServiceManager.findByNameOrId(
+    input.serviceId,
+    ctx.project.getData().id,
+  );
 
   if (!serviceDetails)
     throw new TRPCError({

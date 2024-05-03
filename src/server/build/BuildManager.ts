@@ -3,7 +3,7 @@ import { Queue } from "datastructures-js";
 import { db } from "../db";
 import { serviceDeployment } from "../db/schema/schema";
 import { ServiceDeploymentStatus, ServiceSource } from "../db/types";
-import { type Service } from "../docker/stack";
+import { type FullServiceGeneration } from "../docker/stack";
 import logger from "../utils/logger";
 import BuildTask from "./BuildTask";
 
@@ -35,7 +35,7 @@ export class BuildManager {
     });
   }
 
-  public async runBuilds(services: Service[]) {
+  public async runBuilds(services: FullServiceGeneration[]) {
     await Promise.all(
       services.map(async (service) => {
         if (service.source !== ServiceSource.Docker) {

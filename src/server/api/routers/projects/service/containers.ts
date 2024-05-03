@@ -94,7 +94,9 @@ export const getServiceContainers = authenticatedProcedure
   .query(async ({ ctx }) => {
     // get docker service stats
     const service = (await ctx.docker
-      .getService(`${ctx.project.internalName}_${ctx.service.name}`)
+      .getService(
+        `${ctx.project.getData().internalName}_${ctx.service.getData().name}`,
+      )
       .inspect()
       .catch(docker404ToNull)) as
       | DockerAPITypes["/services/{id}"]["get"]["responses"]["200"]["schema"]

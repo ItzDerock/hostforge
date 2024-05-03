@@ -144,9 +144,10 @@ export const service = sqliteTable(
       .notNull()
       .references(() => serviceGeneration.id),
 
-    deployedGenerationId: text("deployed_generation_id")
-      .notNull()
-      .references(() => serviceGeneration.id),
+    redeploySecret: text("redeploy_secret").notNull(),
+    deployedGenerationId: text("deployed_generation_id").references(
+      () => serviceGeneration.id,
+    ),
 
     createdAt: integer("created_at").default(now).notNull(),
   },
@@ -181,7 +182,6 @@ export const serviceGeneration = sqliteTable(
 
     // service configuration
     source: integer("source").$type<ServiceSource>().notNull(),
-    redeploySecret: text("redeploy_secret").notNull(),
     environment: text("environment"),
 
     // for docker source

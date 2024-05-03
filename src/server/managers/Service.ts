@@ -4,6 +4,7 @@ import { create } from "jsondiffpatch";
 import assert from "node:assert";
 import { db } from "../db";
 import { service, serviceGeneration } from "../db/schema";
+import { ServiceSource } from "../db/types";
 import logger from "../utils/logger";
 
 export default class ServiceManager {
@@ -85,9 +86,38 @@ export default class ServiceManager {
   }
 
   /**
+   * Returns true if there has been a configuration change
+   */
+  public async hasPendingChanges() {
+    const diff = await this.buildDeployDiff();
+
+    if (typeof diff === "object") return Object.keys(diff).length !== 0;
+    return true;
+  }
+
+  /**
+   * Checks if the source has changed between the deployed and latest generation.
+   * If true, then a image build is required.
+   */
+  public async requiresImageBuild() {
+    const diff = await this.buildDeployDiff();
+    const latestGen = await this.fetchLatestGeneration();
+
+    // if latest gen has dockerimage source, no build required
+    if (latestGen.source === ServiceSource.Docker) {
+      return false;
+    }
+
+    // TODO: implement
+    logger.debug("Service diff", { diff });
+
+    return Object.keys(diff).length > 0;
+  }
+
+  /**
    * Clones the latest generation and sets the original generation as the deployed generation.
    */
-  public async deriveNewGeneration() {
+  public async deriveNewGeneration(setDeploymentId?: string) {
     // do as much as possible on the database
     await db.transaction(async (trx) => {
       // clone the latest generation
@@ -98,8 +128,10 @@ export default class ServiceManager {
 
       assert(originalLatestGeneration, "Could not find latest generation??");
 
+      // update deployment id
+      originalLatestGeneration.deploymentId = setDeploymentId ?? null;
+
       // delete the ID so we can insert it again
-      originalLatestGeneration.deploymentId = null;
       // @ts-expect-error i dont feel like typing it as optional
       delete originalLatestGeneration.id;
 
@@ -122,6 +154,21 @@ export default class ServiceManager {
     await this.refetch();
   }
 
+  public async fetchFullLatestGeneration() {
+    return await db.query.serviceGeneration.findFirst({
+      where: eq(serviceGeneration.id, this.serviceData.latestGenerationId),
+      with: {
+        deployment: true,
+        domains: true,
+        ports: true,
+        service: true,
+        sysctls: true,
+        ulimits: true,
+        volumes: true,
+      },
+    });
+  }
+
   /**
    * Fetches the latest generation of the service.
    * @param forceRefetch if true, will ignore what's cached internally
@@ -132,10 +179,17 @@ export default class ServiceManager {
       return this.serviceData.latestGeneration;
     }
 
-    return (this.serviceData.latestGeneration =
+    this.serviceData.latestGeneration =
       await db.query.serviceGeneration.findFirst({
         where: eq(serviceGeneration.id, this.serviceData.latestGenerationId),
-      }));
+      });
+
+    assert(
+      this.serviceData.latestGeneration,
+      "Service is missing latest generation!",
+    );
+
+    return this.serviceData.latestGeneration;
   }
 
   /**
@@ -147,10 +201,14 @@ export default class ServiceManager {
       return this.serviceData.deployedGeneration;
     }
 
-    return (this.serviceData.deployedGeneration =
+    this.serviceData.deployedGeneration =
       await db.query.serviceGeneration.findFirst({
         where: eq(serviceGeneration.id, this.serviceData.deployedGenerationId),
-      }));
+      });
+
+    assert(this.serviceData.deployedGeneration, "Could not find deployed gen");
+
+    return this.serviceData.deployedGeneration;
   }
 
   /**

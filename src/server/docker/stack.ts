@@ -19,7 +19,7 @@ import {
   type Ulimits,
 } from "./compose";
 
-export type Service = typeof serviceGeneration.$inferSelect & {
+export type FullServiceGeneration = typeof serviceGeneration.$inferSelect & {
   domains: (typeof serviceDomain.$inferSelect)[];
   ports: (typeof servicePort.$inferSelect)[];
   sysctls: (typeof serviceSysctl.$inferSelect)[];
@@ -38,7 +38,7 @@ export type Service = typeof serviceGeneration.$inferSelect & {
  */
 // eslint-disable-next-line @typescript-eslint/require-await
 export async function buildDockerStackFile(
-  services: Service[],
+  services: FullServiceGeneration[],
 ): Promise<ComposeSpecification> {
   // create services
   const swarmServices: Record<string, DefinitionsService> = {};

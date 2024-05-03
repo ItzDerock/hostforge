@@ -1,13 +1,21 @@
 import assert from "assert";
 import { eq, or } from "drizzle-orm";
+import { BuildManager } from "../build/BuildManager";
 import { db } from "../db";
 import {
   projectDeployment,
   projects,
   service,
   serviceDeployment,
+  serviceGeneration,
 } from "../db/schema";
 import { ServiceDeploymentStatus } from "../db/types";
+import { type Docker } from "../docker/docker";
+import {
+  buildDockerStackFile,
+  type FullServiceGeneration,
+} from "../docker/stack";
+import logger from "../utils/logger";
 import ServiceManager from "./Service";
 
 export default class ProjectManager {
@@ -45,12 +53,9 @@ export default class ProjectManager {
   /**
    * Deploys the project.
    */
-  public async deploy(deployOptions?: { force?: boolean }) {
+  public async deploy(deployOptions: { docker: Docker; force?: boolean }) {
     // 1. get all services that have pending updates
     const services = await this.getServicesWithPendingUpdates();
-    const serviceData = await Promise.all(
-      services.map((service) => service.getDataWithGenerations()),
-    );
 
     // 2. Create a deployment entry
     const [deployment] = await db
@@ -66,13 +71,35 @@ export default class ProjectManager {
     assert(deployment, "deploymentId is missing");
 
     // 2. for each service, create a new deployment and run builds if needed
-    await Promise.all(
-      serviceData.map(async (service) => {
+    const allServiceData = await Promise.all(
+      services.map(async (service): Promise<FullServiceGeneration> => {
+        // fetch latest generation with all children
+        const fullGenerationData = await db.query.serviceGeneration.findFirst({
+          where: eq(serviceGeneration.id, service.getData().latestGenerationId),
+          with: {
+            deployment: true,
+            domains: true,
+            ports: true,
+            service: true,
+            sysctls: true,
+            ulimits: true,
+            volumes: true,
+          },
+        });
+
+        assert(fullGenerationData, "Generation data is missing!");
+
+        // if no deployment required, just return
+        if (await service.hasPendingChanges()) return fullGenerationData;
+
+        // fetch latest generation data
+        const serviceData = service.getData();
+
         // create a new deployment
         const [sDeployment] = await db
           .insert(serviceDeployment)
           .values({
-            serviceId: service.id,
+            serviceId: serviceData.id,
             status: ServiceDeploymentStatus.BuildPending,
             projectDeploymentId: deployment.id,
           })
@@ -80,12 +107,47 @@ export default class ProjectManager {
             id: serviceDeployment.id,
           });
 
+        assert(sDeployment, "serviceDeploymentId is missing");
+
         // link the new deployment to the service
+        if (fullGenerationData.deploymentId) {
+          logger.warn(
+            `Service "${serviceData.name}" already has a deployment linked.`,
+            {
+              serviceId: serviceData.id,
+              deploymentId: fullGenerationData.deploymentId,
+            },
+          );
+        }
+
+        await service.deriveNewGeneration(sDeployment.id);
+
+        // run builds if needed
+        if (await service.requiresImageBuild()) {
+          const image = await BuildManager.getInstance().startBuild(
+            serviceData.id,
+            sDeployment.id,
+          );
+
+          return {
+            ...fullGenerationData,
+            finalizedDockerImage: image,
+          };
+        }
+
+        return fullGenerationData;
       }),
     );
 
-    // create a new generation for each service
-    // await Promise.all(services.map((service) => service.deriveNewGeneration()));
+    // now build the dockerfile
+    const composeStack = await buildDockerStackFile(allServiceData);
+
+    return await deployOptions.docker.cli(
+      ["stack", "deploy", "--compose-file", "-", this.projectData.internalName],
+      {
+        stdin: JSON.stringify(composeStack),
+      },
+    );
   }
 
   /**

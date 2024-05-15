@@ -73,6 +73,7 @@ export const updateServiceProcedure = authenticatedProcedure
             id: true,
             projectId: true,
             name: true,
+            serviceId: true,
           })
           .partial(),
       )
@@ -95,7 +96,7 @@ export const updateServiceProcedure = authenticatedProcedure
     await ctx.db
       .update(serviceGeneration)
       .set(queryUpdate)
-      .where(eq(serviceGeneration.id, ctx.service.id))
+      .where(eq(serviceGeneration.id, ctx.service.getData().latestGenerationId))
       .execute();
 
     return true;

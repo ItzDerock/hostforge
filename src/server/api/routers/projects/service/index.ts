@@ -1,5 +1,5 @@
 import assert from "assert";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { env } from "~/env";
@@ -14,6 +14,7 @@ import {
   updateServiceDomainsProcedure,
   updateServiceProcedure,
 } from "./update";
+import { ServiceSource } from "~/server/db/types";
 
 export const serviceRouter = createTRPCRouter({
   containers: getServiceContainers,
@@ -33,27 +34,9 @@ export const serviceRouter = createTRPCRouter({
     .use(projectMiddleware)
     .use(serviceMiddleware)
     .query(async ({ ctx }) => {
-      // const fullServiceData = await ctx.db.query.service.findFirst({
-      //   where: eq(serviceGeneration.id, ctx.service.getData().id),
-      //   with: {
-      //     domains: true,
-      //     ports: true,
-      //     volumes: true,
-      //     sysctls: true,
-      //     ulimits: true,
-      //   },
-      // });
-
-      // assert(fullServiceData);
-
-      // return {
-      //   ...fullServiceData,
-      //   deployMode: DOCKER_DEPLOY_MODE_MAP[fullServiceData.deployMode],
-      // };
-
       return {
         ...ctx.service.getData(),
-        latestGeneration: ctx.service.getData().latestGeneration,
+        latestGeneration: await ctx.service.fetchFullLatestGeneration(),
       };
     }),
 
@@ -75,42 +58,61 @@ export const serviceRouter = createTRPCRouter({
     .use(projectMiddleware)
     .mutation(async ({ ctx, input }) => {
       // create a generation for the service
-      // const [defaultGeneration] = await ctx.db
-      //   .insert(serviceGeneration)
-      //   .values({
-      //     : ctx.project.getData().id,
+      const trxResult = await ctx.db.transaction(
+        async (trx) => {
+          // create the service
+          const [data] = await trx
+            .insert(service)
+            .values({
+              name: input.name,
+              projectId: ctx.project.getData().id,
+              latestGenerationId: "",
+              redeploySecret: randomBytes(env.REDEPLOY_SECRET_BYTES).toString(
+                "hex",
+              ),
+            })
+            .returning({
+              id: serviceGeneration.id,
+            })
+            .execute()
+            .catch((err) => {
+              console.error(err);
+              throw err;
+            });
 
-      //     status: "pending",
-      //   })
-      //   .returning({
-      //     id: serviceGeneration.id,
-      //   })
-      //   .execute();
+          assert(data?.id, "Expected service data to be returned");
 
-      const [data] = await ctx.db
-        .insert(service)
-        .values({
-          name: input.name,
-          projectId: ctx.project.getData().id,
-          latestGenerationId: "",
-          redeploySecret: randomBytes(env.REDEPLOY_SECRET_BYTES).toString(
-            "hex",
-          ),
-          // source: ServiceSource.Docker,
-          // dockerImage: "traefik/whoami",
-        })
-        .returning({
-          id: serviceGeneration.id,
-        })
-        .execute()
-        .catch((err) => {
-          console.error(err);
-          throw err;
-        });
+          // create initial generation
+          const [generation] = await trx
+            .insert(serviceGeneration)
+            .values({
+              serviceId: data.id,
+              source: ServiceSource.Docker,
+              dockerImage: "traefik/whoami",
+            })
+            .returning({
+              id: serviceGeneration.id,
+            });
 
-      assert(data?.id);
+          assert(generation?.id, "Expected generation data to be returned");
 
-      return data.id;
+          // update the service with the generation id
+          await trx
+            .update(service)
+            .set({
+              latestGenerationId: generation.id,
+            })
+            .where(eq(service.id, data.id))
+            .execute();
+
+          return data.id;
+        },
+        {
+          behavior: "deferred",
+        },
+      );
+
+      return trxResult;
     }),
 
   delete: authenticatedProcedure

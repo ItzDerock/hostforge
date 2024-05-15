@@ -29,15 +29,9 @@ try {
 }
 
 // migrate the database
-if (env.NODE_ENV === "production") {
-  logger.child({ module: "database" }).info("⚙️ Migrating database");
-  migrate(db, { migrationsFolder: "./migrations" });
-  logger.child({ module: "database" }).info("✅ Database migrated");
-} else {
-  logger
-    .child({ module: "database" })
-    .info("Not running database migrations, use drizzle-kit push to migrate");
-}
+logger.child({ module: "database" }).info("⚙️ Starting database migrations...");
+migrate(db, { migrationsFolder: "./drizzle" });
+logger.child({ module: "database" }).info("✅ Migrations finished!");
 
 // start statistics
 void stats.start();

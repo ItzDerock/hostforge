@@ -12,7 +12,7 @@ export type BasicProjectDetails = {
 export const projectMiddleware = experimental_standaloneMiddleware<{
   ctx: { db: typeof db };
   input: { projectId: string };
-}>().create(async ({ ctx, input, next }) => {
+}>().create(async ({ input, next }) => {
   if (typeof input.projectId != "string") {
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",

@@ -9,6 +9,7 @@
     "build:server": "tsup",
     "clean": "rm -rf .next dist",
     "db:push": "drizzle-kit push:sqlite",
+    "db:generate": "drizzle-kit generate:sqlite",
     "dev": "tsup --watch --onSuccess \"npm run dev:run\" --clean",
     "dev:run": "node --enable-source-maps dist/server.js",
     "lint": "next lint",

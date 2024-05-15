@@ -33,6 +33,17 @@ export default class ProjectManager {
   }
 
   /**
+   * Lists all projects for a user.
+   */
+  static async listForUser(userId: string) {
+    const data = await db.query.projects.findMany({
+      where: eq(projects.ownerId, userId),
+    });
+
+    return data.map((data) => new ProjectManager(data));
+  }
+
+  /**
    * Returns the project data.
    */
   public getData() {
@@ -143,7 +154,7 @@ export default class ProjectManager {
     const composeStack = await buildDockerStackFile(allServiceData);
 
     return await deployOptions.docker.cli(
-      ["stack", "deploy", "--compose-file", "-", this.projectData.internalName],
+      ["stack", "deploy", "--compose-file", "-", this.projectData.internalName, deployOptions.force ? "--force-recreate" : ""],
       {
         stdin: JSON.stringify(composeStack),
       },

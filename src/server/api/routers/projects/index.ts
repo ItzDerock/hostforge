@@ -1,7 +1,7 @@
 import assert from "assert";
-import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { projects, serviceGeneration } from "~/server/db/schema";
+import { projects } from "~/server/db/schema";
+import ProjectManager from "~/server/managers/Project";
 import { authenticatedProcedure, createTRPCRouter } from "../../trpc";
 import { deployProject } from "./deploy";
 import { getProject } from "./project";
@@ -21,28 +21,21 @@ export const projectRouter = createTRPCRouter({
     .input(z.void())
     .output(z.unknown())
     .query(async ({ ctx }) => {
-      const userProjects = await ctx.db
-        .select({
-          id: projects.id,
-          friendlyName: projects.friendlyName,
-          internalName: projects.internalName,
-          createdAt: projects.createdAt,
-        })
-        .from(projects);
+      const projects = await ProjectManager.listForUser(
+        ctx.session.data.userId,
+      );
 
-      return await Promise.all(
-        userProjects.map(async (project) => {
-          const projServices = await ctx.db
-            .select({
-              id: serviceGeneration.id,
-              name: serviceGeneration.name,
-            })
-            .from(serviceGeneration)
-            .where(eq(serviceGeneration.serviceId, project.id));
-
+      // we love the nested Promise.all's
+      // TODO: refactor
+      return Promise.all(
+        projects.map(async (project) => {
           return {
-            ...project,
-            services: projServices,
+            ...project.getData(),
+            services: await Promise.all(
+              (await project.getServices()).map((service) =>
+                service.getDataWithGenerations(),
+              ),
+            ),
           };
         }),
       );

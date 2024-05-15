@@ -1,6 +1,4 @@
-import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { serviceGeneration } from "~/server/db/schema";
 import { projectMiddleware } from "../../middleware/project";
 import { authenticatedProcedure } from "../../trpc";
 
@@ -16,26 +14,22 @@ export const getProject = authenticatedProcedure
   .use(projectMiddleware)
   .output(z.unknown())
   .query(async ({ ctx }) => {
-    const projServices = await ctx.db
-      .select({
-        id: serviceGeneration.id,
-        name: serviceGeneration.name,
-      })
-      .from(serviceGeneration)
-      .where(eq(serviceGeneration.serviceId, ctx.project.id));
+    const projServices = await ctx.project.getServices();
 
     // get docker stats
     const stats = await ctx.docker.listServices({
       filters: {
-        label: [`com.docker.stack.namespace=${ctx.project.internalName}`],
+        label: [
+          `com.docker.stack.namespace=${ctx.project.getData().internalName}`,
+        ],
       },
     });
 
     return {
-      ...ctx.project,
+      ...ctx.project.getData(),
       services: projServices.map((service) => ({
-        ...service,
-        stats: stats.find((stat) => stat.Spec?.Name === service.name),
+        ...service.getData(),
+        stats: stats.find((stat) => stat.Spec?.Name === service.getData().name),
       })),
     };
   });

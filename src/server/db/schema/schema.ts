@@ -140,9 +140,13 @@ export const service = sqliteTable(
         onDelete: "cascade",
       }),
 
+    // https://github.com/drizzle-team/drizzle-orm/issues/2252
+    // Must manually add `DEFERRABLE INITIALLY DEFERRED`
     latestGenerationId: text("latest_generation_id")
       .notNull()
       .references(() => serviceGeneration.id),
+
+    // latestGenerationId: sql<string>`service_generation_id REFERENCES service_generation(id) NOT NULL `,
 
     redeploySecret: text("redeploy_secret").notNull(),
     deployedGenerationId: text("deployed_generation_id").references(

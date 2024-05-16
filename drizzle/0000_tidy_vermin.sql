@@ -19,12 +19,12 @@ CREATE TABLE `service` (
 	`id` text PRIMARY KEY DEFAULT (uuid_generate_v7()) NOT NULL,
 	`name` text NOT NULL,
 	`project_id` text NOT NULL,
-	`latest_generation_id` text NOT NULL DEFERRABLE INITIALLY DEFERRED,
+	`latest_generation_id` text NOT NULL,
 	`redeploy_secret` text NOT NULL,
 	`deployed_generation_id` text,
 	`created_at` integer DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON UPDATE no action ON DELETE cascade,
-	FOREIGN KEY (`latest_generation_id`) REFERENCES `service_generation`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`latest_generation_id`) REFERENCES `service_generation`(`id`) ON UPDATE no action ON DELETE no action DEFERRABLE INITIALLY DEFERRED, -- MODIFIED TO ADD DEFERRED CONSTRAINTS
 	FOREIGN KEY (`deployed_generation_id`) REFERENCES `service_generation`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -88,7 +88,9 @@ CREATE TABLE `service_generation` (
 	`logging_max_size` text DEFAULT '-1' NOT NULL,
 	`logging_max_files` integer DEFAULT 1 NOT NULL,
 	`created_at` integer DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	FOREIGN KEY (`service_id`) REFERENCES `service`(`id`) ON UPDATE no action ON DELETE cascade,
+
+	-- MODIFIED TO ADD DEFERRED CONSTRAINTS
+	FOREIGN KEY (`service_id`) REFERENCES `service`(`id`) ON UPDATE no action ON DELETE cascade DEFERRABLE INITIALLY DEFERRED,
 	FOREIGN KEY (`deployment_id`) REFERENCES `service_deployment`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint

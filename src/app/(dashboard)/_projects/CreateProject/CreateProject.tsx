@@ -77,7 +77,7 @@ export function CreateProjectButton() {
 
       composeFile: stripIndents`
         version: '3.8'
-        
+
         services:
         # Everything written here will be transformed into a HostForge service.
         # Please note that some options are not supported by Docker Swarm and not all options are supported by HostForge.`,
@@ -112,7 +112,7 @@ export function CreateProjectButton() {
               });
 
               toast.success("Project created!");
-              router.push(`/projects/${projectId}`);
+              router.push(`/project/${projectId}`);
             })}
             className="max-w-full space-y-4"
             id="create-project-form"

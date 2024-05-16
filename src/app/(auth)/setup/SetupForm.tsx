@@ -27,6 +27,7 @@ export function SetupForm() {
   const setupInstance = api.setup.setup.useMutation({
     onSuccess: () => {
       router.push("/login");
+      router.refresh();
       toast.success("Successfully setup instance!", { id: toastLoading });
     },
 

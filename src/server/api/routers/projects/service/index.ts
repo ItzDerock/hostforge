@@ -58,59 +58,53 @@ export const serviceRouter = createTRPCRouter({
     .use(projectMiddleware)
     .mutation(async ({ ctx, input }) => {
       // create a generation for the service
-      const trxResult = await ctx.db.transaction(
-        async (trx) => {
-          // create the service
-          const [data] = await trx
-            .insert(service)
-            .values({
-              name: input.name,
-              projectId: ctx.project.getData().id,
-              latestGenerationId: "",
-              redeploySecret: randomBytes(env.REDEPLOY_SECRET_BYTES).toString(
-                "hex",
-              ),
-            })
-            .returning({
-              id: serviceGeneration.id,
-            })
-            .execute()
-            .catch((err) => {
-              console.error(err);
-              throw err;
-            });
+      const trxResult = await ctx.db.transaction(async (trx) => {
+        // mark all deferrable
+        trx.run(sql`PRAGMA defer_foreign_keys = true;`);
 
-          assert(data?.id, "Expected service data to be returned");
+        // create the service
+        const [data] = await trx
+          .insert(service)
+          .values({
+            name: input.name,
+            projectId: ctx.project.getData().id,
+            latestGenerationId: "",
+            redeploySecret: randomBytes(env.REDEPLOY_SECRET_BYTES).toString(
+              "hex",
+            ),
+          })
+          .returning({
+            id: serviceGeneration.id,
+          });
 
-          // create initial generation
-          const [generation] = await trx
-            .insert(serviceGeneration)
-            .values({
-              serviceId: data.id,
-              source: ServiceSource.Docker,
-              dockerImage: "traefik/whoami",
-            })
-            .returning({
-              id: serviceGeneration.id,
-            });
+        assert(data?.id, "Expected service data to be returned");
 
-          assert(generation?.id, "Expected generation data to be returned");
+        // create initial generation
+        trx.run(sql`PRAGMA defer_foreign_keys = true;`);
+        const [generation] = await trx
+          .insert(serviceGeneration)
+          .values({
+            serviceId: data.id,
+            source: ServiceSource.Docker,
+            dockerImage: "traefik/whoami",
+          })
+          .returning({
+            id: serviceGeneration.id,
+          });
 
-          // update the service with the generation id
-          await trx
-            .update(service)
-            .set({
-              latestGenerationId: generation.id,
-            })
-            .where(eq(service.id, data.id))
-            .execute();
+        assert(generation?.id, "Expected generation data to be returned");
 
-          return data.id;
-        },
-        {
-          behavior: "deferred",
-        },
-      );
+        // update the service with the generation id
+        await trx
+          .update(service)
+          .set({
+            latestGenerationId: generation.id,
+          })
+          .where(eq(service.id, data.id))
+          .execute();
+
+        return data.id;
+      });
 
       return trxResult;
     }),

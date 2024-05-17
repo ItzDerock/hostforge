@@ -16,6 +16,9 @@ import {
 } from "./update";
 import { ServiceSource } from "~/server/db/types";
 import { SQLiteSyncDialect } from "drizzle-orm/sqlite-core";
+import { uuidv7 } from "uuidv7";
+import logger from "~/server/utils/logger";
+import { type Database } from "better-sqlite3";
 
 export const serviceRouter = createTRPCRouter({
   containers: getServiceContainers,
@@ -60,47 +63,64 @@ export const serviceRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       // create a generation for the service
       const trxResult = await ctx.db.transaction(async (trx) => {
-        // create initial generation
-        const [generation] = await trx
-          .insert(serviceGeneration)
-          .values({
-            serviceId: "",
-            source: ServiceSource.Docker,
-            dockerImage: "traefik/whoami",
-          })
-          .returning({
-            id: serviceGeneration.id,
-          });
+        // @ts-expect-error using drizzle-orm doesnt work, keep getting foreign key constraint error after the first insert despite it being deferred
+        const db: Database = trx.session.client;
 
-        assert(generation?.id, "Expected generation data to be returned");
+        db.pragma(`defer_foreign_keys = ON`);
+
+        const generationId = uuidv7();
+        const serviceId = uuidv7();
+
+        // create initial generation
+        const dialect = new SQLiteSyncDialect();
+        const createGenerationQuery = dialect.sqlToQuery(
+          trx
+            .insert(serviceGeneration)
+            .values({
+              id: generationId,
+              serviceId: serviceId,
+              source: ServiceSource.Docker,
+              dockerImage: "traefik/whoami",
+            })
+            .getSQL(),
+        );
+
+        const genCreateResult = db
+          .prepare(createGenerationQuery.sql)
+          .run(...createGenerationQuery.params);
+
+        logger.debug(
+          "inserted generation",
+          createGenerationQuery.sql,
+          genCreateResult,
+        );
 
         // create the service
-        const [data] = await trx
-          .insert(service)
-          .values({
-            name: input.name,
-            projectId: ctx.project.getData().id,
-            latestGenerationId: generation.id,
-            redeploySecret: randomBytes(env.REDEPLOY_SECRET_BYTES).toString(
-              "hex",
-            ),
-          })
-          .returning({
-            id: serviceGeneration.id,
-          });
+        const createServiceQuery = dialect.sqlToQuery(
+          trx
+            .insert(service)
+            .values({
+              id: serviceId,
+              name: input.name,
+              projectId: ctx.project.getData().id,
+              latestGenerationId: generationId,
+              redeploySecret: randomBytes(env.REDEPLOY_SECRET_BYTES).toString(
+                "hex",
+              ),
+            })
+            .returning({
+              id: serviceGeneration.id,
+            })
+            .getSQL(),
+        );
 
-        assert(data?.id, "Expected service data to be returned");
+        const createResult = db
+          .prepare(createServiceQuery.sql)
+          .run(...createServiceQuery.params);
 
-        // update the service with the generation id
-        await trx
-          .update(serviceGeneration)
-          .set({
-            serviceId: data.id,
-          })
-          .where(eq(service.id, data.id))
-          .execute();
+        logger.debug("inserted service", createServiceQuery.sql, createResult);
 
-        return data.id;
+        return serviceId;
       });
 
       return trxResult;

@@ -48,6 +48,7 @@ function createDatabaseInstance() {
 
   // enable WAL mode
   sqlite.pragma("journal_mode = WAL");
+  sqlite.pragma("defer_foreign_keys = true");
 
   // load uuidv7 extension
   // built from https://github.com/craigpastro/sqlite-uuidv7

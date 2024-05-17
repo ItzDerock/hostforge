@@ -17,8 +17,13 @@ import {
 } from "../docker/stack";
 import logger from "../utils/logger";
 import ServiceManager from "./Service";
+import { isDefined } from "~/utils/utils";
 
 export default class ProjectManager {
+  private static LOGGER = logger.child({
+    module: "ProjectManager",
+  });
+
   constructor(private projectData: typeof projects.$inferSelect) {}
 
   /**
@@ -66,7 +71,7 @@ export default class ProjectManager {
    */
   public async deploy(deployOptions: { docker: Docker; force?: boolean }) {
     // 1. get all services that have pending updates
-    const services = await this.getServicesWithPendingUpdates();
+    const services = await this.getServices();
 
     // 2. Create a deployment entry
     const [deployment] = await db
@@ -101,7 +106,12 @@ export default class ProjectManager {
         assert(fullGenerationData, "Generation data is missing!");
 
         // if no deployment required, just return
-        if (await service.hasPendingChanges()) return fullGenerationData;
+        if (!(await service.hasPendingChanges()))
+          return { ...fullGenerationData, service: service.getData() };
+
+        ProjectManager.LOGGER.debug(
+          `Service "${service.getData().name}" has pending changes.`,
+        );
 
         // fetch latest generation data
         const serviceData = service.getData();
@@ -143,10 +153,11 @@ export default class ProjectManager {
           return {
             ...fullGenerationData,
             finalizedDockerImage: image,
+            service: service.getData(),
           };
         }
 
-        return fullGenerationData;
+        return { ...fullGenerationData, service: service.getData() };
       }),
     );
 
@@ -154,7 +165,14 @@ export default class ProjectManager {
     const composeStack = await buildDockerStackFile(allServiceData);
 
     return await deployOptions.docker.cli(
-      ["stack", "deploy", "--compose-file", "-", this.projectData.internalName, deployOptions.force ? "--force-recreate" : ""],
+      [
+        "stack",
+        "deploy",
+        "--compose-file",
+        "-",
+        this.projectData.internalName,
+        deployOptions.force ? "--force-recreate" : undefined,
+      ].filter(isDefined),
       {
         stdin: JSON.stringify(composeStack),
       },

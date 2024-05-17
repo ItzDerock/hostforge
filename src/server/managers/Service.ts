@@ -201,6 +201,8 @@ export default class ServiceManager {
       return this.serviceData.deployedGeneration;
     }
 
+    if (!this.serviceData.deployedGenerationId) return null;
+
     this.serviceData.deployedGeneration =
       await db.query.serviceGeneration.findFirst({
         where: eq(serviceGeneration.id, this.serviceData.deployedGenerationId),

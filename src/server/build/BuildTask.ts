@@ -1,10 +1,14 @@
 import assert from "assert";
 import { eq } from "drizzle-orm";
-import { mkdirSync } from "fs";
+import { mkdirSync, createReadStream } from "fs";
 import { rm, rmdir } from "fs/promises";
 import path from "path";
 import { db } from "../db";
-import { serviceDeployment, serviceGeneration } from "../db/schema/schema";
+import {
+  serviceDeployment,
+  serviceGeneration,
+  service,
+} from "../db/schema/schema";
 import {
   ServiceBuildMethod,
   ServiceDeploymentStatus,
@@ -13,6 +17,7 @@ import {
 import Nixpacks from "./builders/Nixpacks";
 import GitHubSource from "./sources/GitHub";
 import BuilderLogger from "./utils/BuilderLogger";
+import zlib from "node:zlib";
 
 export default class BuildTask {
   static BASE_BUILD_PATH = "/var/tmp";
@@ -91,7 +96,20 @@ export default class BuildTask {
       }
 
       // aand we're done
-      void this.updateBuildStatus(ServiceDeploymentStatus.Deploying);
+      if (this.pendingStatusUpdatePromise) {
+        await this.pendingStatusUpdatePromise;
+      }
+
+      // update status and save logs
+      this.status = ServiceDeploymentStatus.Deploying;
+      await (this.pendingStatusUpdatePromise = db
+        .update(serviceDeployment)
+        .set({
+          status: ServiceDeploymentStatus.Deploying,
+          buildLogs: await this.compressLogs(),
+        })
+        .where(eq(serviceDeployment.id, this.deploymentId)));
+
       this.finishCallback(dockerImageTag);
       return dockerImageTag;
     } catch (error) {
@@ -121,13 +139,19 @@ export default class BuildTask {
 
   private async fetchServiceDetails() {
     const [serviceDetails] = await db
-      .select()
-      .from(serviceGeneration)
-      .where(eq(serviceGeneration.id, this.serviceId));
+      .select({
+        latestGeneration: serviceGeneration,
+      })
+      .from(service)
+      .innerJoin(
+        serviceGeneration,
+        eq(serviceGeneration.id, service.latestGenerationId),
+      )
+      .where(eq(service.id, this.serviceId));
 
     assert(serviceDetails, "Service not found");
 
-    return serviceDetails;
+    return serviceDetails.latestGeneration;
   }
 
   private async updateBuildStatus(status: ServiceDeploymentStatus) {
@@ -135,13 +159,30 @@ export default class BuildTask {
       await this.pendingStatusUpdatePromise;
     }
 
+    this.status = status;
+
     // in the event that the service is deleted while building, it'll probably error here
     // but doesn't really matter
     await (this.pendingStatusUpdatePromise = db
       .update(serviceDeployment)
       .set({ status })
       .where(eq(serviceDeployment.id, this.deploymentId)));
+  }
 
-    this.status = status;
+  private compressLogs(): Promise<Buffer> {
+    // pipe through read stream to reduce memory usage
+    // only load the compressed data into memory
+    const compressedLogs = zlib.createGzip();
+    const readStream = createReadStream(this.logFilePath);
+
+    return new Promise((resolve, reject) => {
+      const buffers: Buffer[] = [];
+      readStream.pipe(compressedLogs);
+
+      compressedLogs.on("data", (data) => buffers.push(data));
+
+      compressedLogs.on("error", reject);
+      compressedLogs.on("end", () => resolve(Buffer.concat(buffers)));
+    });
   }
 }

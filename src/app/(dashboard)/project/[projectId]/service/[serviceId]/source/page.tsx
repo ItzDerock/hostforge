@@ -35,23 +35,29 @@ export default function SourcePage() {
   const selectedSource = form.watch("source");
   const mutate = api.projects.services.update.useMutation();
 
-  const resetForm = () =>
+  const resetForm = () => {
+    const latest = data?.latestGeneration;
+    if (!latest) {
+      return console.warn("Resetting to no generation?");
+    }
+
     form.reset(
       {
-        source: data?.source,
-        dockerImage: data?.dockerImage,
-        dockerRegistryUsername: data?.dockerRegistryUsername ?? undefined,
-        dockerRegistryPassword: data?.dockerRegistryPassword ?? undefined,
-        githubUsername: data?.githubUsername ?? undefined,
-        githubRepository: data?.githubRepository ?? undefined,
-        githubBranch: data?.githubBranch ?? undefined,
-        buildMethod: data?.buildMethod ?? ServiceBuildMethod.Nixpacks,
-        buildPath: data?.buildPath ?? "/",
+        source: latest.source,
+        dockerImage: latest.dockerImage,
+        dockerRegistryUsername: latest.dockerRegistryUsername ?? undefined,
+        dockerRegistryPassword: latest.dockerRegistryPassword ?? undefined,
+        githubUsername: latest.githubUsername ?? undefined,
+        githubRepository: latest.githubRepository ?? undefined,
+        githubBranch: latest.githubBranch ?? undefined,
+        buildMethod: latest.buildMethod ?? ServiceBuildMethod.Nixpacks,
+        buildPath: latest.buildPath ?? "/",
       },
       {
         keepDirty: true,
       },
     );
+  };
 
   const ActiveIndicator = ({ type }: { type: ServiceSource }) => (
     <span

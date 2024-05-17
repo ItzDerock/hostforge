@@ -14,10 +14,6 @@ import { createTRPCContext } from "./api/trpc";
 import { db } from "./db";
 import { stats } from "./modules/stats";
 import logger from "./utils/logger";
-// import {
-//   createOpenApiHttpHandler,
-//   generateOpenApiDocument,
-// } from "trpc-openapi";
 
 // check if database folder exists
 try {
@@ -29,9 +25,18 @@ try {
 }
 
 // migrate the database
-logger.child({ module: "database" }).info("⚙️ Starting database migrations...");
-migrate(db, { migrationsFolder: "./drizzle" });
-logger.child({ module: "database" }).info("✅ Migrations finished!");
+if (process.env.NODE_ENV === "production") {
+  logger
+    .child({ module: "database" })
+    .info("⚙️ Starting database migrations...");
+
+  migrate(db, { migrationsFolder: "./drizzle" });
+  logger.child({ module: "database" }).info("✅ Migrations finished!");
+} else {
+  logger
+    .child({ module: "database" })
+    .info("Not running migrations in development.");
+}
 
 // start statistics
 void stats.start();

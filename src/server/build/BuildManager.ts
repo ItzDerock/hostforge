@@ -35,18 +35,21 @@ export class BuildManager {
     });
   }
 
-  public async runBuilds(services: FullServiceGeneration[]) {
+  public async runBuilds(
+    services: FullServiceGeneration[],
+    projectDeploymentId?: string,
+  ) {
     await Promise.all(
       services.map(async (service) => {
         if (service.source !== ServiceSource.Docker) {
           const [deployment] = await db
             .insert(serviceDeployment)
             .values({
+              projectDeploymentId,
               serviceId: service.id,
               status: ServiceDeploymentStatus.BuildPending,
             })
-            .returning()
-            .execute();
+            .returning();
 
           assert(deployment);
 

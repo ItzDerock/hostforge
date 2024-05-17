@@ -26,6 +26,9 @@ export class Docker extends Dockerode {
       stdin?: string;
     } = {},
   ): Promise<string> {
+    this.log.debug(
+      `Running: docker ${args.map((arg) => `"${arg}"`).join(" ")}`,
+    );
     const cmd = spawn("docker", args, {
       cwd: opts.cwd,
     });
@@ -77,11 +80,4 @@ export class Docker extends Dockerode {
       });
     });
   }
-
-  // /**
-  //  * Lists all containers on all nodes.
-  //  */
-  // public async listContainersOnAllNodes() {
-  //   this.listTasks
-  // }
 }

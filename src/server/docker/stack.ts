@@ -1,11 +1,12 @@
 import assert from "assert";
-import {
-  type serviceDomain,
-  type serviceGeneration,
-  type servicePort,
-  type serviceSysctl,
-  type serviceUlimit,
-  type serviceVolume,
+import type {
+  service,
+  serviceDomain,
+  serviceGeneration,
+  servicePort,
+  serviceSysctl,
+  serviceUlimit,
+  serviceVolume,
 } from "../db/schema/schema";
 import {
   DOCKER_DEPLOY_MODE_MAP,
@@ -18,8 +19,11 @@ import {
   type DefinitionsService,
   type Ulimits,
 } from "./compose";
+import { parse } from "dotenv";
 
 export type FullServiceGeneration = typeof serviceGeneration.$inferSelect & {
+  service: typeof service.$inferSelect;
+
   domains: (typeof serviceDomain.$inferSelect)[];
   ports: (typeof servicePort.$inferSelect)[];
   sysctls: (typeof serviceSysctl.$inferSelect)[];
@@ -44,7 +48,7 @@ export async function buildDockerStackFile(
   const swarmServices: Record<string, DefinitionsService> = {};
 
   for (const service of services) {
-    swarmServices[service.name] = {
+    swarmServices[service.service.name] = {
       // TODO: cap_add, cap_drop
       command: service.command ?? undefined,
       deploy: {
@@ -87,10 +91,7 @@ export async function buildDockerStackFile(
       },
 
       entrypoint: service.entrypoint ?? undefined,
-      // environment: service.environment ? parse(service.environment) : undefined,
-      environment: {
-        EULA: "TRUE",
-      },
+      environment: service.environment ? parse(service.environment) : undefined,
       image: service.finalizedDockerImage ?? service.dockerImage ?? undefined,
       ports: service.ports.map((port) => ({
         mode:

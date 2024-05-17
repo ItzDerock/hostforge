@@ -78,8 +78,6 @@ function createDatabaseInstance() {
     },
   });
 
-  // @ts-ignore
-  orm.sqlite = sqlite;
   return orm;
 }
 

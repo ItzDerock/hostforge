@@ -35,13 +35,15 @@ export default function ContainersPage({
     <Table className="w-full text-nowrap">
       <TableHeader>
         <TableRow>
-          <TableHead className="w-36">Container ID</TableHead>
+          <TableHead className="w-36 whitespace-nowrap">Container ID</TableHead>
           <TableHead className="w-[80%]">Status</TableHead>
           <TableHead>Uptime</TableHead>
           <TableHead>Node</TableHead>
           <TableHead>CPU</TableHead>
-          <TableHead>Memory (used/limit)</TableHead>
-          <TableHead>Network (RX/TX)</TableHead>
+          <TableHead className="whitespace-nowrap">
+            Memory (used/limit)
+          </TableHead>
+          <TableHead className="whitespace-nowrap">Network (RX/TX)</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>

@@ -16,7 +16,7 @@ export const deployProject = authenticatedProcedure
     }),
   )
   .use(projectMiddleware)
-  .mutation(async ({ ctx, input }) => {
+  .mutation(async ({ ctx }) => {
     const response = await ctx.project.deploy({
       docker: ctx.docker,
     });

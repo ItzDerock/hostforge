@@ -1,5 +1,4 @@
-import assert from "assert";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { env } from "~/env";
@@ -61,10 +60,13 @@ export const serviceRouter = createTRPCRouter({
     .output(z.string({ description: "Service ID" }))
     .use(projectMiddleware)
     .mutation(async ({ ctx, input }) => {
+      const log = logger.child({ module: "service.create" });
+
       // create a generation for the service
+      // eslint-disable-next-line @typescript-eslint/require-await
       const trxResult = await ctx.db.transaction(async (trx) => {
         // @ts-expect-error using drizzle-orm doesnt work, keep getting foreign key constraint error after the first insert despite it being deferred
-        const db: Database = trx.session.client;
+        const db: Database = trx.session.client; // eslint-disable-line
 
         db.pragma(`defer_foreign_keys = ON`);
 
@@ -89,7 +91,7 @@ export const serviceRouter = createTRPCRouter({
           .prepare(createGenerationQuery.sql)
           .run(...createGenerationQuery.params);
 
-        logger.debug(
+        log.debug(
           "inserted generation",
           createGenerationQuery.sql,
           genCreateResult,
@@ -118,7 +120,7 @@ export const serviceRouter = createTRPCRouter({
           .prepare(createServiceQuery.sql)
           .run(...createServiceQuery.params);
 
-        logger.debug("inserted service", createServiceQuery.sql, createResult);
+        log.debug("inserted service", createServiceQuery.sql, createResult);
 
         return serviceId;
       });

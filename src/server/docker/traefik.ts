@@ -1,6 +1,6 @@
 import { mkdir } from "fs/promises";
 import { DockerInternalServices, DockerNetworks, getDockerInstance } from ".";
-import Dockerode from "dockerode";
+import type Dockerode from "dockerode";
 import logger from "../utils/logger";
 import path from "path";
 import { env } from "~/env";

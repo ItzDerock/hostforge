@@ -272,15 +272,16 @@ export const serviceGeneration = sqliteTable(
  */
 export const serviceDeployment = sqliteTable("service_deployment", {
   id: text("id").default(uuidv7).primaryKey(),
-  projectDeploymentId: text("project_deployment_id")
-    .notNull()
-    .references(() => projectDeployment.id, {
+  projectDeploymentId: text("project_deployment_id").references(
+    () => projectDeployment.id,
+    {
       onDelete: "cascade",
-    }),
+    },
+  ),
 
   serviceId: text("service_id")
     .notNull()
-    .references(() => serviceGeneration.id, {
+    .references(() => service.id, {
       onDelete: "cascade",
     }),
 

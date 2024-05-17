@@ -53,7 +53,7 @@ CREATE TABLE `service_domain` (
 --> statement-breakpoint
 CREATE TABLE `service_generation` (
 	`id` text PRIMARY KEY DEFAULT (uuid_generate_v7()) NOT NULL,
-	`service_id` text NOT NULL,
+	`service_id` text NOT NULL DEFERRABLE INITIALLY DEFERRED,
 	`deployment_id` text,
 	`source` integer NOT NULL,
 	`environment` text,

@@ -68,7 +68,7 @@ function createDatabaseInstance() {
       ),
   );
 
-  return drizzle(sqlite, {
+  const orm = drizzle(sqlite, {
     schema,
     logger: {
       logQuery(query) {
@@ -76,6 +76,10 @@ function createDatabaseInstance() {
       },
     },
   });
+
+  // @ts-ignore
+  orm.sqlite = sqlite;
+  return orm;
 }
 
 export const db = (globalForDB.db ??= createDatabaseInstance());

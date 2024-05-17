@@ -15,6 +15,7 @@ import {
   updateServiceProcedure,
 } from "./update";
 import { ServiceSource } from "~/server/db/types";
+import { SQLiteSyncDialect } from "drizzle-orm/sqlite-core";
 
 export const serviceRouter = createTRPCRouter({
   containers: getServiceContainers,
@@ -59,8 +60,19 @@ export const serviceRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       // create a generation for the service
       const trxResult = await ctx.db.transaction(async (trx) => {
-        // mark all deferrable
-        trx.run(sql`PRAGMA defer_foreign_keys = true;`);
+        // create initial generation
+        const [generation] = await trx
+          .insert(serviceGeneration)
+          .values({
+            serviceId: "",
+            source: ServiceSource.Docker,
+            dockerImage: "traefik/whoami",
+          })
+          .returning({
+            id: serviceGeneration.id,
+          });
+
+        assert(generation?.id, "Expected generation data to be returned");
 
         // create the service
         const [data] = await trx
@@ -68,7 +80,7 @@ export const serviceRouter = createTRPCRouter({
           .values({
             name: input.name,
             projectId: ctx.project.getData().id,
-            latestGenerationId: "",
+            latestGenerationId: generation.id,
             redeploySecret: randomBytes(env.REDEPLOY_SECRET_BYTES).toString(
               "hex",
             ),
@@ -79,26 +91,11 @@ export const serviceRouter = createTRPCRouter({
 
         assert(data?.id, "Expected service data to be returned");
 
-        // create initial generation
-        trx.run(sql`PRAGMA defer_foreign_keys = true;`);
-        const [generation] = await trx
-          .insert(serviceGeneration)
-          .values({
-            serviceId: data.id,
-            source: ServiceSource.Docker,
-            dockerImage: "traefik/whoami",
-          })
-          .returning({
-            id: serviceGeneration.id,
-          });
-
-        assert(generation?.id, "Expected generation data to be returned");
-
         // update the service with the generation id
         await trx
-          .update(service)
+          .update(serviceGeneration)
           .set({
-            latestGenerationId: generation.id,
+            serviceId: data.id,
           })
           .where(eq(service.id, data.id))
           .execute();

@@ -116,6 +116,7 @@ export function CreateProjectButton() {
             })}
             className="max-w-full space-y-4"
             id="create-project-form"
+            autoComplete="off"
           >
             <AnimatePresence initial={false} mode="wait">
               <motion.div

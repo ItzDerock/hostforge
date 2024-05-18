@@ -63,6 +63,10 @@ export class BuildManager {
     );
   }
 
+  public getTask(deploymentId: string) {
+    return this.tasks.get(deploymentId);
+  }
+
   private async processNext() {
     if (this.queue.isEmpty()) {
       BuildManager.logger.debug("Queue is empty");

@@ -137,6 +137,10 @@ export default class BuildTask {
     ]);
   }
 
+  public getLogFile() {
+    return this.logFilePath;
+  }
+
   private async fetchServiceDetails() {
     const [serviceDetails] = await db
       .select({
@@ -172,7 +176,7 @@ export default class BuildTask {
   private compressLogs(): Promise<Buffer> {
     // pipe through read stream to reduce memory usage
     // only load the compressed data into memory
-    const compressedLogs = zlib.createGzip();
+    const compressedLogs = zlib.createBrotliCompress();
     const readStream = createReadStream(this.logFilePath);
 
     return new Promise((resolve, reject) => {

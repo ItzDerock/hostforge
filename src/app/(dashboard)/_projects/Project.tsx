@@ -26,11 +26,11 @@ type Project = RouterOutputs["projects"]["list"][number];
 export function Project({ project }: { project: Project }) {
   return (
     <Card>
-      {/* 
+      {/*
       Card header contains:
       - Project name
       - Project health
-      - Basic project stats 
+      - Basic project stats
       */}
       <CardHeader className="flex flex-row flex-wrap justify-between">
         {/* Name and health */}
@@ -47,25 +47,22 @@ export function Project({ project }: { project: Project }) {
         </div>
 
         {/* Stats */}
-        <div className="flex flex-row gap-2 text-center">
-          {/* CPU */}
+        {/* <div className="flex flex-row gap-2 text-center">
           <div>
             <CardTitle>CPU</CardTitle>
             <p className="mb-auto mt-0 text-sm text-muted-foreground">33%</p>
           </div>
 
-          {/* Memory */}
           <div>
             <CardTitle>MEM</CardTitle>
             <p className="mb-auto mt-0 text-sm text-muted-foreground">33%</p>
           </div>
 
-          {/* Disk */}
           <div>
             <CardTitle>DISK</CardTitle>
             <p className="mb-auto mt-0 text-sm text-muted-foreground">33%</p>
           </div>
-        </div>
+        </div> */}
       </CardHeader>
 
       <CardContent>

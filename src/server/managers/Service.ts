@@ -6,6 +6,7 @@ import { db } from "../db";
 import { service, serviceGeneration } from "../db/schema";
 import { ServiceSource } from "../db/types";
 import logger from "../utils/logger";
+import Deployment from "./Deployment";
 
 export default class ServiceManager {
   private static LOGGER = logger.child({
@@ -158,7 +159,11 @@ export default class ServiceManager {
     return await db.query.serviceGeneration.findFirst({
       where: eq(serviceGeneration.id, this.serviceData.latestGenerationId),
       with: {
-        deployment: true,
+        // deployment: {
+        //   columns: {
+        //     buildLogs: false,
+        //   },
+        // },
         domains: true,
         ports: true,
         service: true,
@@ -167,6 +172,23 @@ export default class ServiceManager {
         volumes: true,
       },
     });
+  }
+
+  public async getDeployment(deploymentId: string) {
+    const deployment = await db.query.serviceDeployment.findFirst({
+      where: (tbl, { eq }) => eq(tbl.id, deploymentId),
+      columns: {
+        deployedAt: true,
+        deployedBy: true,
+        id: true,
+        projectDeploymentId: true,
+        serviceId: true,
+        buildLogs: false,
+        status: true,
+      },
+    });
+
+    return new Deployment(deployment, this);
   }
 
   /**

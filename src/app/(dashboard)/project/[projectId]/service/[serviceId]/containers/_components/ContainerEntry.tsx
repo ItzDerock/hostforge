@@ -45,7 +45,7 @@ export function ContainerEntry({
 
   return (
     <>
-      <TableRow>
+      <TableRow className="whitespace-nowrap">
         <TableCell
           className="cursor-pointer font-mono text-sm text-muted-foreground"
           onClick={() => {

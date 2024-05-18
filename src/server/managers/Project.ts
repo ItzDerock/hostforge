@@ -93,7 +93,6 @@ export default class ProjectManager {
         const fullGenerationData = await db.query.serviceGeneration.findFirst({
           where: eq(serviceGeneration.id, service.getData().latestGenerationId),
           with: {
-            deployment: true,
             domains: true,
             ports: true,
             service: true,

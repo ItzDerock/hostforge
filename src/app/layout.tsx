@@ -5,7 +5,11 @@ import { cookies } from "next/headers";
 import { ThemeProvider } from "~/components/contexts/ThemeProvider";
 import { ToastProvider } from "~/components/contexts/ToastProvider";
 import { TRPCReactProvider } from "~/trpc/react";
-import { AppProgressBar } from "./providers";
+import {
+  AppProgressBar,
+  NextAdapterApp,
+  QueryParamProvider,
+} from "./providers";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -31,12 +35,14 @@ export default function RootLayout({
         <TRPCReactProvider cookies={cookies().toString()}>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <ToastProvider>
-              <AppProgressBar
-                color="hsl(var(--primary))"
-                delay={200}
-                options={{ showSpinner: false }}
-              />
-              {children}
+              <QueryParamProvider adapter={NextAdapterApp}>
+                <AppProgressBar
+                  color="hsl(var(--primary))"
+                  delay={200}
+                  options={{ showSpinner: false }}
+                />
+                {children}
+              </QueryParamProvider>
             </ToastProvider>
           </ThemeProvider>
         </TRPCReactProvider>

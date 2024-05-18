@@ -18,12 +18,16 @@ import { SQLiteSyncDialect } from "drizzle-orm/sqlite-core";
 import { uuidv7 } from "uuidv7";
 import logger from "~/server/utils/logger";
 import { type Database } from "better-sqlite3";
+import { getDeploymentsProcedure } from "./deployments";
+import { getDeploymentLogsSubscription } from "./logs";
 
 export const serviceRouter = createTRPCRouter({
   containers: getServiceContainers,
   update: updateServiceProcedure,
   updateDomain: updateServiceDomainsProcedure,
   deleteDomain: deleteServiceDomainsProcedure,
+  deployments: getDeploymentsProcedure,
+  deploymentLogs: getDeploymentLogsSubscription,
 
   get: authenticatedProcedure
     .meta({

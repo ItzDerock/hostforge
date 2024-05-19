@@ -40,17 +40,10 @@ export function DeploymentCard({
 }: {
   deployment: RouterOutputs["projects"]["services"]["deployments"][number];
 }) {
-  const [deploymentId, setDeploymentId] = useQueryParam(
-    "deploymentId",
-    StringParam,
-  );
+  const [_, setDeploymentId] = useQueryParam("deploymentId", StringParam);
 
   return (
     <Card>
-      {deploymentId === deployment.id && (
-        <DeploymentLogs deployment={deployment} />
-      )}
-
       <div className="flex flex-row items-center p-4">
         <div className="flex-grow">
           <h2 className="flex flex-row items-center gap-2 align-middle text-lg capitalize">

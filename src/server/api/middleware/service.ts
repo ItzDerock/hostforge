@@ -24,7 +24,7 @@ export const serviceMiddleware = experimental_standaloneMiddleware<{
 
   const serviceDetails = await ServiceManager.findByNameOrId(
     input.serviceId,
-    ctx.project.getData().id,
+    ctx.project,
   );
 
   if (!serviceDetails)

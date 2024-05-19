@@ -7,62 +7,45 @@ import { useProject } from "../../../../_context/ProjectContext";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Drawer, DrawerContent } from "~/components/ui/drawer";
+import { LogWindow, type LogLine } from "~/components/LogWindow";
+import { StringParam, useQueryParam } from "use-query-params";
 
-export function DeploymentLogs({
-  deployment,
-}: {
-  deployment: RouterOutputs["projects"]["services"]["deployments"][number];
-}) {
+export function DeploymentLogs() {
   const project = useProject();
-  const [logs, setLogs] = useState<string | null>(null);
+  const [logs, setLogs] = useState<LogLine[] | null>(null);
+  const [deploymentId, setDeploymentId] = useQueryParam(
+    "deploymentId",
+    StringParam,
+  );
 
   api.projects.services.deploymentLogs.useSubscription(
     {
       serviceId: project.selectedService!.id,
-      deploymentId: deployment.id,
+      deploymentId: deploymentId ?? "",
       projectId: project.id,
     },
     {
       onData(data) {
-        setLogs(
-          (existing) =>
-            (existing += data
-              .split("\n")
-              .map((it) => {
-                try {
-                  return JSON.parse(it);
-                } catch (error) {
-                  return { m: it };
-                }
-              })
-              .map((it) => it.m)
-              .join("\n")),
-        );
+        setLogs((existing) => existing?.concat(data) ?? [data]);
       },
 
       onError(error) {
         console.error(error);
         toast.error("Failed to fetch logs: " + error.message);
       },
+
+      enabled: !!deploymentId,
     },
   );
 
   return (
-    <Drawer open={true}>
+    <Drawer open={!!deploymentId} onClose={() => setDeploymentId(null)}>
       <DrawerContent className="max-h-full min-h-[80vh]">
         <div className="mx-auto h-full min-w-[40vw] max-w-4xl">
           <h2>Logs</h2>
-          {/* <pre>{logs}</pre> */}
-          <textarea
-            readOnly
-            value={logs}
-            style={{
-              width: "100%",
-              height: "100%",
-              fontFamily: "monospace",
-              whiteSpace: "pre-wrap",
-            }}
-          />
+          <div className="mb-8 max-h-[80vh] overflow-scroll whitespace-nowrap">
+            {logs && <LogWindow logs={logs} />}
+          </div>
         </div>
       </DrawerContent>
     </Drawer>

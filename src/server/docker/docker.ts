@@ -2,6 +2,8 @@
 import { spawn } from "child_process";
 import Dockerode from "dockerode";
 import logger from "../utils/logger";
+import { PassThrough, Transform } from "stream";
+import { LogLevel } from "../build/utils/BuilderLogger";
 
 export class Docker extends Dockerode {
   static buildContainerPrefixFromName(
@@ -9,6 +11,51 @@ export class Docker extends Dockerode {
     serviceName: string,
   ) {
     return `${projectName}_${serviceName}`;
+  }
+
+  /**
+   * An improved version of docker-modem's demuxStream
+   * as that one has race conditions since it doesn't wait for writes to finish
+   * and writes to separate streams
+   */
+  static demuxStream() {
+    return new Transform({
+      transform(chunk: Buffer, encoding?: unknown, callback: () => void) {
+        console.log("chunk", chunk.toString());
+        if (chunk.length < 8) {
+          this.push(chunk);
+          callback();
+          return;
+        }
+
+        const header = chunk.subarray(0, 8);
+        const dataType = header.readUint8(0);
+        const dataLength = header.readUint32BE(4);
+
+        if (chunk.length < dataLength + 8) {
+          this.push(chunk);
+          callback();
+          return;
+        }
+
+        const content = chunk
+          .subarray(8, dataLength + 8)
+          .toString()
+          .split(" ");
+        const timestamp = new Date(content.shift() ?? "");
+        const message = content.join(" ");
+
+        this.push(
+          JSON.stringify({
+            t: timestamp.getTime(),
+            m: message,
+            l: dataType === 1 ? LogLevel.Stdout : LogLevel.Stderr,
+          }),
+        );
+
+        callback();
+      },
+    });
   }
 
   private log = logger.child({ module: "docker" });

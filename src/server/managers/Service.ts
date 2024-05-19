@@ -7,6 +7,10 @@ import { service, serviceGeneration } from "../db/schema";
 import { ServiceSource } from "../db/types";
 import logger from "../utils/logger";
 import Deployment from "./Deployment";
+import type { Docker } from "../docker/docker";
+import { docker404ToNull } from "../utils/serverUtils";
+import type ProjectManager from "./Project";
+import { type paths as DockerAPITypes } from "~/server/docker/types";
 
 export default class ServiceManager {
   private static LOGGER = logger.child({
@@ -33,20 +37,21 @@ export default class ServiceManager {
       latestGeneration?: typeof serviceGeneration.$inferSelect;
       deployedGeneration?: typeof serviceGeneration.$inferSelect;
     },
+    private parentProject: ProjectManager,
   ) {}
 
   /**
    * Finds a service by name or ID.
    */
-  static async findByNameOrId(nameOrId: string, projectId: string) {
+  static async findByNameOrId(nameOrId: string, project: ProjectManager) {
     const data = await db.query.service.findFirst({
       where: and(
-        eq(service.projectId, projectId),
+        eq(service.projectId, project.getData().id),
         or(eq(service.name, nameOrId), eq(service.id, nameOrId)),
       ),
     });
 
-    return data ? new ServiceManager(data) : null;
+    return data ? new ServiceManager(data, project) : null;
   }
 
   public getData() {
@@ -188,7 +193,16 @@ export default class ServiceManager {
       },
     });
 
+    if (!deployment) return null;
+
     return new Deployment(deployment, this);
+  }
+
+  public toDockerServiceName() {
+    const parent = this.parentProject.getData().internalName;
+    const service = this.serviceData.name;
+
+    return `${parent}_${service}`;
   }
 
   /**

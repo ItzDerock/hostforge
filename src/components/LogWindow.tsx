@@ -1,6 +1,7 @@
 "use client";
 
 import Ansi from "ansi-to-react";
+import { useMemo } from "react";
 
 export enum LogLevel {
   /**
@@ -31,22 +32,41 @@ const LOG_LEVEL_TO_CLASS = {
   [LogLevel.Notice]: "bg-blue-950/40",
 };
 
-export function LogWindow({ logs }: { logs: LogLine[] }) {
+export function LogWindow({
+  logs,
+  supressStderr,
+}: {
+  logs: LogLine[];
+  supressStderr?: boolean;
+}) {
+  const withTimestamp = useMemo(() => logs.some((log) => log.t), [logs]);
+
   return (
-    <div className="h-full w-full select-text">
-      {logs.map((log, i) => (
-        <div
-          key={i}
-          className={`flex gap-2 py-1 text-sm ${LOG_LEVEL_TO_CLASS[log.l]}`}
-        >
-          <div className="mt-1 text-xs text-gray-400">
-            {log.t ? new Date(log.t).toLocaleTimeString() : ""}
-          </div>
-          <div className="flex-1 whitespace-pre">
-            <Ansi>{log.m}</Ansi>
-          </div>
-        </div>
-      ))}
-    </div>
+    <table className="h-full w-full text-sm">
+      <tbody>
+        {logs.map((log, i) => (
+          <tr
+            key={i}
+            className={`${
+              supressStderr && log.l === LogLevel.Stderr
+                ? LOG_LEVEL_TO_CLASS[LogLevel.Stdout]
+                : LOG_LEVEL_TO_CLASS[log.l]
+            } hover:bg-black/20`}
+          >
+            {withTimestamp && (
+              <td className="select-none whitespace-nowrap align-top text-gray-300">
+                {log.t ? new Date(log.t).toLocaleTimeString() : ""}
+              </td>
+            )}
+
+            {
+              <td className="w-full whitespace-pre-wrap pl-2">
+                <Ansi>{log.m}</Ansi>
+              </td>
+            }
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }

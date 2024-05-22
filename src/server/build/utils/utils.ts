@@ -19,7 +19,6 @@ export function waitForExit(child: ChildProcess) {
   return new Promise<void>((resolve, reject) => {
     child.on("exit", (code) => {
       if (code === 0) {
-        console.log("Child process exited successfully");
         resolve();
       } else {
         reject(new Error(`Child process exited with code ${code}`));

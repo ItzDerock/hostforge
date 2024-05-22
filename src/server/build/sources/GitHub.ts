@@ -57,6 +57,5 @@ export default class GitHubSource extends BaseSource {
 
     // wait for exit
     await waitForExit(git);
-    console.log("Downloaded code from GitHub");
   }
 }

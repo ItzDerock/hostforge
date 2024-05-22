@@ -163,7 +163,7 @@ export default class ProjectManager {
     // now build the dockerfile
     const composeStack = await buildDockerStackFile(allServiceData);
 
-    return await deployOptions.docker.cli(
+    const output = await deployOptions.docker.cli(
       [
         "stack",
         "deploy",
@@ -176,6 +176,16 @@ export default class ProjectManager {
         stdin: JSON.stringify(composeStack),
       },
     );
+
+    // update all deployment statuses to success
+    await db
+      .update(serviceDeployment)
+      .set({
+        status: ServiceDeploymentStatus.Success,
+      })
+      .where(eq(serviceDeployment.projectDeploymentId, deployment.id));
+
+    return output;
   }
 
   /**
@@ -186,9 +196,9 @@ export default class ProjectManager {
       (await this.getServices())
         .map((service) => ({
           service,
-          pendingUpdate: service.buildDeployDiff(),
+          pendingUpdate: service.hasPendingChanges(),
         }))
-        .filter(({ pendingUpdate }) => Object.keys(pendingUpdate).length > 0),
+        .filter(({ pendingUpdate }) => pendingUpdate),
     );
 
     return services.map(({ service }) => service);

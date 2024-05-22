@@ -3,7 +3,7 @@ import { z } from "zod";
 import { projects } from "~/server/db/schema";
 import ProjectManager from "~/server/managers/Project";
 import { authenticatedProcedure, createTRPCRouter } from "../../trpc";
-import { deployProject } from "./deploy";
+import { deployProject, getDeployDiff } from "./deploy";
 import { getProject } from "./project";
 import { serviceRouter } from "./service";
 
@@ -73,4 +73,5 @@ export const projectRouter = createTRPCRouter({
 
   get: getProject,
   deploy: deployProject,
+  deployDiff: getDeployDiff,
 });

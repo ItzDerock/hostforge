@@ -4,12 +4,9 @@ import { serviceMiddleware } from "~/server/api/middleware/service";
 import { authenticatedProcedure } from "~/server/api/trpc";
 import { observable } from "@trpc/server/observable";
 import assert from "node:assert";
-import { docker404ToNull, streamSort } from "~/server/utils/serverUtils";
-import { PassThrough, Transform } from "node:stream";
-import type DockerModem from "docker-modem";
+import { docker404ToNull } from "~/server/utils/serverUtils";
 import { LogLevel } from "~/server/build/utils/BuilderLogger";
 import type { LogLine } from "~/components/LogWindow";
-import { Queue } from "datastructures-js";
 import { Docker } from "~/server/docker/docker";
 
 // trpc doesn't have stream support yet, so websockets it is
@@ -46,6 +43,10 @@ export const getDeploymentLogsSubscription = authenticatedProcedure
 
       logs.on("end", () => {
         emit.complete();
+      });
+
+      logs.on("error", (err) => {
+        emit.error(err);
       });
 
       return () => {
@@ -88,18 +89,10 @@ export const getServiceLogsSubscription = authenticatedProcedure
       "Unable to retrieve service logs. Maybe the service is not running",
     );
 
-    const unsorted = logs.pipe(Docker.demuxStream());
-    const final = new PassThrough();
-
-    streamSort(unsorted, final, (a, b) => {
-      const aTime = JSON.parse(a.toString()).t;
-      const bTime = JSON.parse(b.toString()).t;
-
-      return aTime - bTime;
-    });
+    const final = logs.pipe(Docker.demuxStream());
 
     function cleanup() {
-      unsorted.end();
+      final.end();
     }
 
     // tail logs now

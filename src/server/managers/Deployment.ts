@@ -56,6 +56,7 @@ export default class Deployment {
         const task = BuildManager.getInstance().getTask(this.deploymentData.id);
         if (!task) {
           this.logger.error("Task not found for deployment");
+          returnStream.destroy(new Error("Task not found for deployment"));
           return;
         }
 

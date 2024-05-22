@@ -18,6 +18,8 @@ import Nixpacks from "./builders/Nixpacks";
 import GitHubSource from "./sources/GitHub";
 import BuilderLogger from "./utils/BuilderLogger";
 import zlib from "node:zlib";
+import type winston from "winston";
+import mainLogger from "../utils/logger";
 
 export default class BuildTask {
   static BASE_BUILD_PATH = "/var/tmp";
@@ -31,12 +33,21 @@ export default class BuildTask {
   // prevents race conditions when updating the status
   private pendingStatusUpdatePromise: Promise<unknown> | null = null;
 
+  // private logging
+  private consoleLogger: winston.Logger;
+
   constructor(
     private readonly serviceId: string,
     private readonly deploymentId: string,
     private readonly finishCallback: (imageTag: string) => void,
     private readonly errorCallback: (error: unknown) => void,
   ) {
+    this.consoleLogger = mainLogger.child({
+      module: "buildTask",
+      deploymentId: this.deploymentId,
+    });
+    this.consoleLogger.debug(`Build dispatched for ${this.deploymentId}`);
+
     this.workingDirectory = path.join(
       BuildTask.BASE_BUILD_PATH,
       "hostforgebuild-" + this.deploymentId,

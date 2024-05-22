@@ -35,10 +35,16 @@ export class BuildManager {
     });
   }
 
+  /**
+   * Runs multiple builds in parallel.
+   * Returns a list of deployment IDs.
+   */
   public async runBuilds(
     services: FullServiceGeneration[],
     projectDeploymentId?: string,
-  ) {
+  ): Promise<string[]> {
+    const deploymentIds: string[] = [];
+
     await Promise.all(
       services.map(async (service) => {
         if (service.source !== ServiceSource.Docker) {
@@ -52,6 +58,7 @@ export class BuildManager {
             .returning();
 
           assert(deployment);
+          deploymentIds.push(deployment.id);
 
           service.finalizedDockerImage =
             await BuildManager.getInstance().startBuild(
@@ -61,6 +68,8 @@ export class BuildManager {
         }
       }),
     );
+
+    return deploymentIds;
   }
 
   public getTask(deploymentId: string) {

@@ -1,35 +1,17 @@
 import { deterministicString } from "deterministic-object-hash";
 import { and, eq, or } from "drizzle-orm";
-import { create } from "jsondiffpatch";
 import assert from "node:assert";
 import { db } from "../db";
 import { service, serviceGeneration } from "../db/schema";
 import { ServiceSource } from "../db/types";
 import logger from "../utils/logger";
 import Deployment from "./Deployment";
-import type { Docker } from "../docker/docker";
-import { docker404ToNull } from "../utils/serverUtils";
 import type ProjectManager from "./Project";
-import { type paths as DockerAPITypes } from "~/server/docker/types";
+import { diff } from "json-diff-ts";
 
 export default class ServiceManager {
   private static LOGGER = logger.child({
     module: "ServiceManager",
-  });
-
-  private static JSON_DIFF = create({
-    objectHash: (obj: unknown) => {
-      if (typeof obj !== "object" || obj === null) {
-        return deterministicString(obj);
-      }
-
-      if ("id" in obj && typeof obj.id === "string") {
-        return obj.id;
-      }
-
-      this.LOGGER.warn("Unexpected object in JSON diff.", { obj });
-      return deterministicString(obj);
-    },
   });
 
   constructor(
@@ -78,7 +60,7 @@ export default class ServiceManager {
       this.serviceData.latestGenerationId ===
       this.serviceData.deployedGenerationId
     ) {
-      return {};
+      return [];
     }
 
     // fetch the generations
@@ -88,7 +70,7 @@ export default class ServiceManager {
     ]);
 
     // compare the two
-    return ServiceManager.JSON_DIFF.diff(deployed, latest);
+    return diff(deployed, latest);
   }
 
   /**
@@ -96,9 +78,7 @@ export default class ServiceManager {
    */
   public async hasPendingChanges() {
     const diff = await this.buildDeployDiff();
-
-    if (typeof diff === "object") return Object.keys(diff).length !== 0;
-    return true;
+    return diff.length > 0;
   }
 
   /**

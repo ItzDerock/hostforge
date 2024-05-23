@@ -2,7 +2,14 @@
 
 Hostforge takes the complexity out of hosting your applications on your servers. It offers a simple and intuitive, yet powerful interface built on top of Docker Swarm.
 
-<!-- video here -->
+# THIS APP IS IN DEVELOPMENT. DO NOT USE IT IN PRODUCTION, MANY FEATURES ARE MISSING OR INCOMPLETE
+Sneak peeks:
+
+![Dashboard](https://derock.media/r/aTOhOQ.png)
+![Source](https://derock.media/r/hdzNEY.png)
+![Deployments](https://derock.media/r/5m4EZD.png)
+
+View more [here](https://media.derock.dev/folder/5)
 
 ## Features
 

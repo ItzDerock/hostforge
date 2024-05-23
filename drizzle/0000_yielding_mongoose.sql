@@ -24,20 +24,20 @@ CREATE TABLE `service` (
 	`deployed_generation_id` text,
 	`created_at` integer DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON UPDATE no action ON DELETE cascade,
-	FOREIGN KEY (`latest_generation_id`) REFERENCES `service_generation`(`id`) ON UPDATE no action ON DELETE no action DEFERRABLE INITIALLY DEFERRED, -- MODIFIED TO ADD DEFERRED CONSTRAINTS
+	FOREIGN KEY (`latest_generation_id`) REFERENCES `service_generation`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`deployed_generation_id`) REFERENCES `service_generation`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `service_deployment` (
 	`id` text PRIMARY KEY DEFAULT (uuid_generate_v7()) NOT NULL,
-	`project_deployment_id` text NOT NULL,
+	`project_deployment_id` text,
 	`service_id` text NOT NULL,
 	`created_at` integer DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	`deployed_by` text,
 	`build_logs` blob,
 	`status` integer NOT NULL,
 	FOREIGN KEY (`project_deployment_id`) REFERENCES `project_deployment`(`id`) ON UPDATE no action ON DELETE cascade,
-	FOREIGN KEY (`service_id`) REFERENCES `service_generation`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`service_id`) REFERENCES `service`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`deployed_by`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -53,7 +53,7 @@ CREATE TABLE `service_domain` (
 --> statement-breakpoint
 CREATE TABLE `service_generation` (
 	`id` text PRIMARY KEY DEFAULT (uuid_generate_v7()) NOT NULL,
-	`service_id` text NOT NULL DEFERRABLE INITIALLY DEFERRED,
+	`service_id` text NOT NULL,
 	`deployment_id` text,
 	`source` integer NOT NULL,
 	`environment` text,
@@ -88,9 +88,7 @@ CREATE TABLE `service_generation` (
 	`logging_max_size` text DEFAULT '-1' NOT NULL,
 	`logging_max_files` integer DEFAULT 1 NOT NULL,
 	`created_at` integer DEFAULT CURRENT_TIMESTAMP NOT NULL,
-
-	-- MODIFIED TO ADD DEFERRED CONSTRAINTS
-	FOREIGN KEY (`service_id`) REFERENCES `service`(`id`) ON UPDATE no action ON DELETE cascade DEFERRABLE INITIALLY DEFERRED,
+	FOREIGN KEY (`service_id`) REFERENCES `service`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`deployment_id`) REFERENCES `service_deployment`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint

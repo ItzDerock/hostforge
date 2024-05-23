@@ -49,7 +49,7 @@ export default function DomainsList({
 
   const form = useForm<z.infer<typeof formValidator>>({
     defaultValues: {
-      domains: service.data?.domains.map((newDomain) => ({
+      domains: service.data?.latestGeneration?.domains.map((newDomain) => ({
         ...newDomain,
         domainId: newDomain.id,
         id: undefined,
@@ -68,7 +68,7 @@ export default function DomainsList({
     // reset the dirty state
     form.resetField("domains", {
       defaultValue:
-        service.data?.domains.map((newDomain) => ({
+        service.data?.latestGeneration?.domains.map((newDomain) => ({
           ...newDomain,
           domainId: newDomain.id,
         })) ?? [],
@@ -97,7 +97,7 @@ export default function DomainsList({
             }),
 
             // domains that don't exist anymore
-            ...(service.data?.domains
+            ...(service.data?.latestGeneration?.domains
               .filter(
                 (d) =>
                   !data.domains.some(

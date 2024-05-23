@@ -4,7 +4,7 @@ import { useFormContext } from "react-hook-form";
 import { useDebounce } from "use-debounce";
 import { type z } from "zod";
 import { SimpleFormField } from "~/hooks/forms";
-import { type formValidator } from "../page";
+import { type formValidator } from "./_form";
 import GithubRepoPreview from "./GitHubRepoPreview";
 
 export default function SourceGitHub() {

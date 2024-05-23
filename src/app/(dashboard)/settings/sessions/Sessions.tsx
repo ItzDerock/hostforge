@@ -1,6 +1,6 @@
 import { Card } from "~/components/ui/card";
 import UAParser from "ua-parser-js";
-import { RelativeDate } from "~/components/RelativeDate";
+import { RelativeDate } from "~/components/Date";
 
 type SessionData = {
   lastUA: string | null;

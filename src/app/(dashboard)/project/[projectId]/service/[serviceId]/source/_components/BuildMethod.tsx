@@ -5,7 +5,7 @@ import { type z } from "zod";
 import { Label } from "~/components/ui/label";
 import { SimpleFormField } from "~/hooks/forms";
 import { ServiceBuildMethod } from "~/server/db/types";
-import { type formValidator } from "../page";
+import { type formValidator } from "./_form";
 
 export default function SourceBuildMethod() {
   const form = useFormContext<z.infer<typeof formValidator>>();

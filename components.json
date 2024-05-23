@@ -11,6 +11,6 @@
   },
   "aliases": {
     "components": "src/components",
-    "utils": "~/utils/utils.ts"
+    "utils": "~/utils/utils"
   }
 }

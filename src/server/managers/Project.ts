@@ -63,7 +63,7 @@ export default class ProjectManager {
       where: eq(service.projectId, this.projectData.id),
     });
 
-    return serviceData.map((data) => new ServiceManager(data));
+    return serviceData.map((data) => new ServiceManager(data, this));
   }
 
   /**

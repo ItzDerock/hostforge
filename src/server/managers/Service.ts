@@ -70,7 +70,18 @@ export default class ServiceManager {
     ]);
 
     // compare the two
-    return diff(deployed, latest);
+    return diff(
+      {
+        ...deployed,
+        id: undefined,
+        deploymentId: undefined,
+      },
+      {
+        ...latest,
+        id: undefined,
+        deploymentId: undefined,
+      },
+    );
   }
 
   /**

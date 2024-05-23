@@ -1,33 +1,17 @@
 "use client";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
 import LoadingScreen from "~/components/LoadingScreen";
 import { Button } from "~/components/ui/button";
 import { Form } from "~/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { FormSubmit, SimpleFormField, useForm } from "~/hooks/forms";
 import { ServiceBuildMethod, ServiceSource } from "~/server/db/types";
-import { zDockerImage } from "~/server/utils/zod";
 import { api } from "~/trpc/react";
 import { useService } from "../_hooks/service";
 import SourceBuildMethod from "./_components/BuildMethod";
 import SourceGitHub from "./_components/SourceGitHub";
-
-export const formValidator = z.object({
-  source: z.nativeEnum(ServiceSource),
-
-  dockerImage: zDockerImage.nullable(),
-  dockerRegistryUsername: z.string().optional(),
-  dockerRegistryPassword: z.string().optional(),
-
-  githubUsername: z.string().optional(),
-  githubRepository: z.string().optional(),
-  githubBranch: z.string().optional(),
-
-  buildMethod: z.nativeEnum(ServiceBuildMethod),
-  buildPath: z.string().default("/"),
-});
+import { formValidator } from "./_components/_form";
 
 export default function SourcePage() {
   const { data, refetch } = useService();
@@ -155,7 +139,7 @@ export default function SourcePage() {
               [ServiceSource.Docker]: "docker",
               [ServiceSource.GitHub]: "GitHub",
               [ServiceSource.Git]: "Git",
-            }[data.source] || "docker"
+            }[data.latestGeneration?.source ?? ServiceSource.Docker] || "docker"
           }
           className="col-span-2 w-full"
         >

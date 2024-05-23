@@ -1,5 +1,6 @@
 "use client";
 
+import Dockerode from "dockerode";
 import { z } from "zod";
 import {
   Form,
@@ -26,7 +27,7 @@ import { type RouterOutputs } from "~/trpc/shared";
 const formValidator = z.object({
   replicas: z.coerce.number().int().min(0),
   maxReplicasPerNode: z.number().int().positive().nullable(),
-  deployMode: z.enum(["replicated", "global"]),
+  deployMode: z.nativeEnum(DockerDeployMode),
   zeroDowntime: z.boolean(),
   entrypoint: z.string().optional().nullable(),
   command: z.string().optional().nullable(),
@@ -41,16 +42,18 @@ export default function DeploymentSettings({
   service: RouterOutputs["projects"]["services"]["get"];
 }) {
   const update = api.projects.services.update.useMutation();
+  const latestGen = service.latestGeneration!;
+
   const form = useForm(formValidator, {
     defaultValues: {
-      replicas: service.replicas,
-      maxReplicasPerNode: service.maxReplicasPerNode,
-      deployMode: service.deployMode,
-      zeroDowntime: service.zeroDowntime,
-      entrypoint: service.entrypoint,
-      command: service.command,
-      max_memory: service.max_memory,
-      max_cpu: service.max_cpu,
+      replicas: latestGen.replicas,
+      maxReplicasPerNode: latestGen.maxReplicasPerNode,
+      deployMode: latestGen.deployMode,
+      zeroDowntime: latestGen.zeroDowntime,
+      entrypoint: latestGen.entrypoint,
+      command: latestGen.command,
+      max_memory: latestGen.max_memory,
+      max_cpu: latestGen.max_cpu,
     },
   });
 

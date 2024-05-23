@@ -20,7 +20,7 @@ export class Docker extends Dockerode {
    */
   static demuxStream() {
     return new Transform({
-      transform(chunk: Buffer, encoding?: unknown, callback: () => void) {
+      transform(chunk: Buffer, encoding: unknown, callback: () => void) {
         if (chunk.length < 8) {
           this.push(chunk);
           callback();

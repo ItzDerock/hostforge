@@ -1,7 +1,7 @@
 {
-  "version": "5",
+  "version": "6",
   "dialect": "sqlite",
-  "id": "f5624a74-60b3-4d72-90e0-67670f26b0cd",
+  "id": "4d1c3e48-c40b-401f-bb7b-742335b9ec44",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "project_deployment": {
@@ -266,7 +266,7 @@
           "name": "project_deployment_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "service_id": {
@@ -321,10 +321,10 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "service_deployment_service_id_service_generation_id_fk": {
-          "name": "service_deployment_service_id_service_generation_id_fk",
+        "service_deployment_service_id_service_id_fk": {
+          "name": "service_deployment_service_id_service_id_fk",
           "tableFrom": "service_deployment",
-          "tableTo": "service_generation",
+          "tableTo": "service",
           "columnsFrom": [
             "service_id"
           ],

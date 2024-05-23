@@ -1,3 +1,3 @@
 export default function ProjectHome() {
-  return <p>hello world</p>;
+  return <p>todo: overall project stats here</p>;
 }

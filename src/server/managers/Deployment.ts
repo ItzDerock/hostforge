@@ -94,6 +94,11 @@ export default class Deployment {
 
       signal.throwIfAborted();
 
+      if (!buildLogs.buildLogs) {
+        returnStream.end();
+        return;
+      }
+
       // decompress with zlib
       assert(
         buildLogs.buildLogs instanceof Buffer,

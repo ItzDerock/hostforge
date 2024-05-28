@@ -4,7 +4,7 @@ import { api } from "~/trpc/react";
 import { useProject } from "../../../../_context/ProjectContext";
 import { useState } from "react";
 import { toast } from "sonner";
-import { LogWindow, type LogLine } from "~/components/LogWindow";
+import { LogWindow, type LogLine, LogLevel } from "~/components/LogWindow";
 import { StringParam, useQueryParam } from "use-query-params";
 import {
   Dialog,
@@ -34,8 +34,16 @@ export function DeploymentLogs() {
       },
 
       onError(error) {
-        console.error(error);
-        toast.error("Failed to fetch logs: " + error.message);
+        setLogs([
+          {
+            l: LogLevel.Stderr,
+            m: "Failed to fetch logs: " + error.message,
+          },
+        ]);
+      },
+
+      onStarted() {
+        setLogs([]);
       },
 
       enabled: !!deploymentId,
@@ -47,18 +55,21 @@ export function DeploymentLogs() {
       open={!!deploymentId}
       onOpenChange={(ev) => {
         if (!ev) {
-          setLogs(null);
           setDeploymentId(undefined);
+        } else {
+          setLogs(null);
         }
       }}
     >
       <DialogContent className="max-w-6xl">
         <DialogHeader>
-          <DialogTitle>Deployment Logs</DialogTitle>
+          <DialogTitle>Build Logs</DialogTitle>
         </DialogHeader>
         <DialogDescription>
-          <div className="mx-auto h-full max-h-[80vh] max-w-full overflow-scroll overflow-y-scroll text-white">
-            {logs && <LogWindow logs={logs} />}
+          <div>
+            {logs && (
+              <LogWindow logs={logs} className="max-h-[80vh]" supressStderr />
+            )}
           </div>
         </DialogDescription>
       </DialogContent>

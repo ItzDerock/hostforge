@@ -1,7 +1,6 @@
 // import { type RouterOutputs } from "~/trpc/shared";
-import type { IChange } from "json-diff-ts";
+import { Operation, type IChange } from "json-diff-ts";
 import { Badge } from "../ui/badge";
-import { ArrowDown } from "lucide-react";
 
 function Formatted({ children }: { children: React.ReactNode }) {
   return (
@@ -31,13 +30,17 @@ export function ServiceDiff({ diff }: { diff: IChange[] | IChange }) {
           className="ml-auto mr-0 box-content bg-green-100 text-green-900 dark:bg-green-900/20 dark:text-green-400"
           variant="outline"
         >
-          Updated
+          {diff.type}
         </Badge>
       </div>
       <div className="whitespace-pre-wrap text-center text-muted-foreground">
-        <Formatted>{diff.oldValue}</Formatted>
-        <p className="my-1">Updated to</p>
-        <Formatted>{diff.value}</Formatted>
+        {diff.type == Operation.UPDATE && (
+          <>
+            <Formatted>{JSON.stringify(diff.oldValue)}</Formatted>
+            <p className="my-1">Updated to</p>
+          </>
+        )}
+        <Formatted>{JSON.stringify(diff.value)}</Formatted>
       </div>
     </div>
   );

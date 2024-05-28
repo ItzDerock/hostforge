@@ -75,11 +75,13 @@ export default class ServiceManager {
         ...deployed,
         id: undefined,
         deploymentId: undefined,
+        serviceId: undefined,
       },
       {
         ...latest,
         id: undefined,
         deploymentId: undefined,
+        serviceId: undefined,
       },
     );
   }

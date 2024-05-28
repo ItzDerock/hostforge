@@ -24,9 +24,7 @@ export default function ServiceLogsPage() {
   return (
     <div>
       <h1 className="text-xl">Logs</h1>
-      <pre className="max-h-[80vh] rounded-md bg-card p-4 text-white">
-        {logs && <LogWindow logs={logs} />}
-      </pre>
+      {logs && <LogWindow logs={logs} className="max-h-[60vh]" />}
     </div>
   );
 }

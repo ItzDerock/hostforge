@@ -4,6 +4,8 @@ import type Dockerode from "dockerode";
 import logger from "../utils/logger";
 import path from "path";
 import { env } from "~/env";
+import { docker404ToNull } from "../utils/serverUtils";
+import type { paths as DockerAPITypes } from "./types";
 
 const log = logger.child({ module: "docker/traefik" });
 
@@ -11,6 +13,12 @@ const log = logger.child({ module: "docker/traefik" });
  * The expected version of Traefik to be running.
  */
 const EXPECTED_TRAEFIK_VERSION = "2.10";
+
+/**
+ * Internal traefik configuration version.
+ * Versions lower than this number will trigger a redeployment of traefik.
+ */
+const TRAEFIK_CONFIG_VERSION = 1;
 
 /**
  * Storage locations
@@ -29,7 +37,12 @@ export function createTraefikServiceConfig() {
       {
         Target: DockerNetworks.Internal,
       },
+      // network for traefik to watch
+      {
+        Target: DockerNetworks.ReverseProxy,
+      },
     ],
+
     TaskTemplate: {
       ContainerSpec: {
         Image: `traefik:${EXPECTED_TRAEFIK_VERSION}`,
@@ -41,6 +54,7 @@ export function createTraefikServiceConfig() {
           "--providers.swarm.endpoint=unix:///var/run/docker.sock",
           "--providers.swarm.watch=true",
           "--providers.swarm.allowEmptyServices=true",
+          `--providers.swarm.network=${DockerNetworks.ReverseProxy}`,
 
           // "--docker",
           // "--docker.swarmMode",
@@ -66,6 +80,11 @@ export function createTraefikServiceConfig() {
             Type: "bind",
           },
         ],
+
+        Labels: {
+          "hostforge.traefik.configuration-version":
+            TRAEFIK_CONFIG_VERSION.toString(),
+        },
       },
 
       Placement: {
@@ -156,9 +175,9 @@ export async function ensureTraefik() {
 
   const service = docker.getService(DockerInternalServices.Traefik);
 
-  const info = await service
-    .inspect()
-    .catch((err) => (err.statusCode === 404 ? null : Promise.reject(err)));
+  const info = (await service.inspect().catch(docker404ToNull)) as
+    | DockerAPITypes["/services/{id}"]["get"]["responses"]["200"]["schema"]
+    | null;
 
   if (!info) {
     await deployTraefik();
@@ -166,10 +185,21 @@ export async function ensureTraefik() {
   }
 
   if (
-    info.Spec.TaskTemplate.ContainerSpec.Image !==
+    info.Spec?.TaskTemplate?.ContainerSpec?.Image !==
     `traefik:${EXPECTED_TRAEFIK_VERSION}`
   ) {
-    await updateTraefik();
+    // check version label
+    const versionLabel = parseInt(
+      info.Spec?.Labels?.["hostforge.traefik.configuration-version"] ?? "0",
+    );
+
+    if (versionLabel < TRAEFIK_CONFIG_VERSION) {
+      log.info(
+        `Traefik version mismatch. Redeploying. Current: ${versionLabel}, Expected: ${TRAEFIK_CONFIG_VERSION}`,
+      );
+
+      await updateTraefik();
+    }
   }
 }
 

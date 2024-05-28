@@ -11,8 +11,12 @@ export async function getDockerInstance() {
 export enum DockerNetworks {
   Public = "hostforge-public",
   Internal = "hostforge-internal",
+  ReverseProxy = "hostforge-reverse-proxy",
 }
 
+/**
+ * Container names
+ */
 export enum DockerInternalServices {
   Traefik = "hostforge-traefik",
 }

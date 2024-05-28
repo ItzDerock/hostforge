@@ -151,6 +151,21 @@ export async function buildDockerStackFile(
     };
 
     if (service.domains.length > 0) {
+      const labels = (swarmServices[service.name]!.deploy!.labels ??= []);
+
+      for (const domain of service.domains) {
+        labels.push(
+          `traefik.http.routers.${service.name}.rule=Host(\`${domain.domain}\`)`,
+        );
+
+        if (domain.https) {
+          labels.push(`traefik.http.routers.${service.name}.tls=true`);
+          labels.push(
+            `traefik.http.routers.${service.name}.tls.certresolver=letsencrypt`,
+          );
+        }
+      }
+
       // swarmServices[service.name]?.deploy!.labels!
       // TODO: domains
       // services[service.name].networks add hostforge-internal

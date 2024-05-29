@@ -13,12 +13,12 @@ import ipaddr from "ipaddr.js";
 import superjson from "superjson";
 import { ZodError } from "zod";
 import { db } from "~/server/db";
-import { Session } from "../auth/Session";
 import { getDockerInstance } from "../docker";
 import { type Docker } from "../docker/docker";
 import logger from "../utils/logger";
 import { loggerMiddleware } from "./middleware/logger";
-// import { OpenApiMeta, generateOpenApiDocument } from "trpc-openapi";
+import type { Session } from "../auth/Session";
+import type { GlobalStore } from "../managers/GlobalContext";
 
 export type ExtendedRequest = IncomingMessage & {
   cookies: Record<string, string>;
@@ -37,6 +37,7 @@ interface CreateContextOptions {
   response?: ServerResponse;
   session: Session | null;
   docker: Docker;
+  globalStore: GlobalStore;
 }
 
 /**
@@ -56,6 +57,7 @@ export const createInnerTRPCContext = (opts: CreateContextOptions) => {
     response: opts.response,
     db,
     docker: opts.docker,
+    globalStore: opts.globalStore,
   };
 };
 
@@ -68,6 +70,7 @@ export const createInnerTRPCContext = (opts: CreateContextOptions) => {
 export const createTRPCContext = async (opts: {
   req: IncomingMessage;
   res?: ServerResponse;
+  globalContext: GlobalStore;
 }) => {
   // disable caching
   opts.res?.setHeader("Cache-Control", "no-store");
@@ -105,7 +108,7 @@ export const createTRPCContext = async (opts: {
 
   // fetch session data from token
   const session: Session | null = sessionToken
-    ? await Session.fetchFromTokenAndUpdate(sessionToken, {
+    ? await opts.globalContext.sessions.fetchFromTokenAndUpdate(sessionToken, {
         ip,
         ua: opts.req.headers["user-agent"] ?? undefined,
       })
@@ -116,6 +119,7 @@ export const createTRPCContext = async (opts: {
     request: opts.req as ExtendedRequest,
     response: opts.res,
     docker: await getDockerInstance(),
+    globalStore: opts.globalContext,
   });
 };
 

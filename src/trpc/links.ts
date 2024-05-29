@@ -16,7 +16,7 @@ export const authLink: (opts: LinkOptions) => TRPCLink<AppRouter> = (opts) => {
   return (runtime) =>
     ({ next, op }) => {
       return observable((observer) => {
-        if (!op.path.startsWith("auth.")) {
+        if (!op.path.startsWith("auth.") && op.path !== "setup.setup") {
           return next(op).subscribe(observer);
         }
 

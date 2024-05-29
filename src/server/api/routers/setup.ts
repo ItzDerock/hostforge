@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
-import { sql } from "drizzle-orm";
 import { users } from "~/server/db/schema";
 import { TRPCError } from "@trpc/server";
 import assert from "assert";
@@ -12,19 +11,12 @@ export const setupRouter = createTRPCRouter({
       z.object({
         username: z.string(),
         password: z.string(),
+        letsencryptEmail: z.string().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // check if user already exists
-      const [userCount] = await ctx.db
-        .select({
-          count: sql<number>`count(*)`,
-        })
-        .from(users)
-        .limit(1);
-
       // if user already exists, throw error
-      if (userCount && userCount.count > 0)
+      if (ctx.globalStore.settings.isInstanceSetup())
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Instance already set up",
@@ -39,28 +31,27 @@ export const setupRouter = createTRPCRouter({
         })
         .returning({ id: users.id });
 
+      await ctx.globalStore.settings.setupInstance({
+        letsencryptEmail: input.letsencryptEmail,
+      });
+
       // log the user in
       assert(user, "User should be created");
 
-      // TODO: fix setup
-      // const session = await Session.createForUser(user.id, ctx.request);
-      // ctx.request.cookies.set("session", session.data.token);
+      const session = await ctx.globalStore.sessions.createForUser(
+        user.id,
+        ctx.request,
+      );
+      ctx.response?.setHeader("Set-Cookie", session.getCookieString());
 
       return {
         success: true,
       };
     }),
 
-  status: publicProcedure.query(async ({ ctx }) => {
-    const [userCount] = await ctx.db
-      .select({
-        count: sql<number>`count(*)`,
-      })
-      .from(users)
-      .limit(1);
-
+  status: publicProcedure.query(({ ctx }) => {
     return {
-      setup: userCount && userCount.count > 0,
+      setup: ctx.globalStore.settings.isInstanceSetup(),
     };
   }),
 });

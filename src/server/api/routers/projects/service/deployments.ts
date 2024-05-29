@@ -1,4 +1,3 @@
-import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { projectMiddleware } from "~/server/api/middleware/project";
 import { serviceMiddleware } from "~/server/api/middleware/service";

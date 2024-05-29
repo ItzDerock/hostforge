@@ -29,6 +29,15 @@ const now = sql<number>`CURRENT_TIMESTAMP`;
 // easy to see the relations between tables
 
 /**
+ * Global instance settings
+ */
+export const instanceSettings = sqliteTable("instance_settings", {
+  id: integer("id").primaryKey(),
+  letsencryptEmail: text("letsencrypt_email"),
+  sessionSecret: text("session_secret").notNull(),
+});
+
+/**
  * User table.
  * Represents a global user.
  */
@@ -37,7 +46,7 @@ export const users = sqliteTable(
   {
     id: text("id").default(uuidv7).primaryKey(),
     username: text("username").unique().notNull(),
-    password: text("password"), // raw hash
+    password: text("password"),
 
     // user configuration
     mfaToken: blob("mfa_token"), // raw hash

@@ -24,6 +24,7 @@ export function SetupForm() {
   const [toastLoading, setToastLoading] = useState<
     string | number | undefined
   >();
+
   const setupInstance = api.setup.setup.useMutation({
     onSuccess: () => {
       router.push("/login");
@@ -40,6 +41,7 @@ export function SetupForm() {
     z.object({
       username: z.string().min(3),
       password: z.string().min(3),
+      letsencryptEmail: z.string().email().optional(),
     }),
   );
 
@@ -64,7 +66,11 @@ export function SetupForm() {
             className="space-y-2"
             onSubmit={form.handleSubmit(async (data) => {
               setToastLoading(toast.loading("Setting up instance..."));
-              await setupInstance.mutateAsync(data);
+              await setupInstance.mutateAsync({
+                username: data.username,
+                password: data.password,
+                letsencryptEmail: data.letsencryptEmail ?? null,
+              });
             })}
           >
             <SimpleFormField
@@ -82,6 +88,14 @@ export function SetupForm() {
               description="The password for the admin Hostforge user."
               required
               type="password"
+            />
+
+            <SimpleFormField
+              control={form.control}
+              name="letsencryptEmail"
+              friendlyName="Let's Encrypt Email"
+              description="An email address to use for Let's Encrypt SSL notifications."
+              type="email"
             />
           </form>
         </Form>

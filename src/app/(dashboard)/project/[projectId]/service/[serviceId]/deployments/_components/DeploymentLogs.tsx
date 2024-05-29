@@ -3,7 +3,6 @@
 import { api } from "~/trpc/react";
 import { useProject } from "../../../../_context/ProjectContext";
 import { useState } from "react";
-import { toast } from "sonner";
 import { LogWindow, type LogLine, LogLevel } from "~/components/LogWindow";
 import { StringParam, useQueryParam } from "use-query-params";
 import {

@@ -15,7 +15,6 @@ export const env = createEnv({
       .default("development"),
 
     SQLITE_UUIDV7_EXT_PATH: z.string().optional(),
-    SESSION_SECRET: z.string().min(8),
     HOSTNAME: z.string().default("localhost"),
     PORT: z
       .string()
@@ -47,7 +46,6 @@ export const env = createEnv({
     DATABASE_PATH: process.env.DATABASE_PATH,
     NODE_ENV: process.env.NODE_ENV,
     SQLITE_UUIDV7_EXT_PATH: process.env.SQLITE_UUIDV7_EXT_PATH,
-    SESSION_SECRET: process.env.SESSION_SECRET,
     HOSTNAME: process.env.HOSTNAME,
     PORT: process.env.PORT,
     NEXT_PUBLIC_BUILD_COMMIT_SHA: process.env.NEXT_PUBLIC_BUILD_COMMIT_SHA,

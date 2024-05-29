@@ -8,7 +8,6 @@ import { users } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import argon2 from "argon2";
-import { Session } from "~/server/auth/Session";
 import { sessionsRouter } from "./sessions";
 import assert from "assert";
 
@@ -85,8 +84,13 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      const session = await Session.createForUser(user.id, ctx.request);
-      ctx.response.setHeader("Set-Cookie", session.getCookieString());
+      try {
+        const session = await ctx.globalStore.sessions.createForUser(
+          user.id,
+          ctx.request,
+        );
+        ctx.response.setHeader("Set-Cookie", session.getCookieString());
+      } catch (err) {}
 
       return {
         success: true,

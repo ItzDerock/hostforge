@@ -82,3 +82,4 @@ function createDatabaseInstance() {
 }
 
 export const db = (globalForDB.db ??= createDatabaseInstance());
+export type Database = typeof db;

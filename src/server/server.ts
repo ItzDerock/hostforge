@@ -14,6 +14,8 @@ import { createTRPCContext } from "./api/trpc";
 import { db } from "./db";
 import { stats } from "./modules/stats";
 import logger from "./utils/logger";
+import SettingsManager from "./managers/SettingsManager";
+import { GlobalStore } from "./managers/GlobalContext";
 
 // check if database folder exists
 try {
@@ -37,6 +39,10 @@ if (process.env.NODE_ENV === "production") {
     .child({ module: "database" })
     .info("Not running migrations in development.");
 }
+
+// load settings
+const settingsStore = await SettingsManager.createInstance(db);
+const globalContext = new GlobalStore(db, settingsStore);
 
 // start statistics
 void stats.start();
@@ -88,6 +94,7 @@ const server = createServer((req, res) => {
         return createTRPCContext({
           req,
           res,
+          globalContext,
         });
       },
     });
@@ -120,6 +127,7 @@ const trpcHandler = applyWSSHandler({
   createContext: ({ req }) => {
     return createTRPCContext({
       req,
+      globalContext,
     });
   },
 });

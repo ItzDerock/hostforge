@@ -1,4 +1,3 @@
-import { deterministicString } from "deterministic-object-hash";
 import { and, eq, or } from "drizzle-orm";
 import assert from "node:assert";
 import { db } from "../db";
@@ -7,7 +6,9 @@ import { ServiceSource } from "../db/types";
 import logger from "../utils/logger";
 import Deployment from "./Deployment";
 import type ProjectManager from "./Project";
-import { IChange, Operation, diff } from "json-diff-ts";
+import { type IChange, Operation, diff } from "json-diff-ts";
+import type { Docker } from "../docker/docker";
+import type { paths as DockerAPITypes } from "~/server/docker/types";
 
 export default class ServiceManager {
   private static LOGGER = logger.child({
@@ -232,6 +233,25 @@ export default class ServiceManager {
     const service = this.serviceData.name;
 
     return `${parent}_${service}`;
+  }
+
+  public async getHealth(docker: Docker) {
+    const [res] = await docker.dial<
+      DockerAPITypes["/services"]["get"]["responses"]["200"]["schema"]
+    >({
+      path:
+        "/services?status=true&id=" +
+        encodeURIComponent(this.toDockerServiceName()),
+      method: "GET",
+      statusCodes: {
+        200: true,
+        404: "no such service",
+        500: "server error",
+        503: "node is not part of a swarm",
+      },
+    });
+
+    return res?.ServiceStatus;
   }
 
   /**

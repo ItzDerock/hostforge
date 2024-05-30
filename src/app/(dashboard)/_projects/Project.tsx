@@ -20,6 +20,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { type RouterOutputs } from "~/trpc/shared";
+import { renderServiceHealth } from "~/utils/utils";
 
 type Project = RouterOutputs["projects"]["list"][number];
 
@@ -79,8 +80,12 @@ export function Project({ project }: { project: Project }) {
             {project.services.map((service, id) => (
               <TableRow key={id}>
                 <TableCell className="font-semibold">{service.name}</TableCell>
-                <TableCell>Database</TableCell>
-                <TableCell>Healthy</TableCell>
+                <TableCell>Service</TableCell>
+                <TableCell>
+                  {service.status
+                    ? renderServiceHealth(service.status)
+                    : "Unknown"}
+                </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

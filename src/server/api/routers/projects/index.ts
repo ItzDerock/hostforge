@@ -32,9 +32,11 @@ export const projectRouter = createTRPCRouter({
           return {
             ...project.getData(),
             services: await Promise.all(
-              (await project.getServices()).map((service) =>
-                service.getDataWithGenerations(),
-              ),
+              (await project.getServices()).map(async (service) => ({
+                ...(await service.getDataWithGenerations()),
+                redeploySecret: undefined,
+                status: await service.getHealth(ctx.docker),
+              })),
             ),
           };
         }),

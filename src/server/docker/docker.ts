@@ -1,9 +1,11 @@
 // import { dockerCommand } from "docker-cli-js";
 import { spawn } from "child_process";
-import Dockerode from "dockerode";
+import Dockerode, { type DockerOptions } from "dockerode";
 import logger from "../utils/logger";
-import { PassThrough, Transform } from "stream";
+import { Transform } from "stream";
 import { LogLevel } from "../build/utils/BuilderLogger";
+import { promisify } from "util";
+import type { DialOptions } from "docker-modem";
 
 export class Docker extends Dockerode {
   static buildContainerPrefixFromName(
@@ -55,6 +57,15 @@ export class Docker extends Dockerode {
         callback();
       },
     });
+  }
+
+  public dial: <T = unknown>(opts: DialOptions) => Promise<T>;
+
+  constructor(opts: DockerOptions) {
+    super(opts);
+    this.dial = promisify(this.modem.dial.bind(this.modem)) as <T = unknown>(
+      opts: DialOptions,
+    ) => Promise<T>;
   }
 
   private log = logger.child({ module: "docker" });

@@ -20,6 +20,7 @@ import {
   type Ulimits,
 } from "./compose";
 import { parse } from "dotenv";
+import { emptyStringIs } from "~/utils/utils";
 
 export type FullServiceGeneration = typeof serviceGeneration.$inferSelect & {
   service: typeof service.$inferSelect;
@@ -50,7 +51,7 @@ export async function buildDockerStackFile(
   for (const service of services) {
     swarmServices[service.service.name] = {
       // TODO: cap_add, cap_drop
-      command: service.command ?? undefined,
+      command: emptyStringIs(service.command, undefined),
       deploy: {
         replicas: service.replicas,
         endpoint_mode: "vip", // maybe dnsrr support?
@@ -90,7 +91,7 @@ export async function buildDockerStackFile(
         },
       },
 
-      entrypoint: service.entrypoint ?? undefined,
+      entrypoint: emptyStringIs(service.entrypoint, undefined),
       environment: service.environment ? parse(service.environment) : undefined,
       image: service.finalizedDockerImage ?? service.dockerImage ?? undefined,
       ports: service.ports.map((port) => ({

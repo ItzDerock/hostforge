@@ -12,3 +12,8 @@ export function isDefined<TValue>(
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/**
+ * If the string is empty, return the "or" value, otherwise return the string.
+ */
+export const emptyStringIs = <T>(str: string, or: T) => (str === "" ? or : str);

@@ -1,6 +1,11 @@
 // import { type RouterOutputs } from "~/trpc/shared";
 import { Operation, type IChange } from "json-diff-ts";
 import { Badge } from "../ui/badge";
+import {
+  DockerDeployMode,
+  ServiceBuildMethod,
+  ServiceSource,
+} from "~/server/db/types";
 
 function Formatted({ children }: { children: React.ReactNode }) {
   return (
@@ -36,12 +41,36 @@ export function ServiceDiff({ diff }: { diff: IChange[] | IChange }) {
       <div className="whitespace-pre-wrap text-center text-muted-foreground">
         {diff.type == Operation.UPDATE && (
           <>
-            <Formatted>{JSON.stringify(diff.oldValue)}</Formatted>
+            <Formatted>{formatValue(diff.key, diff.oldValue)}</Formatted>
             <p className="my-1">Updated to</p>
           </>
         )}
-        <Formatted>{JSON.stringify(diff.value)}</Formatted>
+        <Formatted>{formatValue(diff.key, diff.value)}</Formatted>
       </div>
     </div>
   );
+}
+
+export function formatValue(key: string, value: unknown) {
+  if (
+    key === "deployMode" &&
+    typeof value === "number" &&
+    value in DockerDeployMode
+  ) {
+    return DockerDeployMode[value];
+  }
+
+  if (
+    key === "buildMethod" &&
+    typeof value === "number" &&
+    value in ServiceBuildMethod
+  ) {
+    return ServiceBuildMethod[value];
+  }
+
+  if (key === "source" && typeof value === "number" && value in ServiceSource) {
+    return ServiceSource[value];
+  }
+
+  return JSON.stringify(value);
 }

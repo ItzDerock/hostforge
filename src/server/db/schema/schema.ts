@@ -221,8 +221,8 @@ export const serviceGeneration = sqliteTable(
     buildPath: text("build_path").default("/").notNull(),
 
     // deployment settings
-    command: text("command"),
-    entrypoint: text("entrypoint"),
+    command: text("command").default("").notNull(),
+    entrypoint: text("entrypoint").default("").notNull(),
     replicas: integer("replicas").default(1).notNull(),
     maxReplicasPerNode: integer("max_replicas_per_node"),
     deployMode: integer("deploy_mode")

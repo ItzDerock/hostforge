@@ -10,6 +10,13 @@ import { CreateService } from "./_components/CreateService";
 import { DeployChanges } from "./_components/DeployChanges";
 import { ServiceCard } from "./_components/ServiceCard";
 import { ProjectContextProvider } from "./_context/ProjectContext";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from "~/components/ui/breadcrumb";
 
 export function ProjectLayout(props: {
   project: RouterOutputs["projects"]["get"];
@@ -49,10 +56,29 @@ export function ProjectLayout(props: {
         selectedService,
       }}
     >
-      <div className="text-sm text-muted-foreground">
-        Project &gt; {project.data.internalName}
-        {selectedService && <>&gt; {selectedService.name}</>}
-      </div>
+      <Breadcrumb>
+        <BreadcrumbList className="mb-2 gap-1 sm:gap-1">
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href={projectPath}>
+              {project.data.internalName}
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          {selectedService && (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink href={servicePath}>
+                  {selectedService.name}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+            </>
+          )}
+        </BreadcrumbList>
+      </Breadcrumb>
 
       <div className="flex flex-row flex-wrap content-center justify-between gap-4">
         <div>

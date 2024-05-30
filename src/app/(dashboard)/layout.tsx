@@ -1,11 +1,16 @@
 import Footer from "../_footer/Footer";
-import Navbar from "./_navbar/Navbar";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout({
+  children,
+  navbar,
+}: {
+  children: React.ReactNode;
+  navbar: React.ReactNode;
+}) {
   return (
     <div className="p-4">
       <div className="mx-auto max-w-[1500px]">
-        <Navbar />
+        {navbar}
         {children}
         <Footer />
       </div>

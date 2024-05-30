@@ -1,6 +1,5 @@
 "use client";
 
-import Dockerode from "dockerode";
 import { z } from "zod";
 import {
   Form,
@@ -27,10 +26,10 @@ import { type RouterOutputs } from "~/trpc/shared";
 const formValidator = z.object({
   replicas: z.coerce.number().int().min(0),
   maxReplicasPerNode: z.number().int().positive().nullable(),
-  deployMode: z.nativeEnum(DockerDeployMode),
+  deployMode: z.enum(["global", "replicated"]),
   zeroDowntime: z.boolean(),
-  entrypoint: z.string().optional().nullable(),
-  command: z.string().optional().nullable(),
+  entrypoint: z.string().optional(),
+  command: z.string().optional(),
 
   max_memory: z.string().optional(),
   max_cpu: z.coerce.number().optional(),
@@ -48,7 +47,7 @@ export default function DeploymentSettings({
     defaultValues: {
       replicas: latestGen.replicas,
       maxReplicasPerNode: latestGen.maxReplicasPerNode,
-      deployMode: latestGen.deployMode,
+      deployMode: DOCKER_DEPLOY_MODE_MAP[latestGen.deployMode],
       zeroDowntime: latestGen.zeroDowntime,
       entrypoint: latestGen.entrypoint,
       command: latestGen.command,

@@ -7,10 +7,10 @@ import type ServiceManager from "./Service";
 import { PassThrough, type Readable } from "stream";
 import baseLogger from "../utils/logger";
 import type winston from "winston";
-import { waitForFileToExist } from "../utils/file";
+import { waitForFileToExist } from "../utils/file/index";
 import { brotliDecompress } from "zlib";
 import { promisify } from "util";
-import Tail from "@logdna/tail-file";
+import { createReadStream } from "../utils/file/stream.mjs";
 
 const brotliDecompressAsync = promisify(brotliDecompress);
 
@@ -68,18 +68,9 @@ export default class Deployment {
 
         // stream the file
         this.logger.debug("Streaming file", filepath);
-        const fileStream = new Tail(filepath, { encoding: "utf8" }).on(
-          "tail_error",
-          (err) => {
-            this.logger.error("TailFile had an error!", err);
-            throw err;
-          },
-        );
+        const fileStream = createReadStream(filepath);
 
-        await fileStream.start();
-        fileStream.pipe(returnStream).on("data", (data) => {
-          console.log("data", data);
-        });
+        fileStream.pipe(returnStream);
 
         signal.addEventListener("abort", () => {
           fileStream.destroy();

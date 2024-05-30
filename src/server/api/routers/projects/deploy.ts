@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { projectMiddleware } from "../../middleware/project";
 import { authenticatedProcedure } from "../../trpc";
+import { TRPCError } from "@trpc/server";
 
 export const deployProject = authenticatedProcedure
   .meta({
@@ -17,16 +18,21 @@ export const deployProject = authenticatedProcedure
   )
   .use(projectMiddleware)
   .mutation(async ({ ctx }) => {
-    const response = await ctx.project.deploy({
+    if (await ctx.project.isDeploying()) {
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "There is already a pending deployment.",
+      });
+    }
+
+    await ctx.project.deploy({
       docker: ctx.docker,
     });
 
     // TODO: stream progress to client
     // https://github.com/trpc/trpc/issues/4477
     // could do with ws, but very complicated
-    return {
-      response,
-    };
+    return { success: true };
   });
 
 export const getDeployDiff = authenticatedProcedure

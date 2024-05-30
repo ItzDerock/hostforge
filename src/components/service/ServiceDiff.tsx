@@ -13,11 +13,11 @@ function Formatted({ children }: { children: React.ReactNode }) {
 export function ServiceDiff({ diff }: { diff: IChange[] | IChange }) {
   if (Array.isArray(diff)) {
     return (
-      <div>
+      <>
         {diff.map((change, i) => (
           <ServiceDiff key={i} diff={change} />
         ))}
-      </div>
+      </>
     );
   }
 

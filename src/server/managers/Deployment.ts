@@ -1,16 +1,16 @@
 import assert from "assert";
 import { BuildManager } from "../build/BuildManager";
 import { db } from "../db";
-import { serviceDeployment } from "../db/schema";
+import type { serviceDeployment } from "../db/schema";
 import { ServiceDeploymentStatus } from "../db/types";
-import ServiceManager from "./Service";
-import { Duplex, PassThrough, type Readable } from "stream";
+import type ServiceManager from "./Service";
+import { PassThrough, type Readable } from "stream";
 import baseLogger from "../utils/logger";
 import type winston from "winston";
 import { waitForFileToExist } from "../utils/file";
-import { createReadStream } from "fs";
 import { brotliDecompress } from "zlib";
 import { promisify } from "util";
+import Tail from "@logdna/tail-file";
 
 const brotliDecompressAsync = promisify(brotliDecompress);
 
@@ -67,12 +67,28 @@ export default class Deployment {
         signal.throwIfAborted();
 
         // stream the file
-        const fileStream = createReadStream(filepath);
-        fileStream.pipe(returnStream);
+        this.logger.debug("Streaming file", filepath);
+        const fileStream = new Tail(filepath, { encoding: "utf8" }).on(
+          "tail_error",
+          (err) => {
+            this.logger.error("TailFile had an error!", err);
+            throw err;
+          },
+        );
+
+        await fileStream.start();
+        fileStream.pipe(returnStream).on("data", (data) => {
+          console.log("data", data);
+        });
 
         signal.addEventListener("abort", () => {
-          fileStream.close();
+          fileStream.destroy();
           returnStream.end();
+        });
+
+        await new Promise((resolve) => {
+          // wait for the stream to end
+          returnStream.on("end", resolve);
         });
 
         return;
@@ -120,7 +136,7 @@ export default class Deployment {
         }
 
         this.logger.error("Streaming error:", err);
-        returnStream.destroy(err);
+        returnStream.destroy(err instanceof Error ? err : new Error());
       })
       .then(() => {
         returnStream.end();

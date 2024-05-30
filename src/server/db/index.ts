@@ -7,6 +7,7 @@ import { join } from "path";
 import { env } from "~/env";
 import logger from "../utils/logger";
 import * as schema from "./schema";
+import { isDebugFlagEnabled } from "../utils/serverUtils";
 
 const globalForDB = globalThis as unknown as {
   db: ReturnType<typeof createDatabaseInstance>;
@@ -72,9 +73,9 @@ function createDatabaseInstance() {
   const orm = drizzle(sqlite, {
     schema,
     logger: {
-      logQuery(query) {
-        LOGGER.debug(query);
-      },
+      logQuery: isDebugFlagEnabled("db:query")
+        ? (query) => LOGGER.debug(query)
+        : () => void 0,
     },
   });
 

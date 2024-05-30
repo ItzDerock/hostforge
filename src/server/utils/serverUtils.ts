@@ -1,5 +1,5 @@
 import { PriorityQueue } from "datastructures-js";
-import { Readable, Writable } from "node:stream";
+import type { Readable, Writable } from "node:stream";
 
 export function docker404ToNull(err: unknown) {
   if (
@@ -62,4 +62,17 @@ export function parseISODate(date: string) {
   const d = BigInt(new Date(date.split(".")[0] + "Z").getTime());
 
   return d * BigInt(1e6) + ns;
+}
+
+/**
+ * Checks if a certain debug flag is enabled
+ */
+export function isDebugFlagEnabled(flag: string) {
+  const enabledFlags = process.env.DEBUG?.split(",") ?? [];
+
+  return enabledFlags.some(
+    (userFlag) =>
+      userFlag.trim().toLowerCase() === flag.toLowerCase() ||
+      userFlag.trim() === "*",
+  );
 }

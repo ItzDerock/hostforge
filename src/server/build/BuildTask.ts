@@ -1,7 +1,7 @@
 import assert from "assert";
 import { eq } from "drizzle-orm";
 import { mkdirSync, createReadStream } from "fs";
-import { rm, rmdir } from "fs/promises";
+import { rm } from "fs/promises";
 import path from "path";
 import { db } from "../db";
 import {
@@ -143,7 +143,7 @@ export default class BuildTask {
     await this.buildLogger.finish();
 
     await Promise.allSettled([
-      rmdir(this.workingDirectory, { recursive: true }),
+      rm(this.workingDirectory, { recursive: true }),
       rm(this.logFilePath),
     ]);
   }
@@ -194,7 +194,7 @@ export default class BuildTask {
       const buffers: Buffer[] = [];
       readStream.pipe(compressedLogs);
 
-      compressedLogs.on("data", (data) => buffers.push(data));
+      compressedLogs.on("data", (data: Buffer) => buffers.push(data));
 
       compressedLogs.on("error", reject);
       compressedLogs.on("end", () => resolve(Buffer.concat(buffers)));

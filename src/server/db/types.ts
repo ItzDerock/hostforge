@@ -131,6 +131,7 @@ export enum DockerVolumeType {
 export enum ServiceDeploymentStatus {
   /**
    * The service is waiting to be built. This may be because there are other builds in progress.
+   * Not used for project deployments.
    */
   BuildPending,
 

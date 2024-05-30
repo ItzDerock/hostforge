@@ -17,6 +17,7 @@ import {
 import { LoadingSpinner } from "~/components/LoadingSpinner";
 import { ServiceDiff } from "~/components/service/ServiceDiff";
 import { useMemo } from "react";
+import { Operation } from "json-diff-ts";
 
 export function DeployChanges() {
   const project = useProject();
@@ -42,7 +43,7 @@ export function DeployChanges() {
           variant="outline"
           icon={UploadCloud}
           onClick={() => diff.refetch()}
-          isLoading={mutation.isPending}
+          isLoading={mutation.isPending || project.isDeploying}
         >
           Deploy Changes
         </Button>
@@ -61,9 +62,15 @@ export function DeployChanges() {
               <h2 className="text-lg font-bold text-white">
                 Service: {service.name}
               </h2>
-              <pre className="text-sm text-gray-400">
-                <ServiceDiff diff={diff} />
-              </pre>
+              <div className="grid grid-cols-1 gap-4 text-sm lg:grid-cols-2">
+                {"type" in diff &&
+                diff.key === "serviceId" &&
+                diff.type === Operation.ADD ? (
+                  <p className="col-span-2">Service Created</p>
+                ) : (
+                  <ServiceDiff diff={diff} />
+                )}
+              </div>
             </div>
           ))}
           {servicesWithChanges.length === 0 && "No changes to deploy."}

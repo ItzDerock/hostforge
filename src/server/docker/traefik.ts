@@ -27,7 +27,13 @@ export class TraefikManager {
    */
   static TRAEFIK_CONFIG_PATH = path.resolve(env.STORAGE_PATH, "traefik");
 
-  constructor(private store: GlobalStore) {}
+  constructor(private store: GlobalStore) {
+    // schedule regular traefik checks (every 5 mins)
+    setInterval(() => void this.ensureTraefik(), 5 * 60 * 1000);
+    void this.ensureTraefik().catch((err) => {
+      this.log.error("Initial traefik loading failed", err);
+    });
+  }
 
   public createTraefikServiceConfig() {
     const { letsencryptEmail } = this.store.settings.getSettings();
@@ -43,10 +49,6 @@ export class TraefikManager {
         {
           Target: DockerNetworks.Internal,
         },
-        // network for traefik to watch
-        {
-          Target: DockerNetworks.ReverseProxy,
-        },
       ],
 
       TaskTemplate: {
@@ -60,7 +62,7 @@ export class TraefikManager {
             "--providers.swarm.endpoint=unix:///var/run/docker.sock",
             "--providers.swarm.watch=true",
             "--providers.swarm.allowEmptyServices=true",
-            `--providers.swarm.network=${DockerNetworks.ReverseProxy}`,
+            `--providers.swarm.network=${DockerNetworks.Public}`,
 
             "--entrypoints.web.address=:80",
             "--entrypoints.websecure.address=:443",
@@ -139,24 +141,38 @@ export class TraefikManager {
     await mkdir(TraefikManager.TRAEFIK_CONFIG_PATH, { recursive: true });
 
     // create the networks
-    await docker.createNetwork({
-      Name: DockerNetworks.Public,
-      CheckDuplicate: true,
-      Driver: "overlay",
-      Attachable: true,
-    });
+    await docker
+      .createNetwork({
+        Name: DockerNetworks.Public,
+        CheckDuplicate: true,
+        Driver: "overlay",
+        Attachable: true,
+      })
+      .catch((err: Error) => {
+        if ("statusCode" in err && err.statusCode == 409) {
+          // network already exists, ignore
+          return;
+        }
+      });
 
-    await docker.createNetwork({
-      Name: DockerNetworks.Internal,
-      CheckDuplicate: true,
-      Driver: "overlay",
-      Attachable: false,
-      Internal: true,
-      // enable encryption
-      Options: {
-        encrypted: "true",
-      },
-    });
+    await docker
+      .createNetwork({
+        Name: DockerNetworks.Internal,
+        CheckDuplicate: true,
+        Driver: "overlay",
+        Attachable: false,
+        Internal: true,
+        // enable encryption
+        Options: {
+          encrypted: "true",
+        },
+      })
+      .catch((err: Error) => {
+        if ("statusCode" in err && err.statusCode == 409) {
+          // network already exists, ignore
+          return;
+        }
+      });
 
     const res = await docker.createService(this.createTraefikServiceConfig());
     this.log.info(`Traefik deployed: ${res.id}`);
@@ -172,6 +188,12 @@ export class TraefikManager {
   }
 
   public async ensureTraefik() {
+    // skip checking if the instance hasn't been set up yet
+    if (!this.store.settings.isInstanceSetup()) {
+      this.log.debug("Skipping traefik check, instance not set up");
+      return false;
+    }
+
     const docker = await getDockerInstance();
 
     const service = docker.getService(DockerInternalServices.Traefik);

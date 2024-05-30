@@ -7,7 +7,7 @@ import { ServiceSource } from "../db/types";
 import logger from "../utils/logger";
 import Deployment from "./Deployment";
 import type ProjectManager from "./Project";
-import { diff } from "json-diff-ts";
+import { IChange, Operation, diff } from "json-diff-ts";
 
 export default class ServiceManager {
   private static LOGGER = logger.child({
@@ -60,6 +60,10 @@ export default class ServiceManager {
       this.serviceData.latestGenerationId ===
       this.serviceData.deployedGenerationId
     ) {
+      logger.debug(
+        `Service ${this.serviceData.name} has same deployed and latest generation. No changes to deploy.`,
+      );
+
       return [];
     }
 
@@ -68,6 +72,14 @@ export default class ServiceManager {
       this.fetchLatestGeneration(),
       this.fetchDeployedGeneration(),
     ]);
+
+    // new service
+    if (!deployed) {
+      return {
+        key: "serviceId",
+        type: Operation.ADD,
+      } satisfies IChange;
+    }
 
     // compare the two
     return diff(
@@ -91,7 +103,16 @@ export default class ServiceManager {
    */
   public async hasPendingChanges() {
     const diff = await this.buildDeployDiff();
-    return diff.length > 0;
+
+    // if the service was just created, return true
+    if (
+      "type" in diff &&
+      diff.type === Operation.ADD &&
+      diff.key === "serviceId"
+    )
+      return true;
+
+    return (diff as IChange[]).length > 0;
   }
 
   /**
@@ -114,9 +135,10 @@ export default class ServiceManager {
   }
 
   /**
-   * Clones the latest generation and sets the original generation as the deployed generation.
+   * Sets the current latest generation as the deployed generation, and creates a copy for the new latest generation.
+   * @param deploymentId - the new deployed generation will have this deploymentId.
    */
-  public async deriveNewGeneration(setDeploymentId?: string) {
+  public async deriveNewGeneration(deploymentId?: string) {
     // do as much as possible on the database
     await db.transaction(async (trx) => {
       // clone the latest generation
@@ -127,14 +149,15 @@ export default class ServiceManager {
 
       assert(originalLatestGeneration, "Could not find latest generation??");
 
-      // update deployment id
-      originalLatestGeneration.deploymentId = setDeploymentId ?? null;
+      // Since this will become the new latest generation, delete the deploymentId.
+      originalLatestGeneration.deploymentId = null;
 
       // delete the ID so we can insert it again
       // @ts-expect-error i dont feel like typing it as optional
       delete originalLatestGeneration.id;
 
       // insert the cloned generation
+      // this will become the new latest generation
       const [clonedLatestGeneration] = await trx
         .insert(serviceGeneration)
         .values(originalLatestGeneration)
@@ -142,12 +165,25 @@ export default class ServiceManager {
 
       assert(clonedLatestGeneration, "Cloned generation was null!");
 
-      // update the service's latest gen to point to the cloned generation
-      // and set the deployed gen to the original
-      await trx.update(service).set({
-        latestGenerationId: clonedLatestGeneration.id,
-        deployedGenerationId: this.serviceData.latestGenerationId,
-      });
+      await Promise.all([
+        // update the service's latest gen to point to the cloned generation
+        // and set the deployed gen to the original
+        trx
+          .update(service)
+          .set({
+            latestGenerationId: clonedLatestGeneration.id,
+            deployedGenerationId: this.serviceData.latestGenerationId,
+          })
+          .where(eq(service.id, this.serviceData.id)),
+
+        // update the deploymentId of the original generation
+        trx
+          .update(serviceGeneration)
+          .set({
+            deploymentId: deploymentId ?? null,
+          })
+          .where(eq(serviceGeneration.id, this.serviceData.latestGenerationId)),
+      ]);
     });
 
     await this.refetch();

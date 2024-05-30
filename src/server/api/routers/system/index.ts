@@ -1,7 +1,7 @@
 import { observable } from "@trpc/server/observable";
-import { updateTraefik } from "~/server/docker/traefik";
 import { stats, type BasicServerStats } from "~/server/modules/stats";
 import { authenticatedProcedure, createTRPCRouter } from "../../trpc";
+import logger from "~/server/utils/logger";
 
 export const systemRouter = createTRPCRouter({
   currentStats: authenticatedProcedure.query(async () => {
@@ -26,9 +26,16 @@ export const systemRouter = createTRPCRouter({
   }),
 
   // core container options
-  redeployTraefik: authenticatedProcedure.mutation(() => {
+  redeployTraefik: authenticatedProcedure.mutation(({ ctx }) => {
     setTimeout(() => {
-      void updateTraefik();
+      void ctx.globalStore.traefik
+        .updateTraefik()
+        .then(() => {
+          logger.info("Traefik redeployed");
+        })
+        .catch((err) => {
+          logger.error("Failed to redeploy traefik", err);
+        });
     }, 200);
 
     return "ok";

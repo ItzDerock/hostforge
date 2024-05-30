@@ -1,6 +1,7 @@
 import { api } from "~/trpc/server";
 import { DeploymentCard } from "./_components/DeploymentCard";
 import { DeploymentLogs } from "./_components/DeploymentLogs";
+import { NoDeployments } from "../../../_components/NoDeployments";
 
 export default async function DeploymentsPage({
   params: { serviceId, projectId },
@@ -29,6 +30,8 @@ export default async function DeploymentsPage({
               <DeploymentCard deployment={deployment} />
             </li>
           ))}
+
+        {deployments.length === 0 && <NoDeployments />}
       </ul>
 
       <DeploymentLogs />

@@ -1,5 +1,5 @@
 import assert from "assert";
-import { eq, or } from "drizzle-orm";
+import { desc, eq, or } from "drizzle-orm";
 import { BuildManager } from "../build/BuildManager";
 import { db } from "../db";
 import {
@@ -67,125 +67,182 @@ export default class ProjectManager {
   }
 
   /**
+   * Checks if the project is in the process of being deployed
+   */
+  public async isDeploying() {
+    const latestDeployment = await db.query.projectDeployment.findFirst({
+      where: eq(projectDeployment.projectId, this.projectData.id),
+      orderBy: desc(projectDeployment.deployedAt),
+      columns: {
+        status: true,
+        id: true,
+      },
+    });
+
+    return (
+      latestDeployment &&
+      latestDeployment.status != ServiceDeploymentStatus.Failed &&
+      latestDeployment.status != ServiceDeploymentStatus.Success
+    );
+  }
+
+  /**
    * Deploys the project.
    */
   public async deploy(deployOptions: { docker: Docker; force?: boolean }) {
-    // 1. get all services that have pending updates
+    // 1. find all services
     const services = await this.getServices();
 
-    // 2. Create a deployment entry
+    // 2. Create a PROJECT deployment entry
+    //    This encompasses all the individual SERVICE deployments
     const [deployment] = await db
       .insert(projectDeployment)
       .values({
         projectId: this.projectData.id,
-        status: ServiceDeploymentStatus.BuildPending,
+        status: ServiceDeploymentStatus.Building,
       })
       .returning({
         id: projectDeployment.id,
       });
 
-    assert(deployment, "deploymentId is missing");
+    assert(deployment, "created deploymentId is missing");
 
-    // 2. for each service, create a new deployment and run builds if needed
-    const allServiceData = await Promise.all(
-      services.map(async (service): Promise<FullServiceGeneration> => {
-        // fetch latest generation with all children
-        const fullGenerationData = await db.query.serviceGeneration.findFirst({
-          where: eq(serviceGeneration.id, service.getData().latestGenerationId),
-          with: {
-            domains: true,
-            ports: true,
-            service: true,
-            sysctls: true,
-            ulimits: true,
-            volumes: true,
-          },
-        });
-
-        assert(fullGenerationData, "Generation data is missing!");
-
-        // if no deployment required, just return
-        if (!(await service.hasPendingChanges()))
-          return { ...fullGenerationData, service: service.getData() };
-
-        ProjectManager.LOGGER.debug(
-          `Service "${service.getData().name}" has pending changes.`,
-        );
-
-        // fetch latest generation data
-        const serviceData = service.getData();
-
-        // create a new deployment
-        const [sDeployment] = await db
-          .insert(serviceDeployment)
-          .values({
-            serviceId: serviceData.id,
-            status: ServiceDeploymentStatus.BuildPending,
-            projectDeploymentId: deployment.id,
-          })
-          .returning({
-            id: serviceDeployment.id,
+    try {
+      // 2. for each service, create a new SERVICE deployment and run builds if needed
+      const allServiceData = await Promise.all(
+        services.map(async (service): Promise<FullServiceGeneration> => {
+          // This represents the current UNDEPLOYED generation.
+          const fullLatestGenData = await db.query.serviceGeneration.findFirst({
+            where: eq(
+              serviceGeneration.id,
+              service.getData().latestGenerationId,
+            ),
+            with: {
+              domains: true,
+              ports: true,
+              service: true,
+              sysctls: true,
+              ulimits: true,
+              volumes: true,
+            },
           });
 
-        assert(sDeployment, "serviceDeploymentId is missing");
+          assert(fullLatestGenData, "Generation data is missing!");
 
-        // link the new deployment to the service
-        if (fullGenerationData.deploymentId) {
-          logger.warn(
-            `Service "${serviceData.name}" already has a deployment linked.`,
-            {
+          // if no deployment required, just return
+          if (!(await service.hasPendingChanges()))
+            return { ...fullLatestGenData, service: service.getData() };
+
+          ProjectManager.LOGGER.debug(
+            `Service "${service.getData().name}" has pending changes.`,
+          );
+
+          // fetch latest generation data
+          const serviceData = service.getData();
+
+          // create a new deployment
+          const [sDeployment] = await db
+            .insert(serviceDeployment)
+            .values({
               serviceId: serviceData.id,
-              deploymentId: fullGenerationData.deploymentId,
-            },
-          );
-        }
+              status: ServiceDeploymentStatus.BuildPending,
+              projectDeploymentId: deployment.id,
+            })
+            .returning({
+              id: serviceDeployment.id,
+            });
 
-        await service.deriveNewGeneration(sDeployment.id);
+          assert(sDeployment, "serviceDeploymentId is missing");
 
-        // run builds if needed
-        if (await service.requiresImageBuild()) {
-          const image = await BuildManager.getInstance().startBuild(
-            serviceData.id,
-            sDeployment.id,
-          );
+          // link the new deployment to the service
+          if (fullLatestGenData.deploymentId) {
+            logger.warn(
+              `Service "${serviceData.name}" already has a deployment linked to it's latest generation!!`,
+              {
+                serviceId: serviceData.id,
+                latestGenId: serviceData.latestGenerationId,
+                deployedGenId: serviceData.deployedGenerationId,
+                deploymentId: fullLatestGenData.deploymentId,
+              },
+            );
+          }
 
-          return {
-            ...fullGenerationData,
-            finalizedDockerImage: image,
-            service: service.getData(),
-          };
-        }
+          // need to fetch before deriving a new generation
+          const requiresImageBuild = await service.requiresImageBuild();
 
-        return { ...fullGenerationData, service: service.getData() };
-      }),
-    );
+          await service.deriveNewGeneration(sDeployment.id);
 
-    // now build the dockerfile
-    const composeStack = await buildDockerStackFile(allServiceData);
+          // run builds if needed
+          if (requiresImageBuild) {
+            const image = await BuildManager.getInstance().startBuild(
+              serviceData.id,
+              sDeployment.id,
+            );
 
-    const output = await deployOptions.docker.cli(
-      [
-        "stack",
-        "deploy",
-        "--compose-file",
-        "-",
-        this.projectData.internalName,
-        deployOptions.force ? "--force-recreate" : undefined,
-      ].filter(isDefined),
-      {
-        stdin: JSON.stringify(composeStack),
-      },
-    );
+            return {
+              ...fullLatestGenData,
+              finalizedDockerImage: image,
+              service: service.getData(),
+            };
+          }
 
-    // update all deployment statuses to success
-    await db
-      .update(serviceDeployment)
-      .set({
-        status: ServiceDeploymentStatus.Success,
-      })
-      .where(eq(serviceDeployment.projectDeploymentId, deployment.id));
+          return { ...fullLatestGenData, service: service.getData() };
+        }),
+      );
 
-    return output;
+      // update status to deploying
+      await db
+        .update(projectDeployment)
+        .set({
+          status: ServiceDeploymentStatus.Deploying,
+        })
+        .where(eq(projectDeployment.id, deployment.id));
+
+      // now build the dockerfile
+      const composeStack = await buildDockerStackFile(allServiceData);
+
+      const output = await deployOptions.docker.cli(
+        [
+          "stack",
+          "deploy",
+          "--compose-file",
+          "-",
+          this.projectData.internalName,
+          deployOptions.force ? "--force-recreate" : undefined,
+        ].filter(isDefined),
+        {
+          stdin: JSON.stringify(composeStack),
+        },
+      );
+
+      // update all deployment statuses to success
+      await Promise.all([
+        db
+          .update(serviceDeployment)
+          .set({
+            status: ServiceDeploymentStatus.Success,
+          })
+          .where(eq(serviceDeployment.projectDeploymentId, deployment.id)),
+        db
+          .update(projectDeployment)
+          .set({
+            status: ServiceDeploymentStatus.Success,
+          })
+          .where(eq(projectDeployment.id, deployment.id)),
+      ]);
+
+      return output;
+    } catch (err) {
+      // if an error occurs, update the deployment status to failed and rethrow
+      await db
+        .update(projectDeployment)
+        .set({
+          status: ServiceDeploymentStatus.Failed,
+        })
+        .where(eq(projectDeployment.id, deployment.id));
+
+      throw err;
+    }
   }
 
   /**

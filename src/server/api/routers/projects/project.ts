@@ -27,6 +27,7 @@ export const getProject = authenticatedProcedure
 
     return {
       ...ctx.project.getData(),
+      isDeploying: await ctx.project.isDeploying(),
       services: projServices.map((service) => ({
         ...service.getData(),
         stats: stats.find((stat) => stat.Spec?.Name === service.getData().name),

@@ -30,7 +30,7 @@ export default function ServiceLogsPage() {
 
   return (
     <div>
-      <h1 className="text-xl">Logs</h1>
+      <h1 className="mb-2 text-xl">Logs</h1>
       {logs === null && !error && <LoadingScreen />}
       {logs && <LogWindow logs={logs} className="max-h-[60vh]" />}
       {error && <NoDeployments />}

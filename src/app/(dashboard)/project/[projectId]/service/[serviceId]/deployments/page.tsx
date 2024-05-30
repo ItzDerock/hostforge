@@ -1,9 +1,7 @@
 import { api } from "~/trpc/server";
-import { DeploymentCard } from "./_components/DeploymentCard";
-import { DeploymentLogs } from "./_components/DeploymentLogs";
-import { NoDeployments } from "../../../_components/NoDeployments";
+import DeploymentsPage from "./DeploymentsPage";
 
-export default async function DeploymentsPage({
+export default async function Page({
   params: { serviceId, projectId },
 }: {
   params: {
@@ -17,24 +15,10 @@ export default async function DeploymentsPage({
   });
 
   return (
-    <div>
-      <h1 className="text-xl">Deployments</h1>
-      <p className="mb-4 text-sm text-muted-foreground">
-        {deployments.length} total deployments.
-      </p>
-      <ul className="flex flex-col gap-2">
-        {deployments
-          .sort((a, b) => b.deployedAt - a.deployedAt)
-          .map((deployment) => (
-            <li key={deployment.id}>
-              <DeploymentCard deployment={deployment} />
-            </li>
-          ))}
-
-        {deployments.length === 0 && <NoDeployments />}
-      </ul>
-
-      <DeploymentLogs />
-    </div>
+    <DeploymentsPage
+      defaultDeployments={deployments}
+      projectId={projectId}
+      serviceId={serviceId}
+    />
   );
 }

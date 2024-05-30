@@ -30,6 +30,7 @@ export function ProjectLayout(props: {
     { projectId: props.project.id },
     {
       initialData: props.project,
+      refetchInterval: 60 * 1000, // every minute
     },
   );
 

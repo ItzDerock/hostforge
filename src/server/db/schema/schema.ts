@@ -195,7 +195,7 @@ export const serviceGeneration = sqliteTable(
 
     // service configuration
     source: integer("source").$type<ServiceSource>().notNull(),
-    environment: text("environment"),
+    environment: text("environment").default("").notNull(),
 
     // for docker source
     dockerImage: text("docker_image"),

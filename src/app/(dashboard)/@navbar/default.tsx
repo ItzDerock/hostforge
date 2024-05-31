@@ -4,12 +4,21 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 
-import { Settings } from "lucide-react";
+import {
+  Cog,
+  LogOut,
+  ScanFace,
+  Settings,
+  Settings2,
+  UserCog,
+} from "lucide-react";
 import Link from "next/link";
 import { api } from "~/trpc/server";
+import { Resources } from "./_components/Resources";
 
 export default async function Navbar() {
   const user = await api.auth.me.query();
@@ -21,30 +30,45 @@ export default async function Navbar() {
           <Link href="/">Hostforge</Link>{" "}
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost">Project</Button>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent>
-            <DropdownMenuItem>Project A</DropdownMenuItem>
-            <DropdownMenuItem>Project B</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Resources />
 
         <div className="flex-grow" />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost">
-              <Settings />
+              {/* <Settings /> */}
+              <Cog />
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent>
-            <DropdownMenuLabel>Logged in as {user.username}</DropdownMenuLabel>
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Logout</DropdownMenuItem>
+          <DropdownMenuContent className="mr-4 min-w-36">
+            <DropdownMenuLabel>Welcome, {user.username}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/settings/account">
+                <UserCog className="mr-2 size-4" />
+                Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/settings/sessions">
+                <ScanFace className="mr-2 size-4" />
+                Sessions
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/settings">
+                <Settings2 className="mr-2 size-4" />
+                HostForge Settings
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <LogOut className="mr-2 size-4" />
+              Logout
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

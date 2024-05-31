@@ -1,5 +1,3 @@
-"use server";
-
 import {
   TRPCClientError,
   createTRPCClient,
@@ -81,6 +79,7 @@ export const api = createTRPCClient<AppRouter>({
           cookie: cooks.toString(),
           "x-trpc-source": "rsc",
           "X-Forwarded-For": heads.get("X-Forwarded-For") ?? undefined,
+          "User-Agent": heads.get("User-Agent") ?? undefined,
         };
       },
     }),

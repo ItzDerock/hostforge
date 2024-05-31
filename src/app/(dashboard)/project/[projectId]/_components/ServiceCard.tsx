@@ -31,12 +31,11 @@ export function ServiceCard({ service }: { service: BasicServiceDetails }) {
         <div className="flex flex-row items-center gap-1">
           <div
             className={`mr-1 inline-block h-3 w-3 rounded-full border-2 ${
-              service.stats?.ServiceStatus?.RunningTasks == undefined
+              service.status?.RunningTasks == undefined
                 ? STATUS_ICON_COLORS.Unknown
-                : service.stats?.ServiceStatus?.RunningTasks ==
-                    service.stats?.ServiceStatus?.DesiredTasks
+                : service.status?.RunningTasks == service.status?.DesiredTasks
                   ? STATUS_ICON_COLORS.Healthy
-                  : service.stats?.ServiceStatus?.RunningTasks ?? 0 > 0
+                  : service.status?.RunningTasks ?? 0 > 0
                     ? STATUS_ICON_COLORS.Partial
                     : STATUS_ICON_COLORS.Unhealthy
             }`}

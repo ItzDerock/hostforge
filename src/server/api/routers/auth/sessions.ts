@@ -4,17 +4,21 @@ import { eq } from "drizzle-orm";
 
 export const sessionsRouter = createTRPCRouter({
   list: authenticatedProcedure.query(async ({ ctx }) => {
-    const activeSessions = ctx.db
+    const activeSessions = await ctx.db
       .select({
         lastUA: sessions.lastUA,
         lastIP: sessions.lastIP,
         lastAccessed: sessions.lastAccessed,
         createdAt: sessions.createdAt,
-        id: sessions.token,
+        token: sessions.token,
       })
       .from(sessions)
       .where(eq(sessions.userId, ctx.session.data.userId));
 
-    return activeSessions;
+    return activeSessions.map((session) => ({
+      ...session,
+      active: session.token === ctx.session.data.token,
+      token: undefined,
+    }));
   }),
 });

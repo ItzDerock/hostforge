@@ -11,6 +11,7 @@ type SidebarNavEntry = {
   type?: "entry";
   href: string;
   title: string;
+  description?: string;
   icon?: LucideIcon;
 };
 
@@ -38,7 +39,7 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
       {items.map((item, i) => {
         const isActive =
           item.type !== "divider"
-            ? pathname === item.href.replace(/\/$/, "")
+            ? pathname === item.href?.replace(/\/$/, "")
             : false;
 
         return item.type === "divider" ? (

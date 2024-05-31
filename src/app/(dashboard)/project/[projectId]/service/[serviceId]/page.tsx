@@ -1,13 +1,9 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { usePathname, useRouter } from "next/navigation";
-
-export default function ServicePage() {
-  const router = useRouter();
-  const pathname = usePathname();
-
-  // redirect to ./home
-  router.push(pathname + "/home");
-
-  return <div>Redirecting you...</div>;
+export default function ServicePage({
+  params: { serviceId, projectId },
+}: {
+  params: { serviceId: string; projectId: string };
+}) {
+  redirect(`/project/${projectId}/service/${serviceId}/home`);
 }

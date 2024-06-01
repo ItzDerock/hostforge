@@ -43,9 +43,13 @@ export function ContainerEntry({
     return () => clearInterval(interval);
   }, [mainContainer]);
 
+  const hasError =
+    container?.error !== undefined ||
+    previous[0]?.container?.error !== undefined;
+
   return (
     <>
-      <TableRow className="whitespace-nowrap">
+      <TableRow className={"whitespace-nowrap " + hasError ? "border-b-0" : ""}>
         <TableCell
           className="cursor-pointer font-mono text-sm text-muted-foreground"
           onClick={() => {
@@ -120,11 +124,10 @@ export function ContainerEntry({
         </TableCell>
       </TableRow>
 
-      {container?.error !== undefined ||
-      previous[0]?.container?.error !== undefined ? (
-        <TableRow className="hover:bg-inherit">
+      {hasError && (
+        <TableRow className="border-b border-border hover:bg-inherit">
           <TableCell></TableCell>
-          <TableCell colSpan={8} className="mb-4 text-red-500">
+          <TableCell colSpan={8} className="mb-2 text-red-500">
             {container?.error
               ? "Container exited with:"
               : "Previous container exited with:"}{" "}
@@ -135,7 +138,7 @@ export function ContainerEntry({
             <br />
           </TableCell>
         </TableRow>
-      ) : undefined}
+      )}
     </>
   );
 }

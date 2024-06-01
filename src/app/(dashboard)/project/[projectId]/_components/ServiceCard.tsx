@@ -2,17 +2,17 @@
 
 import Link from "next/link";
 import { buttonVariants } from "~/components/ui/button";
-import { cn } from "~/utils/utils";
+import { ServiceHealth, cn, parseServiceHealth } from "~/utils/utils";
 import {
   useProject,
   type BasicServiceDetails,
 } from "../_context/ProjectContext";
 
 const STATUS_ICON_COLORS = {
-  Healthy: "bg-green-500 border-green-400",
-  Partial: "bg-yellow-500 border-yellow-400",
-  Unhealthy: "bg-red-500 border-red-400",
-  Unknown: "bg-gray-500 border-gray-400",
+  [ServiceHealth.Healthy]: "bg-green-500 border-green-400",
+  [ServiceHealth.PartiallyHealthy]: "bg-yellow-500 border-yellow-400",
+  [ServiceHealth.Unhealthy]: "bg-red-500 border-red-400",
+  [ServiceHealth.Unknown]: "bg-gray-500 border-gray-400",
 } as const;
 
 export function ServiceCard({ service }: { service: BasicServiceDetails }) {
@@ -31,13 +31,7 @@ export function ServiceCard({ service }: { service: BasicServiceDetails }) {
         <div className="flex flex-row items-center gap-1">
           <div
             className={`mr-1 inline-block h-3 w-3 rounded-full border-2 ${
-              service.status?.RunningTasks == undefined
-                ? STATUS_ICON_COLORS.Unknown
-                : service.status?.RunningTasks == service.status?.DesiredTasks
-                  ? STATUS_ICON_COLORS.Healthy
-                  : service.status?.RunningTasks ?? 0 > 0
-                    ? STATUS_ICON_COLORS.Partial
-                    : STATUS_ICON_COLORS.Unhealthy
+              STATUS_ICON_COLORS[parseServiceHealth(service.status)]
             }`}
           />
           <span>{service.name}</span>

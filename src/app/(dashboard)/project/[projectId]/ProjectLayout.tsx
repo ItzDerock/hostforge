@@ -17,6 +17,7 @@ import {
   BreadcrumbLink,
   BreadcrumbSeparator,
 } from "~/components/ui/breadcrumb";
+import { parseServiceHealth, ServiceHealth } from "~/utils/utils";
 
 export function ProjectLayout(props: {
   project: RouterOutputs["projects"]["get"];
@@ -36,9 +37,7 @@ export function ProjectLayout(props: {
 
   const healthy =
     project.data.services.filter(
-      (s) =>
-        s.stats?.ServiceStatus?.RunningTasks ==
-        s.stats?.ServiceStatus?.DesiredTasks,
+      (s) => parseServiceHealth(s.status) === ServiceHealth.Healthy,
     ).length ?? 0;
 
   const selectedService =

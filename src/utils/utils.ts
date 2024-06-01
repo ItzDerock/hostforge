@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
+import { ServiceStatus } from "dockerode";
 import { twMerge } from "tailwind-merge";
 
 export type Awaitable<T> = T | Promise<T>;
@@ -18,14 +19,42 @@ export function cn(...inputs: ClassValue[]) {
  */
 export const emptyStringIs = <T>(str: string, or: T) => (str === "" ? or : str);
 
+export enum ServiceHealth {
+  Healthy,
+  Unhealthy,
+  PartiallyHealthy,
+  Unknown,
+}
+
+export const SERVICE_HEALTH_TO_TEXT = {
+  [ServiceHealth.Healthy]: "Healthy",
+  [ServiceHealth.Unhealthy]: "Unhealthy",
+  [ServiceHealth.PartiallyHealthy]: "Partially Healthy",
+  [ServiceHealth.Unknown]: "Unknown",
+} as const;
+
 export function renderServiceHealth(opts: {
   DesiredTasks?: number;
   RunningTasks?: number;
   CompletedTasks?: number;
 }) {
   const successCount = (opts.RunningTasks ?? 0) + (opts.CompletedTasks ?? 0);
-  const status =
-    successCount >= (opts.DesiredTasks ?? 0) ? "Healthy" : "Unhealthy";
+  const health = parseServiceHealth(opts);
 
-  return `${status} - ${successCount}/${opts.DesiredTasks}`;
+  return `${SERVICE_HEALTH_TO_TEXT[health]} - ${successCount}/${opts.DesiredTasks}`;
+}
+
+export function parseServiceHealth(status: Partial<ServiceStatus> = {}) {
+  if (
+    status.RunningTasks === undefined ||
+    status.DesiredTasks === undefined ||
+    status.CompletedTasks === undefined
+  )
+    return ServiceHealth.Unknown;
+
+  const successCount = status.RunningTasks + status.CompletedTasks;
+
+  if (successCount >= status.DesiredTasks) return ServiceHealth.Healthy;
+  if (successCount === 0) return ServiceHealth.Unhealthy;
+  return ServiceHealth.PartiallyHealthy;
 }

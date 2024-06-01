@@ -236,12 +236,15 @@ export default class ServiceManager {
   }
 
   public async getHealth(docker: Docker) {
-    const [res] = await docker.dial<
+    const params = new URLSearchParams({
+      filters: JSON.stringify({ name: [this.toDockerServiceName()] }),
+      status: "true",
+    });
+
+    const res = await docker.dial<
       DockerAPITypes["/services"]["get"]["responses"]["200"]["schema"]
     >({
-      path:
-        "/services?status=true&id=" +
-        encodeURIComponent(this.toDockerServiceName()),
+      path: "/services?" + params.toString() + "&", // trailing and cus sometimes docker cuts off the last char
       method: "GET",
       statusCodes: {
         200: true,
@@ -251,7 +254,14 @@ export default class ServiceManager {
       },
     });
 
-    return res?.ServiceStatus;
+    if (res.length > 1) {
+      logger.warn("Multiple services with the same name", {
+        serviceName: this.toDockerServiceName(),
+        res,
+      });
+    }
+
+    return res[0]?.ServiceStatus;
   }
 
   /**

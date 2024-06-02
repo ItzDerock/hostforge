@@ -357,7 +357,7 @@ export const serviceVolume = sqliteTable("service_volume", {
     .notNull()
     .references(() => serviceGeneration.id),
 
-  source: text("source"),
+  source: text("source").notNull(),
   target: text("target").notNull(),
   type: text("type").$type<DockerVolumeType>().notNull(),
 });

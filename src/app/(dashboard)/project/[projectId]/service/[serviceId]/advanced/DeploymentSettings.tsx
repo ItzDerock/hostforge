@@ -19,7 +19,12 @@ import {
 } from "~/components/ui/select";
 import { Switch } from "~/components/ui/switch";
 import { FormSubmit, SimpleFormField, useForm } from "~/hooks/forms";
-import { DOCKER_DEPLOY_MODE_MAP, DockerDeployMode } from "~/server/db/types";
+import {
+  DOCKER_DEPLOY_MODE_MAP,
+  DOCKER_RESTART_CONDITION_MAP,
+  DockerDeployMode,
+  DockerRestartCondition,
+} from "~/server/db/types";
 import { api } from "~/trpc/react";
 import { type RouterOutputs } from "~/trpc/shared";
 
@@ -30,6 +35,7 @@ const formValidator = z.object({
   zeroDowntime: z.boolean(),
   entrypoint: z.string().optional(),
   command: z.string().optional(),
+  restart: z.enum(["any", "never", "on-failure"]),
 
   max_memory: z.string().optional(),
   max_cpu: z.coerce.number().optional(),
@@ -49,10 +55,11 @@ export default function DeploymentSettings({
       maxReplicasPerNode: latestGen.maxReplicasPerNode,
       deployMode: DOCKER_DEPLOY_MODE_MAP[latestGen.deployMode],
       zeroDowntime: latestGen.zeroDowntime,
-      entrypoint: latestGen.entrypoint,
-      command: latestGen.command,
+      entrypoint: latestGen.entrypoint ?? "",
+      command: latestGen.command ?? "",
       max_memory: latestGen.max_memory,
       max_cpu: latestGen.max_cpu,
+      restart: DOCKER_RESTART_CONDITION_MAP[latestGen.restart],
     },
   });
 
@@ -67,7 +74,9 @@ export default function DeploymentSettings({
               ...data,
             });
 
-            form.reset(data, { keepValues: true, keepDirty: false });
+            // form.reset({}, { keepValues: true });
+            form.reset(data);
+            // console.log(form.formState.dirtyFields);
           } catch (error) {}
         })}
         className="grid grid-cols-2 gap-4"
@@ -94,7 +103,7 @@ export default function DeploymentSettings({
           control={form.control}
           name="replicas"
           friendlyName="Replicas"
-          description="The number of containers to run for this service."
+          description="The number of containers to run for this service. This option has no effect if the deploy mode is set to global."
         />
 
         <SimpleFormField
@@ -148,6 +157,59 @@ export default function DeploymentSettings({
           friendlyName="Zero Downtime"
           description="When enabled, old containers will stay running until the new containers are online, alowing for zero-downtime deployments."
           render={({ field }) => <Switch {...field} className="!my-4 block" />}
+        />
+
+        <FormField
+          control={form.control}
+          name="restart"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Restart Policy</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem
+                    value={
+                      DOCKER_RESTART_CONDITION_MAP[
+                        DockerRestartCondition.Always
+                      ]
+                    }
+                  >
+                    Always
+                  </SelectItem>
+                  <SelectItem
+                    value={
+                      DOCKER_RESTART_CONDITION_MAP[DockerRestartCondition.Never]
+                    }
+                  >
+                    Never
+                  </SelectItem>
+
+                  <SelectItem
+                    value={
+                      DOCKER_RESTART_CONDITION_MAP[
+                        DockerRestartCondition.OnFailure
+                      ]
+                    }
+                  >
+                    On Failure
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                The restart policy dictates when the container should be
+                restarted. Always will restart the container if it stops for any
+                reason. Never will never restart the container. On Failure will
+                only restart the container if it exits with a non-zero exit
+                code.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
         />
 
         <h1 className="col-span-2 text-lg">Resource Limits and Reservations</h1>

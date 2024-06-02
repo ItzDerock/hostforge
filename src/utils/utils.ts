@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { ServiceStatus } from "dockerode";
 import { twMerge } from "tailwind-merge";
+import { z } from "zod";
 
 export type Awaitable<T> = T | Promise<T>;
 
@@ -58,3 +59,11 @@ export function parseServiceHealth(status: Partial<ServiceStatus> = {}) {
   if (successCount === 0) return ServiceHealth.Unhealthy;
   return ServiceHealth.PartiallyHealthy;
 }
+
+// `extends enum` isn't a thing, so we have to use this workaround
+// https://github.com/microsoft/TypeScript/issues/30611
+export type EnumValue<TEnum> = (TEnum[keyof TEnum] & number) | string;
+export type EnumObject<TEnum> = {
+  [k: number]: string;
+  [k: string]: EnumValue<TEnum>;
+};

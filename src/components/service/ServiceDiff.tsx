@@ -3,9 +3,12 @@ import { Operation, type IChange } from "json-diff-ts";
 import { Badge } from "../ui/badge";
 import {
   DockerDeployMode,
+  DockerRestartCondition,
   ServiceBuildMethod,
   ServiceSource,
 } from "~/server/db/types";
+import { EnumObject } from "~/utils/utils";
+import { reportUnusedDisableDirectives } from ".eslintrc.cjs";
 
 function Formatted({ children }: { children: React.ReactNode }) {
   return (
@@ -52,25 +55,24 @@ export function ServiceDiff({ diff }: { diff: IChange[] | IChange }) {
 }
 
 export function formatValue(key: string, value: unknown) {
-  if (
-    key === "deployMode" &&
-    typeof value === "number" &&
-    value in DockerDeployMode
-  ) {
-    return DockerDeployMode[value];
+  return (
+    replaceWithEnumName(key, "deployMode", DockerDeployMode, value) ??
+    replaceWithEnumName(key, "buildMethod", ServiceBuildMethod, value) ??
+    replaceWithEnumName(key, "source", ServiceSource, value) ??
+    replaceWithEnumName(key, "restart", DockerRestartCondition, value) ??
+    JSON.stringify(value)
+  );
+}
+
+function replaceWithEnumName<T extends EnumObject<T>>(
+  key: string,
+  field: string,
+  nativeEnum: T,
+  value: unknown,
+) {
+  if (key === field && typeof value === "number" && value in nativeEnum) {
+    return nativeEnum[value];
   }
 
-  if (
-    key === "buildMethod" &&
-    typeof value === "number" &&
-    value in ServiceBuildMethod
-  ) {
-    return ServiceBuildMethod[value];
-  }
-
-  if (key === "source" && typeof value === "number" && value in ServiceSource) {
-    return ServiceSource[value];
-  }
-
-  return JSON.stringify(value);
+  return null;
 }

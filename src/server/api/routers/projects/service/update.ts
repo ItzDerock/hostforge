@@ -1,11 +1,11 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { projectMiddleware } from "~/server/api/middleware/project";
 import { serviceMiddleware } from "~/server/api/middleware/service";
 import { authenticatedProcedure } from "~/server/api/trpc";
 import { serviceDomain, serviceGeneration } from "~/server/db/schema";
-import { DockerDeployMode } from "~/server/db/types";
+import { DockerDeployMode, DockerRestartCondition } from "~/server/db/types";
 import { zDockerDuration, zDockerImage, zDomain } from "~/server/utils/zod";
 
 /**
@@ -50,6 +50,20 @@ export const updateServiceProcedure = authenticatedProcedure
                     : DockerDeployMode.Global,
                 ),
             ),
+          restart: z
+            .nativeEnum(DockerRestartCondition)
+            .or(
+              z
+                .enum(["any", "never", "on-failure"])
+                .transform((val) =>
+                  val === "any"
+                    ? DockerRestartCondition.Always
+                    : val === "on-failure"
+                      ? DockerRestartCondition.OnFailure
+                      : DockerRestartCondition.Never,
+                ),
+            ),
+
           zeroDowntime: z.boolean(),
           restartDelay: zDockerDuration,
           healthcheckEnabled: z.boolean(),
@@ -97,113 +111,6 @@ export const updateServiceProcedure = authenticatedProcedure
       .update(serviceGeneration)
       .set(queryUpdate)
       .where(eq(serviceGeneration.id, ctx.service.getData().latestGenerationId))
-      .execute();
-
-    return true;
-  });
-
-export const updateServiceDomainsProcedure = authenticatedProcedure
-  .meta({
-    openapi: {
-      method: "PUT",
-      path: "/api/projects/:projectId/services/:serviceId/domains/:domainId",
-      summary: "Update or create a service domains",
-    },
-  })
-  .input(
-    z.object({
-      // meta
-      projectId: z.string(),
-      serviceId: z.string(),
-      domainId: z
-        .string()
-        .regex(
-          /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
-        )
-        .optional(),
-
-      // details
-      domain: zDomain,
-      internalPort: z.coerce.number().int().min(1).max(65535),
-      https: z.boolean(),
-      forceSSL: z.boolean().default(true),
-    }),
-  )
-  .mutation(async ({ ctx, input }) => {
-    const baseQuery = ctx.db
-      .insert(serviceDomain)
-      .values({
-        id: input.domainId,
-        serviceId: input.serviceId,
-        domain: input.domain,
-        internalPort: input.internalPort,
-        https: input.https,
-        forceSSL: input.forceSSL,
-      })
-      .returning({
-        id: serviceDomain.id,
-      });
-
-    // track if we inserted or updated
-    let updated = false;
-    let domainId = input.domainId;
-
-    if (input.domainId) {
-      const result = await baseQuery
-        .onConflictDoUpdate({
-          set: {
-            internalPort: input.internalPort,
-            https: input.https,
-            forceSSL: input.forceSSL,
-            domain: input.domain,
-          },
-          target: serviceDomain.id,
-        })
-        .execute();
-
-      if (result[0]) {
-        updated = true;
-        domainId = result[0].id;
-      }
-    } else {
-      const result = await baseQuery.execute();
-
-      if (result[0]) {
-        updated = false;
-        domainId = result[0].id;
-      }
-    }
-
-    return {
-      updated,
-      domainId,
-    };
-  });
-
-/**
- * Deletes a service domain
- */
-export const deleteServiceDomainsProcedure = authenticatedProcedure
-  .meta({
-    openapi: {
-      method: "DELETE",
-      path: "/api/projects/:projectId/services/:serviceId/domains/:domainId",
-      summary: "Delete a service domain",
-    },
-  })
-  .input(
-    z.object({
-      projectId: z.string(),
-      serviceId: z.string(),
-      domainId: z.string(),
-    }),
-  )
-  .use(projectMiddleware)
-  .use(serviceMiddleware)
-  .mutation(async ({ ctx, input }) => {
-    await ctx.db
-      .delete(serviceDomain)
-      .where(eq(serviceDomain.id, input.domainId))
       .execute();
 
     return true;

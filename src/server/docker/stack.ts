@@ -11,6 +11,7 @@ import type {
 import {
   DOCKER_DEPLOY_MODE_MAP,
   DOCKER_RESTART_CONDITION_MAP,
+  DockerDeployMode,
   DockerVolumeType,
   ServicePortType,
 } from "../db/types";
@@ -53,7 +54,10 @@ export async function buildDockerStackFile(
       // TODO: cap_add, cap_drop
       command: emptyStringIs(service.command, undefined),
       deploy: {
-        replicas: service.replicas,
+        replicas:
+          service.deployMode === DockerDeployMode.Replicated
+            ? service.replicas
+            : undefined, // replicas only work in replicated mode
         endpoint_mode: "vip", // maybe dnsrr support?
         mode:
           service.deployMode !== null
@@ -70,6 +74,10 @@ export async function buildDockerStackFile(
           },
         },
 
+        // restart_policy is not recommended for docker swarm,
+        // https://stackoverflow.com/questions/51089549/docker-stack-deploy-with-restart-policy-throws-error-response-from-daemon-inva
+        // past that, according to docs, 'any'/'always' behaves the same as 'on-failure'
+        // so maybe we should remove this field entirely
         restart_policy: {
           condition:
             service.restart !== null

@@ -9,9 +9,5 @@ export default async function AdvancedSettings(props: {
     projectId: props.params.projectId,
   });
 
-  return (
-    <div>
-      <DeploymentSettings service={service} />
-    </div>
-  );
+  return <DeploymentSettings service={service} />;
 }

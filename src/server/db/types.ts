@@ -108,9 +108,11 @@ export enum DockerRestartCondition {
 }
 
 export const DOCKER_RESTART_CONDITION_MAP = {
-  [DockerRestartCondition.Always]: "always",
-  [DockerRestartCondition.Never]: "no",
+  [DockerRestartCondition.Always]: "any",
+  [DockerRestartCondition.Never]: "never",
   [DockerRestartCondition.OnFailure]: "on-failure",
+} as const satisfies {
+  [key in DockerRestartCondition]: string;
 };
 
 export enum DockerVolumeType {
@@ -129,6 +131,14 @@ export enum DockerVolumeType {
    */
   Tmpfs,
 }
+
+export const DOCKER_VOLUME_TYPE_MAP = {
+  [DockerVolumeType.Bind]: "bind",
+  [DockerVolumeType.Volume]: "volume",
+  [DockerVolumeType.Tmpfs]: "tmpfs",
+} as const satisfies {
+  [key in DockerVolumeType]: string;
+};
 
 export enum ServiceDeploymentStatus {
   /**

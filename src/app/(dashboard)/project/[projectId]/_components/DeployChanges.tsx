@@ -32,13 +32,13 @@ export function DeployChanges() {
   });
 
   const servicesWithChanges = useMemo(
-    () => diff.data?.filter(({ diff }) => diff.length != 0) ?? [],
+    () => diff.data?.filter(({ diff }) => Object.keys(diff).length != 0) ?? [],
     [diff.data],
   );
 
   return (
     <Dialog>
-      <DialogTrigger>
+      <DialogTrigger asChild>
         <Button
           variant="outline"
           icon={UploadCloud}

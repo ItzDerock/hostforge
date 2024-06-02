@@ -117,32 +117,25 @@ export function FormSubmit({
   form,
   className,
   hideUnsavedChangesIndicator,
+  children,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   form: UseFormReturn<z.infer<any>>;
   className?: string;
   hideUnsavedChangesIndicator?: boolean;
+  children?: ReactNode;
 }) {
   return (
-    <div className={cn("flex flex-row items-center gap-4", className)}>
+    <div className={cn("flex flex-row items-center gap-2", className)}>
       <Button type="submit" isLoading={form.formState.isSubmitting}>
         Save
       </Button>
 
-      {/* does not work for some reason */}
-      {/* <Button
-        type="reset"
-        variant="secondary"
-        disabled={form.formState.isSubmitting || !form.formState.isDirty}
-        onClick={() => {
-          form.reset();
-        }}
-      >
-        Reset
-      </Button> */}
+      {children}
+
       {/* unsaved changes indicator */}
       {!hideUnsavedChangesIndicator && (
-        <FormUnsavedChangesIndicator form={form.control} />
+        <FormUnsavedChangesIndicator form={form.control} className="ml-1" />
       )}
     </div>
   );

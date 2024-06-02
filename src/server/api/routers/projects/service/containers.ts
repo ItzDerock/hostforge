@@ -27,27 +27,28 @@ const zContainerDetails = z.object({
     .optional(),
 });
 
+const zTaskState = z.enum([
+  "complete",
+  "new",
+  "allocated",
+  "pending",
+  "assigned",
+  "accepted",
+  "preparing",
+  "ready",
+  "starting",
+  "running",
+  "shutdown",
+  "failed",
+  "rejected",
+  "remove",
+  "orphaned",
+]);
+
 const zTaskDetails = z.object({
   taskMessage: z.string().optional(),
-  taskState: z
-    .enum([
-      "complete",
-      "new",
-      "allocated",
-      "pending",
-      "assigned",
-      "accepted",
-      "preparing",
-      "ready",
-      "starting",
-      "running",
-      "shutdown",
-      "failed",
-      "rejected",
-      "remove",
-      "orphaned",
-    ])
-    .optional(),
+  taskState: zTaskState.optional(),
+  desiredState: zTaskState.optional(),
 
   slot: z.number(),
 });
@@ -144,9 +145,9 @@ export const getServiceContainers = authenticatedProcedure
     ).then((tasks) =>
       tasks.sort((a, b) => {
         // latest tasks go first
-        if (a.UpdatedAt && b.UpdatedAt) {
+        if (a.CreatedAt && b.CreatedAt) {
           return (
-            new Date(b.UpdatedAt).getTime() - new Date(a.UpdatedAt).getTime()
+            new Date(b.CreatedAt).getTime() - new Date(a.CreatedAt).getTime()
           );
         } else {
           return 0;
@@ -164,6 +165,8 @@ export const getServiceContainers = authenticatedProcedure
       tasksPromise,
       nodesPromise,
     ]);
+
+    console.log(tasks);
 
     // format the tasks into { container, task } objects
     const tasksWithContainers = await Promise.all(
@@ -248,6 +251,7 @@ export const getServiceContainers = authenticatedProcedure
           container: formattedContainerStats,
 
           task: {
+            desiredState: task.DesiredState,
             taskMessage: task.Status?.Message,
             taskState: task.Status?.State,
             slot: task.Slot,

@@ -8,11 +8,11 @@ import { authenticatedProcedure, createTRPCRouter } from "~/server/api/trpc";
 import { service, serviceGeneration } from "~/server/db/schema";
 import { zDockerName } from "~/server/utils/zod";
 import { getServiceContainers } from "./containers";
+import { updateServiceProcedure } from "./update";
 import {
   deleteServiceDomainsProcedure,
   updateServiceDomainsProcedure,
-  updateServiceProcedure,
-} from "./update";
+} from "./domains";
 import { ServiceSource } from "~/server/db/types";
 import { SQLiteSyncDialect } from "drizzle-orm/sqlite-core";
 import { uuidv7 } from "uuidv7";
@@ -23,11 +23,13 @@ import {
   getDeploymentLogsSubscription,
   getServiceLogsSubscription,
 } from "./logs";
+import { updateServiceVolumesProcedure } from "./volumes";
 
 export const serviceRouter = createTRPCRouter({
   containers: getServiceContainers,
   update: updateServiceProcedure,
   updateDomain: updateServiceDomainsProcedure,
+  updateVolumes: updateServiceVolumesProcedure,
   deleteDomain: deleteServiceDomainsProcedure,
   deployments: getDeploymentsProcedure,
   deploymentLogs: getDeploymentLogsSubscription,

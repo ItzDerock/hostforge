@@ -3,8 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
 import { PlusIcon } from "lucide-react";
-import { useEffect, type ReactNode } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useEffect } from "react";
+import { useFieldArray, useForm, useFormState } from "react-hook-form";
 import { toast } from "sonner";
 import { uuidv7 } from "uuidv7";
 import { z } from "zod";
@@ -13,8 +13,9 @@ import { Form } from "~/components/ui/form";
 import { FormSubmit, FormUnsavedChangesIndicator } from "~/hooks/forms";
 import { api } from "~/trpc/react";
 import { type RouterOutputs } from "~/trpc/shared";
-import { useService } from "../_hooks/service";
-import DomainEntry from "./_components/DomainEntry";
+import { useService } from "../../_hooks/service";
+import DomainEntry from "./DomainEntry";
+import { DomainSettings } from "./DomainSettings";
 
 const formValidator = z.object({
   domains: z.array(
@@ -38,10 +39,8 @@ export type DomainsListForm = z.infer<typeof formValidator>;
 
 export default function DomainsList({
   defaultData,
-  children,
 }: {
   defaultData: RouterOutputs["projects"]["services"]["get"];
-  children: ReactNode;
 }) {
   const service = useService(undefined, defaultData);
   const updateDomain = api.projects.services.updateDomain.useMutation();
@@ -76,6 +75,9 @@ export default function DomainsList({
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [service.data]);
+
+  const state = useFormState(form);
+  console.log(state.dirtyFields);
 
   return (
     <Form {...form}>
@@ -130,6 +132,8 @@ export default function DomainsList({
         })}
         className="flex flex-col gap-4"
       >
+        <DomainSettings form={form} />
+
         <AnimatePresence mode="sync" initial={false}>
           <h1 key="title" className="col-span-2">
             Domains
@@ -177,8 +181,6 @@ export default function DomainsList({
             <FormUnsavedChangesIndicator />
           </motion.div>
         </AnimatePresence>
-
-        <AnimatePresence>{children}</AnimatePresence>
       </form>
     </Form>
   );

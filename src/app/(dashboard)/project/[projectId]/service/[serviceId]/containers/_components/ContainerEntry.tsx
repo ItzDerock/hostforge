@@ -24,14 +24,14 @@ export function ContainerEntry({
   data: RouterOutputs["projects"]["services"]["containers"]["latest"][number];
 }) {
   const mainContainer = container ?? previous[0]?.container;
-  const isRedeploying =
-    container === undefined || task.taskState === "starting";
+  const isRedeploying = task.taskState === "starting" && container === null;
 
   const [uptimeText, setUptimeText] = useState<string | null>(
     mainContainer
       ? formatDistanceToNowStrict(mainContainer.containerCreatedAt)
       : null,
   );
+
   useEffect(() => {
     if (!mainContainer) return;
     const interval = setInterval(() => {
@@ -71,7 +71,7 @@ export function ContainerEntry({
               });
           }}
         >
-          {mainContainer?.containerId?.substring(0, 8) ?? "N/A (deploying)"}
+          {mainContainer?.containerId?.substring(0, 8) ?? "N/A"}
           {mainContainer?.containerId && (
             <ClipboardIcon
               size={14}
@@ -92,13 +92,16 @@ export function ContainerEntry({
             </span>
           ) : (
             <span className="capitalize">
-              {task.taskState ?? task.taskMessage ?? "unknown"}
+              {task.taskState ?? task.taskMessage ?? "Unknown State"}
+              {task.taskState !== task.desiredState && (
+                `(Desired State: ${task.desiredState})`
+              )}
             </span>
           )}
         </TableCell>
 
         <TableCell>{uptimeText ?? "N/A"}</TableCell>
-        <TableCell>{mainContainer?.node ?? "unknown"}</TableCell>
+        <TableCell>{mainContainer?.node ?? "N/A"}</TableCell>
         <TableCell>{mainContainer?.cpu?.toFixed(2) ?? "0.00"}%</TableCell>
         <TableCell>
           {prettyBytes(mainContainer?.usedMemory ?? 0)} /{" "}

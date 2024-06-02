@@ -2,15 +2,14 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight, CogIcon, TrashIcon } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
 import { forwardRef } from "react";
 import { useFormContext, type UseFieldArrayReturn } from "react-hook-form";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Switch } from "~/components/ui/switch";
 import { SimpleFormField } from "~/hooks/forms";
-import { useProject } from "../../../../_context/ProjectContext";
-import { type DomainsListForm } from "../DomainsList";
+import { type DomainsListForm } from "./DomainsList";
+import { StringParam, useQueryParam } from "use-query-params";
 
 const DomainEntry = forwardRef<
   HTMLDivElement,
@@ -22,10 +21,8 @@ const DomainEntry = forwardRef<
     domains: UseFieldArrayReturn<DomainsListForm, "domains", "id">;
   }
 >(({ field, index, domains }, ref) => {
+  const [_, setSelectedDomain] = useQueryParam("domainId", StringParam);
   const form = useFormContext();
-  const router = useRouter();
-  const pathname = usePathname();
-  const project = useProject();
 
   return (
     <motion.div
@@ -90,18 +87,7 @@ const DomainEntry = forwardRef<
               type="button"
               icon={CogIcon}
               className="mr-2"
-              onClick={() => {
-                const domains = pathname.trim().endsWith("/domains")
-                  ? pathname.trim()
-                  : pathname.replace(/\/[A-z0-9]*?$/, ``);
-
-                console.log(`${domains}/${field.domainId ?? field.id}`);
-                router.push(
-                  `${project.servicePath}/domains/${
-                    field.domainId ?? field.id
-                  }`,
-                );
-              }}
+              onClick={() => setSelectedDomain(field.domainId)}
             />
 
             <Button

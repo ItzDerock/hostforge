@@ -4,6 +4,8 @@ import { instanceSettings } from "../db/schema";
 import { eq } from "drizzle-orm";
 import logger from "../utils/logger";
 import { randomBytes } from "crypto";
+import { TRPCClientError } from "@trpc/client";
+import { TRPCError } from "@trpc/server";
 
 type InstanceSettings = Omit<typeof instanceSettings.$inferSelect, "id">;
 
@@ -25,7 +27,13 @@ export default class SettingsManager {
   }
 
   public static getInstance() {
-    assert(this.instance !== null, "Instance not set up yet.");
+    assert(
+      this.instance !== null,
+      new TRPCError({
+        message: "Instance not set up yet.",
+        code: "",
+      }), // this should probably be handled at trpc level
+    );
     return this.instance;
   }
 

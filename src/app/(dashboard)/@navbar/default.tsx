@@ -8,17 +8,13 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 
-import {
-  Cog,
-  LogOut,
-  ScanFace,
-  Settings,
-  Settings2,
-  UserCog,
-} from "lucide-react";
+import { Cog, LogOut, ScanFace, Settings2, UserCog } from "lucide-react";
 import Link from "next/link";
 import { api } from "~/trpc/server";
 import { Resources } from "./_components/Resources";
+import hostforgeLogo from "~/assets/logo.svg";
+import Image from "next/image";
+import type { StaticImport } from "next/dist/shared/lib/get-img-props";
 
 export default async function Navbar() {
   const user = await api.auth.me.query();
@@ -26,8 +22,13 @@ export default async function Navbar() {
   return (
     <nav className="py-4">
       <div className="mx-auto flex h-12 flex-row items-center gap-4">
-        <div>
-          <Link href="/">Hostforge</Link>{" "}
+        <div className="flex flex-row items-center gap-2">
+          <Image
+            src={hostforgeLogo as StaticImport}
+            className="inline-block size-8"
+            alt="logo"
+          />
+          {/* <Link href="/">Hostforge</Link>{" "} */}
         </div>
 
         <Resources />

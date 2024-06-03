@@ -47,13 +47,20 @@ export function VolumesPage() {
           mountId: data.id,
         })) ?? [];
 
-      // no one ever EVER use react-hook-form
-      // there are just wayy to many issues with it and trying to get the "isDirty" field to reset
-      form.reset({
-        volumes,
-      });
+      form.reset(
+        {
+          volumes,
+        },
+        {
+          keepDirty: false, // tried without this option
+        },
+      );
+
+      form.reset();
+      form.reset({}, { keepValues: true, keepDirty: false });
 
       console.log(volumes, fields);
+      // i have also tried moving all of this into the handleSubmit function
     }
   }, [mutation.data]);
 

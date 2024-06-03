@@ -359,7 +359,7 @@ export const serviceVolume = sqliteTable("service_volume", {
 
   source: text("source").notNull(),
   target: text("target").notNull(),
-  type: text("type").$type<DockerVolumeType>().notNull(),
+  type: integer("type").$type<DockerVolumeType>().notNull(),
 });
 
 /**

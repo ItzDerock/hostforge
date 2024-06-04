@@ -13,7 +13,7 @@ import {
   DOCKER_RESTART_CONDITION_MAP,
   DockerDeployMode,
   DockerVolumeType,
-  ServicePortType,
+  DockerPortType,
 } from "../db/types";
 import {
   type ComposeSpecification,
@@ -22,6 +22,7 @@ import {
 } from "./compose";
 import { parse } from "dotenv";
 import { emptyStringIs } from "~/utils/utils";
+import { ActivitySquare } from "lucide-react";
 
 export type FullServiceGeneration = typeof serviceGeneration.$inferSelect & {
   service: typeof service.$inferSelect;
@@ -48,6 +49,9 @@ export async function buildDockerStackFile(
 ): Promise<ComposeSpecification> {
   // create services
   const swarmServices: Record<string, DefinitionsService> = {};
+
+  // track networks and volumes
+  const volumes = new Set<string>();
 
   for (const service of services) {
     swarmServices[service.service.name] = {
@@ -107,7 +111,7 @@ export async function buildDockerStackFile(
           port.type !== null ? DOCKER_DEPLOY_MODE_MAP[port.type] : undefined,
         target: port.internalPort,
         published: port.externalPort,
-        protocol: port.portType === ServicePortType.UDP ? "udp" : "tcp",
+        protocol: port.type === DockerPortType.UDP ? "udp" : "tcp",
       })),
 
       healthcheck: {
@@ -151,6 +155,11 @@ export async function buildDockerStackFile(
             volume.source !== null,
             "volume source for non-tmpfs is null!",
           );
+
+          if (volume.type === DockerVolumeType.Volume) {
+            volumes.add(volume.source);
+          }
+
           return {
             type: volume.type === DockerVolumeType.Volume ? "volume" : "bind",
             source: volume.source,
@@ -188,6 +197,14 @@ export async function buildDockerStackFile(
     // docs state that version is purely for backwards compatibility
     // version: "3.9",
     services: cleanObject(swarmServices),
+
+    volumes: Array.from(volumes).reduce(
+      (acc, volume) => ({
+        ...acc,
+        [volume]: {},
+      }),
+      {},
+    ),
   };
 }
 

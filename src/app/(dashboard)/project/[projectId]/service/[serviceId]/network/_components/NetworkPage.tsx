@@ -35,7 +35,7 @@ function transformServerData(
   }));
 }
 
-export function VolumesPage() {
+export function NetworkPage() {
   const project = useProject();
   const mutation = api.projects.services.updateVolumes.useMutation();
 

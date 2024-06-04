@@ -15,8 +15,9 @@ import {
   ServiceBuildMethod,
   type DockerVolumeType,
   type ServiceDeploymentStatus,
-  type ServicePortType,
+  type DockerPortType,
   type ServiceSource,
+  DockerPublishMode,
 } from "../types";
 
 // util
@@ -331,8 +332,8 @@ export const servicePort = sqliteTable("service_port", {
 
   internalPort: integer("internal_port").notNull(),
   externalPort: integer("external_port").notNull(),
-  portType: integer("port_type").$type<ServicePortType>().notNull(),
-  type: integer("type").$type<ServicePortType>().notNull(),
+  type: integer("type").$type<DockerPortType>().notNull(),
+  publishMode: integer("publish_mode").$type<DockerPublishMode>().notNull(),
 });
 
 /**

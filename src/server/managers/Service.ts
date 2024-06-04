@@ -1,14 +1,22 @@
 import { and, eq, or } from "drizzle-orm";
+import { Operation, diff, type IChange } from "json-diff-ts";
 import assert from "node:assert";
+import type { paths as DockerAPITypes } from "~/server/docker/types";
 import { db } from "../db";
-import { service, serviceGeneration } from "../db/schema";
+import {
+  service,
+  serviceDomain,
+  serviceGeneration,
+  servicePort,
+  serviceSysctl,
+  serviceUlimit,
+  serviceVolume,
+} from "../db/schema";
 import { ServiceSource } from "../db/types";
+import type { Docker } from "../docker/docker";
 import logger from "../utils/logger";
 import Deployment from "./Deployment";
 import type ProjectManager from "./Project";
-import { type IChange, Operation, diff } from "json-diff-ts";
-import type { Docker } from "../docker/docker";
-import type { paths as DockerAPITypes } from "~/server/docker/types";
 
 export default class ServiceManager {
   private static LOGGER = logger.child({
@@ -166,6 +174,35 @@ export default class ServiceManager {
 
       assert(clonedLatestGeneration, "Cloned generation was null!");
 
+      // now copy all domains, ports, sysctls, ulimits, and volumes
+      // from the original latest generation to the cloned generation
+      // this looks so messy but idk a better way since there's no CLONE sql command
+      await Promise.all(
+        [
+          serviceDomain,
+          servicePort,
+          serviceSysctl,
+          serviceUlimit,
+          serviceVolume,
+        ].map(async (table) => {
+          const data = await trx
+            .select()
+            .from(table)
+            .where(eq(table.serviceId, this.serviceData.latestGenerationId))
+            .execute()
+            .then((data) => {
+              return data.map((row) => {
+                // @ts-expect-error i dont feel like typing it as optional
+                delete row.id;
+                row.serviceId = clonedLatestGeneration.id;
+                return row;
+              });
+            });
+
+          if (data.length > 0) await trx.insert(table).values(data);
+        }),
+      );
+
       await Promise.all([
         // update the service's latest gen to point to the cloned generation
         // and set the deployed gen to the original
@@ -194,11 +231,6 @@ export default class ServiceManager {
     return await db.query.serviceGeneration.findFirst({
       where: eq(serviceGeneration.id, this.serviceData.latestGenerationId),
       with: {
-        // deployment: {
-        //   columns: {
-        //     buildLogs: false,
-        //   },
-        // },
         domains: true,
         ports: true,
         service: true,
@@ -277,6 +309,13 @@ export default class ServiceManager {
     this.serviceData.latestGeneration =
       await db.query.serviceGeneration.findFirst({
         where: eq(serviceGeneration.id, this.serviceData.latestGenerationId),
+        with: {
+          domains: true,
+          ports: true,
+          ulimits: true,
+          sysctls: true,
+          volumes: true,
+        },
       });
 
     assert(
@@ -301,6 +340,13 @@ export default class ServiceManager {
     this.serviceData.deployedGeneration =
       await db.query.serviceGeneration.findFirst({
         where: eq(serviceGeneration.id, this.serviceData.deployedGenerationId),
+        with: {
+          domains: true,
+          ports: true,
+          ulimits: true,
+          sysctls: true,
+          volumes: true,
+        },
       });
 
     assert(this.serviceData.deployedGeneration, "Could not find deployed gen");

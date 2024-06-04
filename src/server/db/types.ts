@@ -46,15 +46,20 @@ export enum ServiceBuildMethod {
 /**
  * Published port type
  */
-export enum ServicePortType {
+export enum DockerPortType {
   TCP,
   UDP,
 }
 
+export const DOCKER_PORT_TYPE_MAP = {
+  [DockerPortType.TCP]: "tcp",
+  [DockerPortType.UDP]: "udp",
+} as const;
+
 /**
  * Port mode
  */
-export enum ServicePortMode {
+export enum DockerPublishMode {
   /**
    * Publish the port to the host
    */
@@ -66,9 +71,9 @@ export enum ServicePortMode {
   Ingress,
 }
 
-export const SERVICE_PORT_MODE_MAP = {
-  [ServicePortMode.Host]: "host",
-  [ServicePortMode.Ingress]: "ingress",
+export const DOCKER_PUBLISH_MODE_MAP = {
+  [DockerPublishMode.Host]: "host",
+  [DockerPublishMode.Ingress]: "ingress",
 } as const;
 
 export enum DockerDeployMode {

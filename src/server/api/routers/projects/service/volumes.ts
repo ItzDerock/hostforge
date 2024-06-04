@@ -20,7 +20,7 @@ export const updateServiceVolumesProcedure = authenticatedProcedure
       serviceId: z.string(),
       volumes: z.array(
         z.strictObject({
-          mountId: z.string().uuid().optional(),
+          id: z.string().uuid().optional(),
           type: z
             .nativeEnum(DockerVolumeType)
             .or(
@@ -53,7 +53,7 @@ export const updateServiceVolumesProcedure = authenticatedProcedure
             trx
               .insert(serviceVolume)
               .values({
-                id: volume.mountId,
+                id: volume.id,
                 serviceId: currentGeneration,
                 type: volume.type,
                 target: volume.target,

@@ -28,9 +28,13 @@ export const getProject = authenticatedProcedure
     return {
       ...ctx.project.getData(),
       isDeploying: await ctx.project.isDeploying(),
+
       services: await Promise.all(
         projServices.map(async (service) => ({
           ...service.getData(),
+
+          latestGeneration: await service.fetchFullLatestGeneration(),
+
           stats: stats.find(
             (stat) => stat.Spec?.Name === service.getData().name,
           ),

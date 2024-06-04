@@ -167,13 +167,8 @@ export default class ProjectManager {
             );
           }
 
-          // need to fetch before deriving a new generation
-          const requiresImageBuild = await service.requiresImageBuild();
-
-          await service.deriveNewGeneration(sDeployment.id);
-
           // run builds if needed
-          if (requiresImageBuild) {
+          if (await service.requiresImageBuild()) {
             const image = await BuildManager.getInstance().startBuild(
               serviceData.id,
               sDeployment.id,
@@ -186,6 +181,7 @@ export default class ProjectManager {
             };
           }
 
+          await service.deriveNewGeneration(sDeployment.id);
           return { ...fullLatestGenData, service: service.getData() };
         }),
       );

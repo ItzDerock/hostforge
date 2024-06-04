@@ -1,5 +1,7 @@
 import { PriorityQueue } from "datastructures-js";
+import { Akaya_Kanadaka } from "next/font/google";
 import type { Readable, Writable } from "node:stream";
+import { EnumLike, z } from "zod";
 
 export function docker404ToNull(err: unknown) {
   if (
@@ -75,4 +77,38 @@ export function isDebugFlagEnabled(flag: string) {
       userFlag.trim().toLowerCase() === flag.toLowerCase() ||
       userFlag.trim() === "*",
   );
+}
+
+/**
+ * Reverses an enum lookup
+ */
+export function reverseEnumLookupFactory<T extends EnumLike, R extends string>(
+  enumToString: Record<keyof T, R>,
+): (val: R) => keyof T {
+  const reversed = Object.fromEntries(
+    Object.entries(enumToString).map(([key, val]) => [val, key]),
+  ) as Record<R, keyof T>;
+
+  return (val: R) => {
+    if (!Object.keys(reversed).includes(val))
+      throw new Error(`Invalid enum value ${val}`);
+
+    return reversed[val];
+  };
+}
+
+export function zReverseEnumLookup<T extends EnumLike, R extends string>(
+  enumToString: Record<keyof T, R>,
+) {
+  const reversed = reverseEnumLookupFactory(enumToString);
+  return zodEnumFromObjKeys(enumToString).transform(
+    reversed as (arg: string) => keyof T,
+  );
+}
+
+function zodEnumFromObjKeys<K extends string>(
+  obj: Record<K, unknown>,
+): z.ZodEnum<[K, ...K[]]> {
+  const [firstKey, ...otherKeys] = Object.keys(obj) as K[];
+  return z.enum([firstKey!, ...otherKeys]);
 }

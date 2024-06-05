@@ -1,12 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-// import {
-//   FaEthernet,
-//   FaHardDrive,
-//   FaMemory,
-//   FaMicrochip,
-// } from "react-icons/fa6";
 import { Cpu, HardDrive, MemoryStick, Router } from "lucide-react";
 import { api } from "~/trpc/react";
 import { type RouterOutputs } from "~/trpc/shared";

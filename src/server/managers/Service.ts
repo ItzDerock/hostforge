@@ -82,6 +82,9 @@ export default class ServiceManager {
       this.fetchDeployedGeneration(),
     ]);
 
+    stripIds(latest);
+    if (deployed) stripIds(deployed);
+
     // new service
     if (!deployed) {
       return {
@@ -148,12 +151,14 @@ export default class ServiceManager {
    * @param deploymentId - the new deployed generation will have this deploymentId.
    */
   public async deriveNewGeneration(deploymentId?: string) {
+    const originalLatestGenerationId = this.serviceData.latestGenerationId;
+
     // do as much as possible on the database
     await db.transaction(async (trx) => {
       // clone the latest generation
       const originalLatestGeneration =
         await trx.query.serviceGeneration.findFirst({
-          where: eq(serviceGeneration.id, this.serviceData.latestGenerationId),
+          where: eq(serviceGeneration.id, originalLatestGenerationId),
         });
 
       assert(originalLatestGeneration, "Could not find latest generation??");
@@ -188,7 +193,7 @@ export default class ServiceManager {
           const data = await trx
             .select()
             .from(table)
-            .where(eq(table.serviceId, this.serviceData.latestGenerationId))
+            .where(eq(table.serviceId, originalLatestGenerationId))
             .execute()
             .then((data) => {
               return data.map((row) => {
@@ -203,14 +208,14 @@ export default class ServiceManager {
         }),
       );
 
-      await Promise.all([
+      const results = await Promise.all([
         // update the service's latest gen to point to the cloned generation
         // and set the deployed gen to the original
         trx
           .update(service)
           .set({
             latestGenerationId: clonedLatestGeneration.id,
-            deployedGenerationId: this.serviceData.latestGenerationId,
+            deployedGenerationId: originalLatestGenerationId,
           })
           .where(eq(service.id, this.serviceData.id)),
 
@@ -222,6 +227,11 @@ export default class ServiceManager {
           })
           .where(eq(serviceGeneration.id, this.serviceData.latestGenerationId)),
       ]);
+
+      console.log(results);
+      console.log(
+        `Cloned generation ${clonedLatestGeneration.id} from ${originalLatestGenerationId}`,
+      );
     });
 
     await this.refetch();
@@ -365,4 +375,33 @@ export default class ServiceManager {
     assert(data, "Could not find service in database");
     this.serviceData = data;
   }
+}
+
+function stripIds<T extends Record<string | number | symbol, unknown>>(
+  data: T,
+): T {
+  // traverse the object and delete all keys that end with "Id" and the "id" key itself
+  Object.entries(data).forEach(([key, value]) => {
+    if (key.endsWith("Id") || key === "id") {
+      delete data[key];
+    } else if (Array.isArray(value)) {
+      value.forEach((val) => {
+        if (typeof val === "object") {
+          stripIds(val);
+        }
+      });
+    } else if (
+      typeof value === "object" &&
+      value !== null &&
+      value !== undefined &&
+      typeof value !== "string" &&
+      typeof value !== "number" &&
+      typeof value !== "boolean"
+    ) {
+      // @ts-expect-error fix if error occurs, i dont feel like typing it
+      stripIds(value);
+    }
+  });
+
+  return data;
 }

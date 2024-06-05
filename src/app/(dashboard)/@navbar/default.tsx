@@ -25,7 +25,7 @@ export default async function Navbar() {
         <div className="flex flex-row items-center gap-2">
           <Image
             src={hostforgeLogo as StaticImport}
-            className="inline-block size-8"
+            className="inline-block w-8"
             alt="logo"
           />
           {/* <Link href="/">Hostforge</Link>{" "} */}

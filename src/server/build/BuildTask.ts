@@ -124,7 +124,12 @@ export default class BuildTask {
       this.finishCallback(dockerImageTag);
       return dockerImageTag;
     } catch (error) {
-      void this.updateBuildStatus(ServiceDeploymentStatus.Failed);
+      // save logs
+      await Promise.all([
+        this.updateBuildStatus(ServiceDeploymentStatus.Failed),
+        this.saveBuildLogs(),
+      ]);
+
       this.errorCallback(error);
       throw error;
     } finally {
@@ -199,5 +204,13 @@ export default class BuildTask {
       compressedLogs.on("error", reject);
       compressedLogs.on("end", () => resolve(Buffer.concat(buffers)));
     });
+  }
+
+  private async saveBuildLogs() {
+    const logs = await this.compressLogs();
+    await db
+      .update(serviceDeployment)
+      .set({ buildLogs: logs })
+      .where(eq(serviceDeployment.id, this.deploymentId));
   }
 }

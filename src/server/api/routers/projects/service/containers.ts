@@ -49,6 +49,7 @@ const zTaskDetails = z.object({
   taskMessage: z.string().optional(),
   taskState: zTaskState.optional(),
   desiredState: zTaskState.optional(),
+  error: z.string().optional(),
 
   slot: z.number(),
 });
@@ -166,8 +167,6 @@ export const getServiceContainers = authenticatedProcedure
       nodesPromise,
     ]);
 
-    console.log(tasks);
-
     // format the tasks into { container, task } objects
     const tasksWithContainers = await Promise.all(
       tasks.map(async (task) => {
@@ -254,6 +253,7 @@ export const getServiceContainers = authenticatedProcedure
             desiredState: task.DesiredState,
             taskMessage: task.Status?.Message,
             taskState: task.Status?.State,
+            error: task.Status?.Err,
             slot: task.Slot,
           },
         } satisfies Omit<

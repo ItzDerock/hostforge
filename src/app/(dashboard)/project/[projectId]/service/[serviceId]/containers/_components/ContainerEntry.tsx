@@ -93,10 +93,13 @@ export function ContainerEntry({
           ) : (
             <span className="capitalize">
               {task.taskState ?? task.taskMessage ?? "Unknown State"}
-              {task.taskState !== task.desiredState && (
-                `(Desired State: ${task.desiredState})`
-              )}
+              {task.taskState !== task.desiredState &&
+                ` (Desired State: ${task.desiredState})`}
             </span>
+          )}
+
+          {task.taskState === "rejected" && task.error && (
+            <div className="text-xs text-red-500">{task.error}</div>
           )}
         </TableCell>
 

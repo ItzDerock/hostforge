@@ -17,7 +17,7 @@ import {
   type ServiceDeploymentStatus,
   type DockerPortType,
   type ServiceSource,
-  DockerPublishMode,
+  type DockerPublishMode,
 } from "../types";
 
 // util

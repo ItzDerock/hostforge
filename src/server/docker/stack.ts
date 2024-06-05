@@ -14,6 +14,7 @@ import {
   DockerDeployMode,
   DockerVolumeType,
   DockerPortType,
+  DOCKER_PUBLISH_MODE_MAP,
 } from "../db/types";
 import {
   type ComposeSpecification,
@@ -22,7 +23,6 @@ import {
 } from "./compose";
 import { parse } from "dotenv";
 import { emptyStringIs } from "~/utils/utils";
-import { ActivitySquare } from "lucide-react";
 
 export type FullServiceGeneration = typeof serviceGeneration.$inferSelect & {
   service: typeof service.$inferSelect;
@@ -108,7 +108,7 @@ export async function buildDockerStackFile(
       image: service.finalizedDockerImage ?? service.dockerImage ?? undefined,
       ports: service.ports.map((port) => ({
         mode:
-          port.type !== null ? DOCKER_DEPLOY_MODE_MAP[port.type] : undefined,
+          port.type !== null ? DOCKER_PUBLISH_MODE_MAP[port.type] : undefined,
         target: port.internalPort,
         published: port.externalPort,
         protocol: port.type === DockerPortType.UDP ? "udp" : "tcp",

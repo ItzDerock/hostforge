@@ -1,7 +1,9 @@
 import { PriorityQueue } from "datastructures-js";
-import { Akaya_Kanadaka } from "next/font/google";
+import { type SQL, getTableColumns, sql } from "drizzle-orm";
+import type { SQLiteTable } from "drizzle-orm/sqlite-core";
 import type { Readable, Writable } from "node:stream";
-import { EnumLike, z } from "zod";
+import type { EnumLike } from "zod";
+import { zodEnumFromObjValues } from "~/utils/utils";
 
 export function docker404ToNull(err: unknown) {
   if (
@@ -97,18 +99,38 @@ export function reverseEnumLookupFactory<T extends EnumLike, R extends string>(
   };
 }
 
-export function zReverseEnumLookup<T extends EnumLike, R extends string>(
-  enumToString: Record<keyof T, R>,
-) {
+// i give up fighting with typescript
+// export function zReverseEnumLookup<T extends EnumObject<T>>(
+//   enumToString: Record<EnumValue<T>, string>,
+//   tsEnum: T,
+// ) {
+//   const reversed = reverseEnumLookupFactory(enumToString);
+//   return zodEnumFromObjValues(enumToString).transform(
+//     reversed as (arg: string) => T,
+//   );
+// }
+
+export function zReverseEnumLookup<T>(enumToString: Record<number, string>) {
   const reversed = reverseEnumLookupFactory(enumToString);
-  return zodEnumFromObjKeys(enumToString).transform(
-    reversed as (arg: string) => keyof T,
+  return zodEnumFromObjValues(enumToString).transform(
+    reversed as (arg: string) => T,
   );
 }
 
-function zodEnumFromObjKeys<K extends string>(
-  obj: Record<K, unknown>,
-): z.ZodEnum<[K, ...K[]]> {
-  const [firstKey, ...otherKeys] = Object.keys(obj) as K[];
-  return z.enum([firstKey!, ...otherKeys]);
+export function conflictUpdateAllExcept<
+  T extends SQLiteTable,
+  E extends (keyof T["$inferInsert"])[],
+>(table: T, except: E) {
+  const columns = getTableColumns(table);
+  const updateColumns = Object.entries(columns).filter(
+    ([col]) => !except.includes(col as keyof typeof table.$inferInsert),
+  );
+
+  return updateColumns.reduce(
+    (acc, [colName, table]) => ({
+      ...acc,
+      [colName]: sql.raw(`excluded.${table.name}`),
+    }),
+    {},
+  ) as Omit<Record<keyof typeof table.$inferInsert, SQL>, E[number]>;
 }

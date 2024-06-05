@@ -4,7 +4,11 @@ import { projectMiddleware } from "~/server/api/middleware/project";
 import { serviceMiddleware } from "~/server/api/middleware/service";
 import { authenticatedProcedure } from "~/server/api/trpc";
 import { serviceVolume } from "~/server/db/schema";
-import { DockerVolumeType } from "~/server/db/types";
+import { DOCKER_VOLUME_TYPE_MAP, DockerVolumeType } from "~/server/db/types";
+import {
+  conflictUpdateAllExcept,
+  zReverseEnumLookup,
+} from "~/server/utils/serverUtils";
 
 export const updateServiceVolumesProcedure = authenticatedProcedure
   .meta({
@@ -18,22 +22,13 @@ export const updateServiceVolumesProcedure = authenticatedProcedure
     z.object({
       projectId: z.string(),
       serviceId: z.string(),
-      volumes: z.array(
+      data: z.array(
         z.strictObject({
           id: z.string().uuid().optional(),
           type: z
             .nativeEnum(DockerVolumeType)
-            .or(
-              z
-                .enum(["bind", "volume", "tmpfs"])
-                .transform((val) =>
-                  val === "bind"
-                    ? DockerVolumeType.Bind
-                    : val === "volume"
-                      ? DockerVolumeType.Volume
-                      : DockerVolumeType.Tmpfs,
-                ),
-            ),
+            .or(zReverseEnumLookup<DockerVolumeType>(DOCKER_VOLUME_TYPE_MAP)),
+
           target: z.string().min(1),
           source: z.string().min(1),
         }),
@@ -47,31 +42,19 @@ export const updateServiceVolumesProcedure = authenticatedProcedure
 
     return await ctx.db.transaction(async (trx) => {
       // insert or update
-      const wanted = (
-        await Promise.all(
-          input.volumes.map(async (volume) =>
-            trx
-              .insert(serviceVolume)
-              .values({
-                id: volume.id,
-                serviceId: currentGeneration,
-                type: volume.type,
-                target: volume.target,
-                source: volume.source,
-              })
-              .onConflictDoUpdate({
-                set: {
-                  type: volume.type,
-                  target: volume.target,
-                  source: volume.source,
-                },
-                target: serviceVolume.id,
-                targetWhere: eq(serviceVolume.serviceId, currentGeneration),
-              })
-              .returning(),
-          ),
+      const wanted = await trx
+        .insert(serviceVolume)
+        .values(
+          input.data.map((volume) => ({
+            serviceId: currentGeneration,
+            ...volume,
+          })),
         )
-      ).flat();
+        .onConflictDoUpdate({
+          set: conflictUpdateAllExcept(serviceVolume, ["id"]),
+          target: serviceVolume.id,
+        })
+        .returning();
 
       // delete any volumes that are not in the wanted list
       await trx.delete(serviceVolume).where(

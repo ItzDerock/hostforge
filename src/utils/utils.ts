@@ -1,5 +1,4 @@
 import { clsx, type ClassValue } from "clsx";
-import { ServiceStatus } from "dockerode";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
 
@@ -67,3 +66,10 @@ export type EnumObject<TEnum> = {
   [k: number]: string;
   [k: string]: EnumValue<TEnum>;
 };
+
+export function zodEnumFromObjValues<K extends string>(
+  obj: Record<string | number | symbol, K>,
+): z.ZodEnum<[K, ...K[]]> {
+  const [firstKey, ...otherKeys] = Object.values(obj);
+  return z.enum([firstKey!, ...otherKeys]);
+}

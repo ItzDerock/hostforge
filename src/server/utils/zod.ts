@@ -1,6 +1,6 @@
 import z from "zod";
 
-export const zDockerName = z.string().regex(/^[a-z0-9-]+$/, {
+export const zDockerName = z.string().regex(/^[a-z0-9][a-z0-9_-]*$/, {
   message: "Must be lowercase alphanumeric with dashes.",
 });
 
@@ -24,4 +24,11 @@ export const zDomain = z
   .regex(
     /(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]/,
     { message: "Invalid domain name. (Regex)" },
+  );
+
+export const zPort = z
+  .string()
+  .regex(
+    /^((\d{1,5}(-\d{1,5})?(:\d{1,5}(-\d{1,5})?)?)|((\d{1,3}\.){3}\d{1,3}:\d{1,5}(-\d{1,5})?(:\d{1,5}(-\d{1,5})?)?))(\/(tcp|udp))?$/,
+    { message: "Invalid port. (Regex failed)" },
   );

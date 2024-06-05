@@ -24,11 +24,13 @@ import {
   getServiceLogsSubscription,
 } from "./logs";
 import { updateServiceVolumesProcedure } from "./volumes";
+import { updateServicePortsProcedure } from "./ports";
 
 export const serviceRouter = createTRPCRouter({
   containers: getServiceContainers,
   update: updateServiceProcedure,
   updateDomain: updateServiceDomainsProcedure,
+  updatePorts: updateServicePortsProcedure,
   updateVolumes: updateServiceVolumesProcedure,
   deleteDomain: deleteServiceDomainsProcedure,
   deployments: getDeploymentsProcedure,

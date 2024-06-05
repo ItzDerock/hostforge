@@ -174,6 +174,8 @@ export default class ProjectManager {
               sDeployment.id,
             );
 
+            await service.deriveNewGeneration(sDeployment.id);
+
             return {
               ...fullLatestGenData,
               finalizedDockerImage: image,

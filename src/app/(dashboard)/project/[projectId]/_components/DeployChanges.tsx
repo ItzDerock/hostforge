@@ -67,6 +67,8 @@ export function DeployChanges() {
                 diff.key === "serviceId" &&
                 diff.type === Operation.ADD ? (
                   <p className="col-span-2">Service Created</p>
+                ) : Array.isArray(diff) ? (
+                  diff.map((d, i) => <ServiceDiff key={i} diff={d} />)
                 ) : (
                   <ServiceDiff diff={diff} />
                 )}

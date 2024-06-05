@@ -1,17 +1,21 @@
 import { and, eq, notInArray } from "drizzle-orm";
-import { ZodRecord, z } from "zod";
+import { z } from "zod";
 import { projectMiddleware } from "~/server/api/middleware/project";
 import { serviceMiddleware } from "~/server/api/middleware/service";
 import { authenticatedProcedure } from "~/server/api/trpc";
-import { serviceVolume } from "~/server/db/schema";
+import { servicePort } from "~/server/db/schema";
 import {
-  DockerVolumeType,
   DockerPortType,
   DOCKER_PORT_TYPE_MAP,
+  DockerPublishMode,
+  DOCKER_PUBLISH_MODE_MAP,
 } from "~/server/db/types";
-import { zReverseEnumLookup } from "~/server/utils/serverUtils";
+import {
+  conflictUpdateAllExcept,
+  zReverseEnumLookup,
+} from "~/server/utils/serverUtils";
 
-export const updateServiceVolumesProcedure = authenticatedProcedure
+export const updateServicePortsProcedure = authenticatedProcedure
   .meta({
     openapi: {
       method: "PUT",
@@ -23,18 +27,56 @@ export const updateServiceVolumesProcedure = authenticatedProcedure
     z.object({
       projectId: z.string(),
       serviceId: z.string(),
-      volumes: z.array(
+      data: z.array(
         z.strictObject({
           id: z.string().uuid().optional(),
+
           type: z
             .nativeEnum(DockerPortType)
-            .or(zReverseEnumLookup(DOCKER_PORT_TYPE_MAP)),
-          target: z.string().min(1),
-          source: z.string().min(1),
+            .or(zReverseEnumLookup<DockerPortType>(DOCKER_PORT_TYPE_MAP)),
+
+          publishMode: z
+            .nativeEnum(DockerPublishMode)
+            .or(zReverseEnumLookup<DockerPublishMode>(DOCKER_PUBLISH_MODE_MAP)),
+
+          internalPort: z.number().int().min(1).max(65535),
+          externalPort: z.number().int().min(1).max(65535),
         }),
       ),
     }),
   )
   .use(projectMiddleware)
   .use(serviceMiddleware)
-  .mutation(async ({ ctx, input }) => {});
+  .mutation(async ({ ctx, input }) => {
+    const currentGeneration = ctx.service.getData().latestGenerationId;
+
+    return await ctx.db.transaction(async (trx) => {
+      // insert or update
+      const wanted = await trx
+        .insert(servicePort)
+        .values(
+          input.data.map((item) => ({
+            serviceId: currentGeneration,
+            ...item,
+          })),
+        )
+        .onConflictDoUpdate({
+          set: conflictUpdateAllExcept(servicePort, ["id"]),
+          target: servicePort.id,
+        })
+        .returning();
+
+      // delete any volumes that are not in the wanted list
+      await trx.delete(servicePort).where(
+        and(
+          eq(servicePort.serviceId, currentGeneration),
+          notInArray(
+            servicePort.id,
+            wanted.map((v) => v.id),
+          ),
+        ),
+      );
+
+      return wanted;
+    });
+  });

@@ -1,6 +1,9 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
+import { getQueryKey } from "@trpc/react-query";
 import { createContext, useContext } from "react";
+import { api } from "~/trpc/react";
 import { type RouterOutputs } from "~/trpc/shared";
 
 export type BasicServiceDetails =
@@ -36,5 +39,31 @@ export function ProjectContextProvider(props: {
 }
 
 export const useProject = () => {
-  return useContext(ProjectContext);
+  const queryClient = useQueryClient();
+  const project = useContext(ProjectContext);
+
+  return {
+    ...project,
+    refetch: () => {
+      return queryClient.invalidateQueries({
+        queryKey: getQueryKey(
+          api.projects.get,
+          { projectId: project.id },
+          "query",
+        ),
+      });
+    },
+
+    refetchService: () => {
+      if (!project.selectedService) return;
+
+      return queryClient.invalidateQueries({
+        queryKey: getQueryKey(
+          api.projects.services.get,
+          { projectId: project.id, serviceId: project.selectedService.id },
+          "query",
+        ),
+      });
+    },
+  };
 };

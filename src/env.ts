@@ -23,6 +23,7 @@ export const env = createEnv({
 
     STORAGE_PATH: z.string().default("/var/lib/hostforge"),
 
+    // TODO: remove this
     REDEPLOY_SECRET_BYTES: z
       .string()
       .default("32")

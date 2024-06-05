@@ -1,61 +1,65 @@
 "use client";
 
-import { useEffect } from "react";
 import { useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import { Form } from "~/components/ui/form";
 import { FormSubmit, useForm } from "~/hooks/forms";
-import { DOCKER_VOLUME_TYPE_MAP } from "~/server/db/types";
+import {
+  DOCKER_PORT_TYPE_MAP,
+  DOCKER_PUBLISH_MODE_MAP,
+} from "~/server/db/types";
 import { api } from "~/trpc/react";
 import { useProject } from "../../../../_context/ProjectContext";
-import VolumeEntry from "./VolumeEntry";
+import PortEntry from "./PortEntry";
 import { uuidv7 } from "uuidv7";
 import type { RouterOutputs } from "~/trpc/shared";
+import { zodEnumFromObjValues } from "~/utils/utils";
+import { getQueryKey } from "@trpc/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const formValidator = z.object({
-  volumes: z.array(
+  data: z.array(
     z.object({
       id: z.string().optional(),
-      source: z.string().min(1),
-      target: z.string().min(1),
-      type: z.enum(["tmpfs", "volume", "bind"]),
+      type: zodEnumFromObjValues(DOCKER_PORT_TYPE_MAP),
+      publishMode: zodEnumFromObjValues(DOCKER_PUBLISH_MODE_MAP),
+      internalPort: z.coerce.number().int().min(1).max(65535),
+      externalPort: z.coerce.number().int().min(1).max(65535),
     }),
   ),
 });
 
 function transformServerData(
-  data: RouterOutputs["projects"]["services"]["updateVolumes"] = [],
+  data: RouterOutputs["projects"]["services"]["updatePorts"] = [],
 ) {
   return data.map((data) => ({
-    type: DOCKER_VOLUME_TYPE_MAP[data.type],
-    source: data.source,
-    target: data.target,
-    id: data.id,
+    ...data,
+    type: DOCKER_PORT_TYPE_MAP[data.type],
+    publishMode: DOCKER_PUBLISH_MODE_MAP[data.publishMode],
   }));
 }
 
 export function NetworkPage() {
   const project = useProject();
-  const mutation = api.projects.services.updateVolumes.useMutation();
+  const mutation = api.projects.services.updatePorts.useMutation({
+    onSuccess: async () => {
+      await project.refetchService();
+    },
+  });
 
   const form = useForm(formValidator, {
     defaultValues: {
-      volumes: transformServerData(
-        mutation.data ?? project.selectedService?.latestGeneration?.volumes,
+      data: transformServerData(
+        mutation.data ?? project.selectedService?.latestGeneration?.ports,
       ),
     },
   });
 
   const { append, fields, remove } = useFieldArray({
     control: form.control,
-    name: "volumes",
+    name: "data",
   });
-
-  useEffect(() => {
-    if (mutation.data) {
-    }
-  }, [mutation.data]);
 
   return (
     <Form {...form}>
@@ -65,13 +69,13 @@ export function NetworkPage() {
             await mutation.mutateAsync({
               projectId: project.id,
               serviceId: project.selectedService!.id,
-              volumes: data.volumes,
+              data: data.data,
             }),
           );
 
           form.reset(
             {
-              volumes,
+              data: volumes,
             },
             {
               keepDirty: false,
@@ -79,15 +83,15 @@ export function NetworkPage() {
           );
         })}
       >
-        <h1 className="text-lg">Volumes and Mounts</h1>
+        <h1 className="text-lg">Network</h1>
         <p className="text-muted-foreground">
-          Volumes are used to persist data between container restarts. You can
-          mount a volume from the host machine.
+          Configure the network settings for your service. You can expose ports
+          to the public internet.
         </p>
 
         <section className="my-4 flex flex-col gap-4">
           {fields.map((service, index) => (
-            <VolumeEntry key={service.id} index={index} remove={remove} />
+            <PortEntry key={service.id} index={index} remove={remove} />
           ))}
         </section>
 
@@ -96,9 +100,10 @@ export function NetworkPage() {
             type="button"
             onClick={() =>
               append({
-                source: "",
-                target: "",
-                type: "volume",
+                externalPort: undefined,
+                internalPort: undefined,
+                publishMode: "host",
+                type: "tcp",
                 id: uuidv7(),
               })
             }

@@ -130,7 +130,11 @@ export class StatManager {
   private liveInterval: NodeJS.Timeout | null = null;
 
   constructor() {
-    void this.update().then(() => this.updateDatabase());
+    void this.update()
+      .then(() => this.updateDatabase())
+      .catch((err: unknown) => {
+        this.logger.error("Failed to update stats", { err });
+      });
 
     // whenever a new listener is added, start the live interval
     this.events.on("newListener", (event) => {

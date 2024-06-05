@@ -1,24 +1,16 @@
 import { Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { api } from "~/trpc/server";
-import { SystemStatistics } from "./_components/SystemStatistics";
 import { ProjectList } from "./_projects/ProjectList";
 
 export default async function DashboardHome() {
-  const [initialStats, historicalData, projects, user] = await Promise.all([
-    api.system.currentStats.query(),
-    api.system.history.query(),
+  const [projects, user] = await Promise.all([
     api.projects.list.query(),
     api.auth.me.query(),
   ]);
 
   return (
     <div className="mx-auto">
-      <SystemStatistics
-        initialData={initialStats}
-        historicalData={historicalData}
-      />
-
       <Card className="mt-8 bg-gradient-to-br from-primary to-accent py-4 text-accent-foreground">
         <CardHeader className="pb-4">
           <CardTitle className="text-2xl">

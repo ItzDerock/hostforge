@@ -7,8 +7,7 @@ import {
   ServiceBuildMethod,
   ServiceSource,
 } from "~/server/db/types";
-import { EnumObject } from "~/utils/utils";
-import { reportUnusedDisableDirectives } from ".eslintrc.cjs";
+import type { EnumObject } from "~/utils/utils";
 
 function Formatted({ children }: { children: React.ReactNode }) {
   return (
@@ -18,15 +17,22 @@ function Formatted({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function ServiceDiff({ diff }: { diff: IChange[] | IChange }) {
-  if (Array.isArray(diff)) {
+export function ServiceDiff({ diff }: { diff: IChange }) {
+  if (diff.changes) {
     return (
-      <>
-        {diff.map((change, i) => (
+      <div className="grid grid-cols-1 gap-4 pl-4 text-sm lg:col-span-2 lg:grid-cols-2">
+        <h2 className="-my-2 text-lg lg:col-span-2">.{diff.key}</h2>
+
+        {diff.changes.map((change, i) => (
           <ServiceDiff key={i} diff={change} />
         ))}
-      </>
+      </div>
     );
+  }
+
+  // ignore removes if the original value was null
+  if (diff.value === null && diff.type === Operation.REMOVE) {
+    return null;
   }
 
   return (
@@ -42,13 +48,15 @@ export function ServiceDiff({ diff }: { diff: IChange[] | IChange }) {
         </Badge>
       </div>
       <div className="whitespace-pre-wrap text-center text-muted-foreground">
-        {diff.type == Operation.UPDATE && (
+        {diff.type == Operation.UPDATE && diff.oldValue !== undefined && (
           <>
             <Formatted>{formatValue(diff.key, diff.oldValue)}</Formatted>
             <p className="my-1">Updated to</p>
           </>
         )}
-        <Formatted>{formatValue(diff.key, diff.value)}</Formatted>
+        <Formatted>
+          {formatValue(diff.key, diff.value ?? diff.changes)}
+        </Formatted>
       </div>
     </div>
   );

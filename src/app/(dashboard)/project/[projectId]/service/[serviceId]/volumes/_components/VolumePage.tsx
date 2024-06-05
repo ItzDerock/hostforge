@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
@@ -37,7 +36,11 @@ function transformServerData(
 
 export function VolumesPage() {
   const project = useProject();
-  const mutation = api.projects.services.updateVolumes.useMutation();
+  const mutation = api.projects.services.updateVolumes.useMutation({
+    onSuccess: async () => {
+      await project.refetchService();
+    },
+  });
 
   const form = useForm(formValidator, {
     defaultValues: {
@@ -52,11 +55,6 @@ export function VolumesPage() {
     name: "volumes",
   });
 
-  useEffect(() => {
-    if (mutation.data) {
-    }
-  }, [mutation.data]);
-
   return (
     <Form {...form}>
       <form
@@ -65,7 +63,7 @@ export function VolumesPage() {
             await mutation.mutateAsync({
               projectId: project.id,
               serviceId: project.selectedService!.id,
-              volumes: data.volumes,
+              data: data.volumes,
             }),
           );
 

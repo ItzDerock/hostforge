@@ -14,7 +14,6 @@ export function SystemStatistics(props: {
   historicalData: HistoricalStatData;
 }) {
   const [data, setData] = useState<StatData>(props.initialData);
-  // const [selectedId, setSelected] = useState<string | null>(null);
 
   api.system.liveStats.useSubscription(undefined, {
     onData: (data) => {

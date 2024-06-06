@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
+import type { ServiceStatus } from "dockerode";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
 

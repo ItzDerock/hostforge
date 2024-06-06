@@ -1,12 +1,12 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { projectMiddleware } from "~/server/api/middleware/project";
 import { serviceMiddleware } from "~/server/api/middleware/service";
 import { authenticatedProcedure } from "~/server/api/trpc";
-import { serviceDomain, serviceGeneration } from "~/server/db/schema";
+import { serviceGeneration } from "~/server/db/schema";
 import { DockerDeployMode, DockerRestartCondition } from "~/server/db/types";
-import { zDockerDuration, zDockerImage, zDomain } from "~/server/utils/zod";
+import { zDockerDuration, zDockerImage } from "~/server/utils/zod";
 
 /**
  * Handles updating basic details of a service

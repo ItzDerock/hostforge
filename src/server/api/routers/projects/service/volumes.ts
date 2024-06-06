@@ -1,14 +1,11 @@
-import { and, eq, notInArray } from "drizzle-orm";
 import { z } from "zod";
 import { projectMiddleware } from "~/server/api/middleware/project";
 import { serviceMiddleware } from "~/server/api/middleware/service";
 import { authenticatedProcedure } from "~/server/api/trpc";
 import { serviceVolume } from "~/server/db/schema";
 import { DOCKER_VOLUME_TYPE_MAP, DockerVolumeType } from "~/server/db/types";
-import {
-  conflictUpdateAllExcept,
-  zReverseEnumLookup,
-} from "~/server/utils/serverUtils";
+import { zReverseEnumLookup } from "~/server/utils/serverUtils";
+import { createUpdateProcedure } from "~/server/utils/updateProcedure";
 
 export const updateServiceVolumesProcedure = authenticatedProcedure
   .meta({
@@ -37,36 +34,4 @@ export const updateServiceVolumesProcedure = authenticatedProcedure
   )
   .use(projectMiddleware)
   .use(serviceMiddleware)
-  .mutation(async ({ ctx, input }) => {
-    const currentGeneration = ctx.service.getData().latestGenerationId;
-
-    return await ctx.db.transaction(async (trx) => {
-      // insert or update
-      const wanted = await trx
-        .insert(serviceVolume)
-        .values(
-          input.data.map((volume) => ({
-            serviceId: currentGeneration,
-            ...volume,
-          })),
-        )
-        .onConflictDoUpdate({
-          set: conflictUpdateAllExcept(serviceVolume, ["id"]),
-          target: serviceVolume.id,
-        })
-        .returning();
-
-      // delete any volumes that are not in the wanted list
-      await trx.delete(serviceVolume).where(
-        and(
-          eq(serviceVolume.serviceId, currentGeneration),
-          notInArray(
-            serviceVolume.id,
-            wanted.map((v) => v.id),
-          ),
-        ),
-      );
-
-      return wanted;
-    });
-  });
+  .mutation(createUpdateProcedure(serviceVolume));

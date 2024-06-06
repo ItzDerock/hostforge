@@ -1,8 +1,11 @@
-import { SQLiteColumn, SQLiteTableWithColumns } from "drizzle-orm/sqlite-core";
-import ServiceManager from "../managers/Service";
+import type {
+  SQLiteColumn,
+  SQLiteTableWithColumns,
+} from "drizzle-orm/sqlite-core";
+import type ServiceManager from "../managers/Service";
 import type { Database } from "../db";
-import { TableConfig } from "drizzle-orm";
-import { servicePort } from "../db/schema";
+import { and, eq, notInArray } from "drizzle-orm";
+import { conflictUpdateAllExcept } from "./serverUtils";
 
 export function createUpdateProcedure<
   T extends SQLiteTableWithColumns<{
@@ -22,7 +25,7 @@ export function createUpdateProcedure<
       }>;
 
       serviceId: SQLiteColumn<{
-        name: "serviceId";
+        name: "service_id";
         tableName: string;
         dataType: "string";
         columnType: "SQLiteText";
@@ -50,7 +53,7 @@ export function createUpdateProcedure<
     input: {
       serviceId: string;
       projectId: string;
-      data: (typeof table.$inferInsert)[];
+      data: Omit<typeof table.$inferInsert, "serviceId">[];
     };
   }) {
     const currentGeneration = ctx.service.getData().latestGenerationId;
@@ -59,22 +62,24 @@ export function createUpdateProcedure<
       // insert or update
       const wanted = await trx
         .insert(table)
-        .values(input)
+        .values(
+          input.data.map((item) => ({
+            ...item,
+            serviceId: currentGeneration,
+          })) as { [K in keyof T["$inferInsert"]]: T["$inferInsert"][K] }[],
+        )
         .onConflictDoUpdate({
-          set: {
-            id: c,
-          },
+          set: conflictUpdateAllExcept(table, ["id"]),
           target: table.id,
-          targetWhere: eq(table.serviceId, currentGeneration),
         })
         .returning();
 
       // delete any volumes that are not in the wanted list
       await trx.delete(table).where(
         and(
-          eq(serviceVolume.serviceId, currentGeneration),
+          eq(table.serviceId, currentGeneration),
           notInArray(
-            serviceVolume.id,
+            table.id,
             wanted.map((v) => v.id),
           ),
         ),

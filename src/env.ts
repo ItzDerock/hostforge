@@ -28,6 +28,8 @@ export const env = createEnv({
       .string()
       .default("32")
       .transform((str) => parseInt(str)),
+
+    NETDATA_HOST: z.string().default("http://netdata_central:19999"),
   },
 
   /**
@@ -52,6 +54,7 @@ export const env = createEnv({
     NEXT_PUBLIC_BUILD_COMMIT_SHA: process.env.NEXT_PUBLIC_BUILD_COMMIT_SHA,
     STORAGE_PATH: process.env.STORAGE_PATH,
     REDEPLOY_SECRET_BYTES: process.env.REDEPLOY_SECRET_BYTES,
+    NETDATA_HOST: process.env.NETDATA_HOST,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

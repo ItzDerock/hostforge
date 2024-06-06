@@ -15,11 +15,13 @@
     "lint": "next lint",
     "start": "node -r tsconfig",
     "fetch-compose-types": "curl -s https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json | json2ts > src/server/docker/compose.d.ts",
-    "fetch-docker-types": "openapi-typescript https://docs.docker.com/reference/engine/v1.43.yaml -o ./src/server/docker/types.d.ts"
+    "fetch-docker-types": "openapi-typescript https://docs.docker.com/reference/engine/v1.43.yaml -o ./src/server/docker/types.d.ts",
+    "fetch-netdata-types": "openapi-typescript https://raw.githubusercontent.com/netdata/netdata/master/src/web/api/netdata-swagger.json -o ./src/server/modules/stats/netdata-api.d.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
     "@mantine/form": "^7.4.0",
+    "@netdata/charts": "^5.0.20",
     "@nicktomlin/codemirror-lang-yaml-lite": "^0.0.3",
     "@radix-ui/react-checkbox": "^1.0.4",
     "@radix-ui/react-dialog": "^1.0.5",

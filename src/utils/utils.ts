@@ -1,3 +1,4 @@
+import { AssertionError } from "assert";
 import { clsx, type ClassValue } from "clsx";
 import type { ServiceStatus } from "dockerode";
 import { twMerge } from "tailwind-merge";
@@ -73,4 +74,17 @@ export function zodEnumFromObjValues<K extends string>(
 ): z.ZodEnum<[K, ...K[]]> {
   const [firstKey, ...otherKeys] = Object.values(obj);
   return z.enum([firstKey!, ...otherKeys]);
+}
+
+export function expectOrThrow<T>(value: T | undefined, message: string): T {
+  if (value === undefined) {
+    throw new AssertionError({
+      message,
+      actual: value,
+      expected: "not undefined",
+      operator: "===",
+    });
+  }
+
+  return value;
 }

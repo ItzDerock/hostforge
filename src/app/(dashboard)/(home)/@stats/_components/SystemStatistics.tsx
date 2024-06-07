@@ -5,14 +5,19 @@ import { Cpu, HardDrive, MemoryStick, Router } from "lucide-react";
 import { api } from "~/trpc/react";
 import { type RouterOutputs } from "~/trpc/shared";
 import { StatCard } from "./StatCard";
+import { StringParam, useQueryParam } from "use-query-params";
 
 type StatData = RouterOutputs["system"]["currentStats"];
 type HistoricalStatData = RouterOutputs["system"]["history"];
+type Hosts = RouterOutputs["system"]["hosts"];
 
 export function SystemStatistics(props: {
   initialData: StatData;
   historicalData: HistoricalStatData;
+  hosts: Hosts;
 }) {
+  const mainNode = props.hosts.find((node) => node.isMainNode);
+  const [hostId] = useQueryParam("host", StringParam);
   const [data, setData] = useState<StatData>(props.initialData);
 
   api.system.liveStats.useSubscription(undefined, {
@@ -21,14 +26,29 @@ export function SystemStatistics(props: {
     },
   });
 
-  const historicalData = useMemo(
-    () =>
-      props.historicalData.map((data) => ({
-        ...data,
-        network: data.networkTx + data.networkRx,
-      })),
-    [props.historicalData],
-  );
+  const keys = useMemo(() => {
+    const host = hostId ?? mainNode?.id ?? props.hosts[0]!.id;
+    //       contexts: "system.cpu,system.ram,system.io,system.net",
+
+    const cpuKey = findDataIndex(props.historicalData.labels, "user", host);
+    const memoryKey = findDataIndex(props.historicalData.labels, "used", host);
+    const diskKey = findDataIndex(props.historicalData.labels, "io", host);
+
+    const networkKey = findDataIndex(
+      props.historicalData.labels,
+      "system.net",
+      host,
+    );
+
+    return {
+      cpuKey,
+      memoryKey,
+      diskKey,
+      networkKey,
+    };
+  }, [props.historicalData, hostId, props.hosts, mainNode]);
+
+  console.log(keys, props.historicalData.labels);
 
   return (
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -39,8 +59,8 @@ export function SystemStatistics(props: {
         unit="%"
         subvalue={`of ${data.cpu.cores} CPUs`}
         icon={Cpu}
-        data={historicalData}
-        dataKey="cpuUsage"
+        data={props.historicalData.series}
+        dataKey={keys.cpuKey}
       />
       {/* </motion.div> */}
 
@@ -52,8 +72,8 @@ export function SystemStatistics(props: {
           2,
         )} GB`}
         icon={MemoryStick}
-        data={historicalData}
-        dataKey="memoryUsage"
+        data={props.historicalData.series}
+        dataKey={keys.memoryKey}
       />
 
       <StatCard
@@ -64,8 +84,8 @@ export function SystemStatistics(props: {
           2,
         )} / ${data.storage.total.toFixed(2)} GB`}
         icon={HardDrive}
-        data={historicalData}
-        dataKey="diskUsage"
+        data={props.historicalData.series}
+        dataKey={keys.diskKey}
       />
 
       <StatCard
@@ -80,30 +100,24 @@ export function SystemStatistics(props: {
         secondarySubvalue="RX / Mbps"
         // misc
         icon={Router}
-        data={historicalData}
-        dataKey="network"
+        data={props.historicalData.series}
+        dataKey={keys.networkKey}
       />
-
-      {/* animations soon™️ */}
-      {/* <AnimatePresence>
-        {selectedId && (
-          <motion.div
-            layoutId={selectedId}
-            className="fixed inset-0 z-50 bg-black/40 p-8"
-          >
-            <StatCard
-              title="CPU Usage"
-              value={data.cpu.usage}
-              unit="%"
-              subvalue={`of ${data.cpu.cores} CPUs`}
-              icon={FaMicrochip}
-              data={historicalData}
-              dataKey="cpuUsage"
-              type="fullscreen"
-            />
-          </motion.div>
-        )}
-      </AnimatePresence> */}
     </div>
   );
+}
+
+function findDataIndex(
+  labels: (string | { host: string; type: string })[],
+  type: string,
+  host: string,
+) {
+  return labels.findIndex((label) => {
+    if (typeof label === "object") {
+      return (
+        label.type === type && (label.host === host || label.host === "unknown")
+      );
+    }
+    return false;
+  });
 }

@@ -1,6 +1,5 @@
 import type { GlobalStore } from "~/server/managers/GlobalContext";
 import type { paths as NetdataAPI, components } from "./netdata-api";
-import assert from "assert";
 import { expectOrThrow } from "~/utils/utils";
 import logger from "~/server/utils/logger";
 import { NetdataServiceManager } from "./NetdataService";
@@ -24,8 +23,9 @@ export class NetdataManager {
 
   public async getHistoricalSystemStats() {
     const data = (await this.call("/api/v2/data", {
-      contexts: "system.cpu,system.ram,system.io,system.net",
+      contexts: "system.cpu,system.ram,disk.space,system.net",
       after: 24 * 60 * 60 /* 24 hours in seconds */,
+      points: 20,
     })) as components["schemas"]["jsonwrap2"];
 
     const result = data.result as components["schemas"]["data_json2"];
@@ -89,7 +89,13 @@ export class NetdataManager {
     //   cgroup_test-project_netdata-central-1-l658hqvksrvtcv68oubw648pc.mem_usage_limit@5ee164e8-23a4-11ef-bf48-02420a00008c
     return labels.map((label) => {
       const match = label.match(NetdataManager.LABEL_REGEX);
-      assert(match, `label ${label} did not match regex`);
+      if (!match)
+        return {
+          container: "unknown",
+          type: label,
+          host: "unknown",
+          raw: label,
+        };
 
       return {
         container: expectOrThrow(

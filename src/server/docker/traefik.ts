@@ -27,13 +27,7 @@ export class TraefikManager {
    */
   static TRAEFIK_CONFIG_PATH = path.resolve(env.STORAGE_PATH, "traefik");
 
-  constructor(private store: GlobalStore) {
-    // schedule regular traefik checks (every 5 mins)
-    setInterval(() => void this.ensureTraefik(), 5 * 60 * 1000);
-    void this.ensureTraefik().catch((err) => {
-      this.log.error("Initial traefik loading failed", err);
-    });
-  }
+  constructor(private store: GlobalStore) {}
 
   public createTraefikServiceConfig() {
     const { letsencryptEmail } = this.store.settings.getSettings();
@@ -193,5 +187,13 @@ export class TraefikManager {
         await this.updateTraefik();
       }
     }
+  }
+
+  public async init() {
+    // schedule regular traefik checks (every 5 mins)
+    setInterval(() => void this.ensureTraefik(), 5 * 60 * 1000);
+    await this.ensureTraefik().catch((err) => {
+      this.log.error("Initial traefik loading failed", err);
+    });
   }
 }

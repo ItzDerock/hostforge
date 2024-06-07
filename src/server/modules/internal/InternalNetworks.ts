@@ -58,12 +58,7 @@ export class NetworkManager {
         Name: DockerNetworks.Internal,
         CheckDuplicate: true,
         Driver: "overlay",
-        Attachable: false,
-        Internal: true,
-        // enable encryption
-        Options: {
-          encrypted: "true",
-        },
+        Attachable: true,
       })
       .then(() => true)
       .catch((err: Error) => {

@@ -24,7 +24,7 @@ export class GlobalStore {
     this.internalServices = {
       networks: new NetworkManager(this, docker),
       traefik: new TraefikManager(this),
-      netdata: new NetdataManager(this, env.NETDATA_HOST),
+      netdata: new NetdataManager(this, env.NETDATA_URL),
     };
   }
 }

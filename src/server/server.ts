@@ -12,7 +12,6 @@ import { version } from "../../package.json";
 import { appRouter } from "./api/root";
 import { createTRPCContext } from "./api/trpc";
 import { db } from "./db";
-import { stats } from "./modules/stats";
 import logger from "./utils/logger";
 import SettingsManager from "./managers/SettingsManager";
 import { GlobalStore } from "./managers/GlobalContext";
@@ -51,9 +50,11 @@ const globalContext = new GlobalStore(
 
 // start statistics
 // void stats.start();
-void settingsStore.waitForSetup().then(async () => {
+await settingsStore.waitForSetup().then(async () => {
   await globalContext.internalServices.networks.waitForNetworks();
+  await new Promise((r) => setTimeout(r, 500)); // takes a bit for the networks to be ready
   void globalContext.internalServices.netdata.serviceManager.init();
+  void globalContext.internalServices.traefik.init();
 });
 
 // initialize the next app

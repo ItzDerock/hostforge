@@ -3,10 +3,11 @@ import { DockerNetworks } from "~/server/docker";
 import type { GlobalStore } from "~/server/managers/GlobalContext";
 import type { paths as DockerAPITypes } from "~/server/docker/types";
 import { expectOrThrow } from "~/utils/utils";
-import { stripIndents } from "common-tags";
+import { stripIndent } from "common-tags";
 import logger from "~/server/utils/logger";
 import assert from "assert";
 import { docker404ToNull } from "~/server/utils/serverUtils";
+import { env } from "~/env";
 
 /**
  * @brief This class is responsible for managing the netdata services.
@@ -30,7 +31,9 @@ export class NetdataServiceManager {
         CapabilityAdd: ["SYS_PTRACE", "SYS_ADMIN"],
         Privileges: {
           // @ts-expect-error - types are out of date https://docs.docker.com/engine/api/v1.45/#tag/Service/operation/ServiceCreate
-          AppArmor: "disabled",
+          AppArmor: {
+            Mode: "disabled",
+          },
         },
         Mounts: [
           {
@@ -138,18 +141,21 @@ export class NetdataServiceManager {
       },
     );
 
-    // TODO: remove for production
-    // publish the port
-    (centralService as ServiceSpec).EndpointSpec = {
-      Ports: [
-        {
-          TargetPort: 19999,
-          PublishedPort: 19999,
-          Protocol: "tcp",
-          PublishMode: "host",
-        },
-      ],
-    };
+    if (env.NODE_ENV === "development") {
+      // publish the port
+      (centralService as ServiceSpec).EndpointSpec = {
+        Mode: "vip",
+        Ports: [
+          {
+            Name: "netdata-public-ingress",
+            TargetPort: 19999,
+            PublishedPort: 19999,
+            Protocol: "tcp",
+            PublishMode: "host",
+          },
+        ],
+      };
+    }
 
     // set name
     centralService.Name = "hostforge_internal_netdata_central";
@@ -249,7 +255,7 @@ export class NetdataServiceManager {
       .createConfig({
         Name: NetdataServiceManager.NETDATA_CENTRAL_CONF_NAME,
         Data: Buffer.from(
-          stripIndents`
+          stripIndent`
             [web]
               bind to = *
               allow connections from = *
@@ -264,7 +270,7 @@ export class NetdataServiceManager {
       .createConfig({
         Name: NetdataServiceManager.NETDATA_CENTRAL_STREAM_CONF_NAME,
         Data: Buffer.from(
-          stripIndents`
+          stripIndent`
             [${token}]
               enabled = yes
           `,
@@ -276,7 +282,7 @@ export class NetdataServiceManager {
       .createConfig({
         Name: NetdataServiceManager.NETDATA_CLIENT_STREAM_CONF_NAME,
         Data: Buffer.from(
-          stripIndents`
+          stripIndent`
             [stream]
               enabled = yes
               destination = netdata_central:19999

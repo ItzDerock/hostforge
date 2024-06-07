@@ -23,16 +23,13 @@ export const systemRouter = createTRPCRouter({
   }),
 
   history: authenticatedProcedure.query(async ({ ctx }) => {
-    return ctx.globalStore.netdata.getHistoricalSystemStats();
-    // return await stats.getStatsInRange(
-    //   new Date(Date.now() - 1000 * 60 * 60 * 24),
-    // );
+    return ctx.globalStore.internalServices.netdata.getHistoricalSystemStats();
   }),
 
   // core container options
   redeployTraefik: authenticatedProcedure.mutation(({ ctx }) => {
     setTimeout(() => {
-      void ctx.globalStore.traefik
+      void ctx.globalStore.internalServices.traefik
         .updateTraefik()
         .then(() => {
           logger.info("Traefik redeployed");

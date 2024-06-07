@@ -1,15 +1,15 @@
 configs:
-  netdata_client_stream:
-    file: ./netdata_client_stream.conf
+  netdata_client_config:
+    file: ./netdata/netdata_client.yml
   netdata_central_config:
-    file: ./netdata_central.conf
+    file: ./netdata/netdata_central.yml
   netdata_central_stream:
-    file: ./netdata_central_stream.conf
+    file: ./netdata/netdata_central_stream.yml
 
 services:
   netdata-client:
     image: netdata/netdata
-    hostname: "{{.Node.Hostname}}"
+    hostname: "{{.Node.Hostname}}-{{.Node.ID}}"
     cap_add:
       - SYS_PTRACE
       - SYS_ADMIN
@@ -22,16 +22,16 @@ services:
     networks:
       - netdata
     configs:
-      - source: netdata_client_stream
-        target: /etc/netdata/stream.conf  
+      - source: netdata_client_config
+        target: /etc/netdata/stream.conf
     deploy:
       mode: global
       placement:
-        constraints: [node.role == worker]
+        constraints: [node.id != i6s98au3wvj5wx7j4lo041ndj]
 
   netdata_central:
     image: netdata/netdata
-    hostname: netdata_central 
+    hostname: "netdata_central-{{.Node.ID}}"
     cap_add:
       - SYS_PTRACE
       - SYS_ADMIN
@@ -47,17 +47,19 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - netdata-lib:/var/lib/netdata
     networks:
-      - netdata
+      netdata:
+        aliases:
+          - netdata_central
     configs:
       - source: netdata_central_config
-        target: /etc/netdata/netdata.conf  
+        target: /etc/netdata/netdata.conf
       - source: netdata_central_stream
         target: /etc/netdata/stream.conf
     deploy:
       mode: replicated
       replicas: 1
       placement:
-        constraints: [node.id == tmt6v8upd2s4vbc1umbe2cw43]
+        constraints: [node.id == i6s98au3wvj5wx7j4lo041ndj]
 
 networks:
   netdata:

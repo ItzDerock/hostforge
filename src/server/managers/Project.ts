@@ -205,6 +205,7 @@ export default class ProjectManager {
           "deploy",
           "--compose-file",
           "-",
+          "--prune", // remove old services
           this.projectData.internalName,
           deployOptions.force ? "--force-recreate" : undefined,
         ].filter(isDefined),

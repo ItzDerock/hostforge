@@ -4,7 +4,6 @@ import { instanceSettings } from "../db/schema";
 import { eq } from "drizzle-orm";
 import logger from "../utils/logger";
 import { randomBytes } from "crypto";
-import { TRPCClientError } from "@trpc/client";
 import { TRPCError } from "@trpc/server";
 
 type InstanceSettings = Omit<typeof instanceSettings.$inferSelect, "id">;
@@ -12,6 +11,7 @@ type InstanceSettings = Omit<typeof instanceSettings.$inferSelect, "id">;
 export default class SettingsManager {
   private static INSTANCE_ID = parseInt(process.env.CUSTOM_INSTANCE_ID ?? "1");
   private static instance: SettingsManager | null = null;
+  private isSetup = false;
 
   public static async createInstance(db: Database) {
     if (this.instance == null) {
@@ -31,7 +31,7 @@ export default class SettingsManager {
       this.instance !== null,
       new TRPCError({
         message: "Instance not set up yet.",
-        code: "",
+        code: "UNPROCESSABLE_CONTENT", // cant return 503 since trpc doesn't support
       }), // this should probably be handled at trpc level
     );
     return this.instance;
@@ -40,7 +40,11 @@ export default class SettingsManager {
   private constructor(
     private db: Database,
     private settings: InstanceSettings | null,
-  ) {}
+  ) {
+    if (settings) {
+      this.isSetup = true;
+    }
+  }
 
   public getSettings() {
     assert(this.settings !== null, "Instance not set up yet.");
@@ -76,10 +80,22 @@ export default class SettingsManager {
       .returning();
 
     assert(result !== undefined, "Failed to set up instance.");
+    this.isSetup = true;
     return (this.settings = result);
   }
 
   public isInstanceSetup() {
     return this.settings !== null;
+  }
+
+  public waitForSetup() {
+    return new Promise<void>((resolve) => {
+      const interval = setInterval(() => {
+        if (this.isSetup) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 100);
+    });
   }
 }

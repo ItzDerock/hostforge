@@ -140,39 +140,7 @@ export class TraefikManager {
     const docker = await getDockerInstance();
     await mkdir(TraefikManager.TRAEFIK_CONFIG_PATH, { recursive: true });
 
-    // create the networks
-    await docker
-      .createNetwork({
-        Name: DockerNetworks.Public,
-        CheckDuplicate: true,
-        Driver: "overlay",
-        Attachable: true,
-      })
-      .catch((err: Error) => {
-        if ("statusCode" in err && err.statusCode == 409) {
-          // network already exists, ignore
-          return;
-        }
-      });
-
-    await docker
-      .createNetwork({
-        Name: DockerNetworks.Internal,
-        CheckDuplicate: true,
-        Driver: "overlay",
-        Attachable: false,
-        Internal: true,
-        // enable encryption
-        Options: {
-          encrypted: "true",
-        },
-      })
-      .catch((err: Error) => {
-        if ("statusCode" in err && err.statusCode == 409) {
-          // network already exists, ignore
-          return;
-        }
-      });
+    //  TODO: wait for networks before creation
 
     const res = await docker.createService(this.createTraefikServiceConfig());
     this.log.info(`Traefik deployed: ${res.id}`);
@@ -194,8 +162,9 @@ export class TraefikManager {
       return false;
     }
 
-    const docker = await getDockerInstance();
+    await mkdir(TraefikManager.TRAEFIK_CONFIG_PATH, { recursive: true });
 
+    const docker = await getDockerInstance();
     const service = docker.getService(DockerInternalServices.Traefik);
 
     const info = (await service.inspect().catch(docker404ToNull)) as

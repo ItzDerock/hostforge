@@ -16,6 +16,7 @@ import { stats } from "./modules/stats";
 import logger from "./utils/logger";
 import SettingsManager from "./managers/SettingsManager";
 import { GlobalStore } from "./managers/GlobalContext";
+import { getDockerInstance } from "./docker";
 
 // check if database folder exists
 try {
@@ -42,10 +43,18 @@ if (process.env.NODE_ENV === "production") {
 
 // load settings
 const settingsStore = await SettingsManager.createInstance(db);
-const globalContext = new GlobalStore(db, settingsStore);
+const globalContext = new GlobalStore(
+  db,
+  settingsStore,
+  await getDockerInstance(),
+);
 
 // start statistics
-void stats.start();
+// void stats.start();
+void settingsStore.waitForSetup().then(async () => {
+  await globalContext.internalServices.networks.waitForNetworks();
+  void globalContext.internalServices.netdata.serviceManager.init();
+});
 
 // initialize the next app
 const app = next({

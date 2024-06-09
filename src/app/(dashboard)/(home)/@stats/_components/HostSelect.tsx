@@ -32,9 +32,10 @@ export function HostSelect({
           <SelectItem
             key={node.id}
             value={node.id}
-            disabled={!node.statsAvailable}
+            disabled={node.stats.nodeExporter === undefined}
           >
             {node.name} {node.isMainNode ? "*" : ""}
+            {/* {!node.statsAvailable && " (No stats available)"} */}
           </SelectItem>
         ))}
       </SelectContent>

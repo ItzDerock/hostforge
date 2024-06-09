@@ -11,6 +11,7 @@ import { env } from "~/env";
 
 /**
  * @brief This class is responsible for managing the netdata services.
+ * @todo Maybe we should switch to prometheus + node-exporter?
  */
 export class NetdataServiceManager {
   private static SERVICE_VERSION = 1;
@@ -27,7 +28,7 @@ export class NetdataServiceManager {
     TaskTemplate: {
       ContainerSpec: {
         Image: NetdataServiceManager.NETDATA_IMAGE,
-        Hostname: "netdata-{{.Node.ID}}",
+        Hostname: "netdata-{{.Node.ID}}" as string,
         CapabilityAdd: ["SYS_PTRACE", "SYS_ADMIN"],
         Privileges: {
           // @ts-expect-error - types are out of date https://docs.docker.com/engine/api/v1.45/#tag/Service/operation/ServiceCreate
@@ -110,7 +111,14 @@ export class NetdataServiceManager {
     > = structuredClone(NetdataServiceManager.BASE_NETDATA_SPEC);
 
     // add an alias to the network
-    centralService.TaskTemplate.Networks[0].Aliases.push("netdata_central");
+    // BUG: this does not work...
+    centralService.TaskTemplate.Networks[0].Aliases.push(
+      "netdata_central",
+      "hostforge_internal_netdata_central",
+    );
+
+    centralService.TaskTemplate.ContainerSpec.Hostname =
+      "hostforge_internal_netdata_central";
 
     // add the constraint and disable global mode
     centralService.TaskTemplate.Placement.Constraints.push(
@@ -285,7 +293,7 @@ export class NetdataServiceManager {
           stripIndent`
             [stream]
               enabled = yes
-              destination = netdata_central:19999
+              destination = hostforge_internal_netdata_central:19999
               api key = ${token}
             `,
         ).toString("base64"),

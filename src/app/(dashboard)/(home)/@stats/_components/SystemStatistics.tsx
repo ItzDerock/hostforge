@@ -26,30 +26,6 @@ export function SystemStatistics(props: {
     },
   });
 
-  const keys = useMemo(() => {
-    const host = hostId ?? mainNode?.id ?? props.hosts[0]!.id;
-    //       contexts: "system.cpu,system.ram,system.io,system.net",
-
-    const cpuKey = findDataIndex(props.historicalData.labels, "user", host);
-    const memoryKey = findDataIndex(props.historicalData.labels, "used", host);
-    const diskKey = findDataIndex(props.historicalData.labels, "io", host);
-
-    const networkKey = findDataIndex(
-      props.historicalData.labels,
-      "system.net",
-      host,
-    );
-
-    return {
-      cpuKey,
-      memoryKey,
-      diskKey,
-      networkKey,
-    };
-  }, [props.historicalData, hostId, props.hosts, mainNode]);
-
-  console.log(keys, props.historicalData.labels);
-
   return (
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
       {/* <motion.div layoutId="cpuUsage" onClick={() => setSelected("cpuUsage")}> */}
@@ -59,8 +35,8 @@ export function SystemStatistics(props: {
         unit="%"
         subvalue={`of ${data.cpu.cores} CPUs`}
         icon={Cpu}
-        data={props.historicalData.series}
-        dataKey={keys.cpuKey}
+        data={props.historicalData.cpu}
+        dataKey="value"
       />
       {/* </motion.div> */}
 
@@ -72,8 +48,8 @@ export function SystemStatistics(props: {
           2,
         )} GB`}
         icon={MemoryStick}
-        data={props.historicalData.series}
-        dataKey={keys.memoryKey}
+        data={props.historicalData.usedMemory}
+        dataKey="value"
       />
 
       <StatCard
@@ -84,8 +60,8 @@ export function SystemStatistics(props: {
           2,
         )} / ${data.storage.total.toFixed(2)} GB`}
         icon={HardDrive}
-        data={props.historicalData.series}
-        dataKey={keys.diskKey}
+        data={props.historicalData.usedDisk}
+        dataKey="value"
       />
 
       <StatCard
@@ -100,24 +76,9 @@ export function SystemStatistics(props: {
         secondarySubvalue="RX / Mbps"
         // misc
         icon={Router}
-        data={props.historicalData.series}
-        dataKey={keys.networkKey}
+        data={props.historicalData.networkTransmit}
+        dataKey="value"
       />
     </div>
   );
-}
-
-function findDataIndex(
-  labels: (string | { host: string; type: string })[],
-  type: string,
-  host: string,
-) {
-  return labels.findIndex((label) => {
-    if (typeof label === "object") {
-      return (
-        label.type === type && (label.host === host || label.host === "unknown")
-      );
-    }
-    return false;
-  });
 }

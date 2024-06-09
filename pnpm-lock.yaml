@@ -170,6 +170,9 @@ dependencies:
   pretty-bytes:
     specifier: ^6.1.1
     version: 6.1.1
+  prometheus-query:
+    specifier: ^3.4.0
+    version: 3.4.0
   react:
     specifier: 18.2.0
     version: 18.2.0
@@ -2091,7 +2094,7 @@ packages:
       md5: 2.3.0
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      styled-components: 5.3.11(@babel/core@7.24.7)(react-dom@18.2.0)(react-is@16.13.1)(react@18.2.0)
+      styled-components: 5.3.11(@babel/core@7.24.7)(react-dom@18.2.0)(react-is@18.3.1)(react@18.2.0)
       throttle-debounce: 5.0.0
       uuid: 9.0.1
     transitivePeerDependencies:
@@ -2128,7 +2131,7 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
       react-portal: 4.2.2(react-dom@18.2.0)(react@18.2.0)
       react-select: 5.8.0(@types/react@18.2.46)(react-dom@18.2.0)(react@18.2.0)
-      styled-components: 5.3.11(@babel/core@7.24.7)(react-dom@18.2.0)(react-is@16.13.1)(react@18.2.0)
+      styled-components: 5.3.11(@babel/core@7.24.7)(react-dom@18.2.0)(react-is@18.3.1)(react@18.2.0)
       styled-system: 5.1.5
       throttle-debounce: 5.0.0
       use-context-selector: 1.4.4(react-dom@18.2.0)(react@18.2.0)(scheduler@0.23.0)
@@ -4481,7 +4484,7 @@ packages:
       '@babel/plugin-syntax-jsx': 7.24.7(@babel/core@7.24.7)
       lodash: 4.17.21
       picomatch: 2.3.1
-      styled-components: 5.3.11(@babel/core@7.24.7)(react-dom@18.2.0)(react-is@16.13.1)(react@18.2.0)
+      styled-components: 5.3.11(@babel/core@7.24.7)(react-dom@18.2.0)(react-is@18.3.1)(react@18.2.0)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -8036,6 +8039,14 @@ packages:
       react-is: 18.3.1
     dev: false
 
+  /prometheus-query@3.4.0:
+    resolution: {integrity: sha512-PGNwYVjXxenfj2PR4FKEUv5O4XO8ciHT92GX83J5ZJm5ki3YzLLiv+TfbmQSUxvHcXofLg9PYH6CBCSplcvr9g==}
+    dependencies:
+      axios: 1.7.2
+    transitivePeerDependencies:
+      - debug
+    dev: false
+
   /prop-types@15.8.1:
     resolution: {integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==}
     dependencies:
@@ -8856,7 +8867,7 @@ packages:
     resolution: {integrity: sha512-Ca5ib8HrFn+f+0n4N4ScTIA9iTOQ7MaGS1ylHcoVqW9J7w2w8PzN6g9gKmTYgGEBH8e120+RCmhpje6jC5uGWA==}
     dev: false
 
-  /styled-components@5.3.11(@babel/core@7.24.7)(react-dom@18.2.0)(react-is@16.13.1)(react@18.2.0):
+  /styled-components@5.3.11(@babel/core@7.24.7)(react-dom@18.2.0)(react-is@18.3.1)(react@18.2.0):
     resolution: {integrity: sha512-uuzIIfnVkagcVHv9nE0VPlHPSCmXIUGKfJ42LNjxCCTDTL5sgnJ8Z7GZBq0EnLYGln77tPpEpExt2+qa+cZqSw==}
     engines: {node: '>=10'}
     peerDependencies:
@@ -8874,7 +8885,7 @@ packages:
       hoist-non-react-statics: 3.3.2
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      react-is: 16.13.1
+      react-is: 18.3.1
       shallowequal: 1.1.0
       supports-color: 5.5.0
     transitivePeerDependencies:

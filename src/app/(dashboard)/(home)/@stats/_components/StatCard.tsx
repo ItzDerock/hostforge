@@ -10,8 +10,8 @@ export function StatCard(props: {
   title: string;
 
   icon: React.FC<{ className: string }> | LucideIcon;
-  data: number[];
-  dataKey: number;
+  data: unknown[];
+  dataKey: string;
 
   value: number;
   unit?: string;

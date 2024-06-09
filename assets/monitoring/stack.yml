@@ -1,0 +1,116 @@
+version: "3.8"
+
+configs:
+  hostforge-internal_prometheus-config-1: # increment the number for each new config
+    file: ./prometheus.yml
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    # Required to access the Docker socket
+    # Don't really like doing this, but access to prom is very guarded
+    # so hopefully this can't be exploited.
+    # We can look into maybe using a docker socket proxy in the future.
+    user: root
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--log.level=error"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+          - node.labels.sh.hostforge.primary == true
+    volumes:
+      - prometheus-data:/prometheus
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+    configs:
+      - source: hostforge-internal_prometheus-config-1
+        target: /etc/prometheus/prometheus.yml
+    networks:
+      - hostforge-internal
+    ports:
+      - target: 9090
+        published: 9090
+        protocol: tcp
+        mode: host
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    command: -logtostderr -docker_only -port=80
+    deploy:
+      mode: global
+      resources:
+        limits:
+          memory: 128M
+    volumes:
+      - type: bind
+        source: /
+        target: /rootfs
+        read_only: true
+      - type: bind
+        source: /var/run
+        target: /var/run
+        read_only: true
+      - type: bind
+        source: /sys
+        target: /sys
+        read_only: true
+      - type: bind
+        source: /var/lib/docker
+        target: /var/lib/docker
+        read_only: true
+      - type: bind
+        source: /dev/disk
+        target: /dev/disk
+        read_only: true
+    labels:
+      - "prometheus-job=cadvisor"
+    networks:
+      - hostforge-internal
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.1
+    command:
+      - "--path.sysfs=/host/sys"
+      - "--path.procfs=/host/proc"
+      - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
+      - "--no-collector.ipvs"
+      - "--web.listen-address=:80"
+    deploy:
+      mode: global
+      resources:
+        limits:
+          memory: 128M
+    volumes:
+      - type: bind
+        source: /
+        target: /rootfs
+        read_only: true
+      - type: bind
+        source: /proc
+        target: /host/proc
+        read_only: true
+      - type: bind
+        source: /sys
+        target: /host/sys
+        read_only: true
+    labels:
+      - "prometheus-job=node-exporter"
+    networks:
+      - hostforge-internal
+
+volumes:
+  grafana-data:
+  prometheus-data:
+
+networks:
+  hostforge-internal:
+    external: true
+    name: hostforge-internal

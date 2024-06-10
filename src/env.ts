@@ -29,7 +29,7 @@ export const env = createEnv({
       .default("32")
       .transform((str) => parseInt(str)),
 
-    NETDATA_URL: z.string().default("http://netdata_central:19999"),
+    PROMETHEUS_URL: z.string().default("http://prometheus:9090"),
   },
 
   /**
@@ -54,7 +54,7 @@ export const env = createEnv({
     NEXT_PUBLIC_BUILD_COMMIT_SHA: process.env.NEXT_PUBLIC_BUILD_COMMIT_SHA,
     STORAGE_PATH: process.env.STORAGE_PATH,
     REDEPLOY_SECRET_BYTES: process.env.REDEPLOY_SECRET_BYTES,
-    NETDATA_URL: process.env.NETDATA_URL,
+    PROMETHEUS_URL: process.env.PROMETHEUS_URL,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

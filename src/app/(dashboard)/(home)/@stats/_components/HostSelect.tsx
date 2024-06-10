@@ -34,8 +34,7 @@ export function HostSelect({
             value={node.id}
             disabled={node.stats.nodeExporter === undefined}
           >
-            {node.name} {node.isMainNode ? "*" : ""}
-            {/* {!node.statsAvailable && " (No stats available)"} */}
+            {node.name} {node.isMainNode ? "(Primary)" : ""}
           </SelectItem>
         ))}
       </SelectContent>

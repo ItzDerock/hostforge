@@ -5,7 +5,6 @@ import { Cpu, HardDrive, MemoryStick, Router } from "lucide-react";
 import { api } from "~/trpc/react";
 import { type RouterOutputs } from "~/trpc/shared";
 import { StatCard } from "./StatCard";
-import { StringParam, useQueryParam } from "use-query-params";
 
 type StatData = RouterOutputs["system"]["currentStats"];
 type HistoricalStatData = RouterOutputs["system"]["history"];
@@ -16,8 +15,6 @@ export function SystemStatistics(props: {
   historicalData: HistoricalStatData;
   hosts: Hosts;
 }) {
-  const mainNode = props.hosts.find((node) => node.isMainNode);
-  const [hostId] = useQueryParam("host", StringParam);
   const [data, setData] = useState<StatData>(props.initialData);
 
   api.system.liveStats.useSubscription(undefined, {

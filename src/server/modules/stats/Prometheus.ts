@@ -1,36 +1,9 @@
 import { PrometheusDriver, type Target } from "prometheus-query";
 import type { GlobalStore } from "~/server/managers/GlobalContext";
 import { PrometheusStack } from "./PrometheusStack";
+import { CURRENT_STATS_QUERIES, HISTORY_QUERIES } from "./PromQueries";
 
 export class Prometheus {
-  static readonly QUERIES = [
-    [
-      "cpu",
-      `(((count(count(node_cpu_seconds_total{docker_node_id="$node"}) by (cpu))) - avg(sum by (mode)(rate(node_cpu_seconds_total{mode='idle',docker_node_id="$node"}[5m])))) * 100) / count(count(node_cpu_seconds_total{docker_node_id="$node"}) by (cpu))`,
-    ],
-    [
-      "usedMemory",
-      `node_memory_MemTotal_bytes{docker_node_id="$node"} - node_memory_MemFree_bytes{docker_node_id="$node"}`,
-    ],
-    ["totalMemory", `node_memory_MemTotal_bytes{docker_node_id="$node"}`],
-    [
-      "usedDisk",
-      `node_filesystem_size_bytes{device!~'rootfs',docker_node_id="$node"} - node_filesystem_avail_bytes{device!~'rootfs',docker_node_id="$node"}`,
-    ],
-    [
-      "totalDisk",
-      `node_filesystem_size_bytes{device!~'rootfs',docker_node_id="$node"}`,
-    ],
-    [
-      "networkReceive",
-      `sum by (instance)(irate(node_network_receive_bytes_total{docker_node_id="$node"}[5m]))`,
-    ],
-    [
-      "networkTransmit",
-      `sum by (instance)(irate(node_network_transmit_bytes_total{docker_node_id="$node"}[5m]))`,
-    ],
-  ] as const;
-
   private queryClient: PrometheusDriver;
   public readonly stack: PrometheusStack;
 
@@ -54,58 +27,18 @@ export class Prometheus {
     instance: string;
   }) {
     if (!start) start = Date.now() - 1000 * 60 * 60 * 24; // 24 hours
-
-    return (
-      await Promise.all(
-        Prometheus.QUERIES.map(async ([name, q]) => {
-          // replace $node with instance
-          const query = q.replace(/\$node/g, instance);
-
-          return {
-            name,
-            data: await this.queryClient
-              .rangeQuery(query, start!, end ?? Date.now(), "1m")
-              .then((res) => res.result as [{ values: [number, string][] }]),
-          };
-        }),
-      )
-    ).reduce(
-      (acc, { name, data }) => ({
-        ...acc,
-        [name]: data[0].values,
-      }),
-      {} as Record<
-        (typeof Prometheus.QUERIES)[number][0],
-        { time: string; data: number }[]
-      >,
+    return this.runRangeQueries(
+      HISTORY_QUERIES,
+      { node: instance },
+      start,
+      end,
     );
   }
 
   public async getCurrentSystemStats({ instance }: { instance: string }) {
-    return (
-      await Promise.all(
-        Prometheus.QUERIES.map(async ([name, q]) => {
-          // replace $node with instance
-          const query = q.replace(/\$node/g, instance);
-
-          return {
-            name,
-            data: await this.queryClient
-              .instantQuery(query)
-              .then((res) => res.result as [{ values: [number, string][] }]),
-          };
-        }),
-      )
-    ).reduce(
-      (acc, { name, data }) => ({
-        ...acc,
-        [name]: data[0].values,
-      }),
-      {} as Record<
-        (typeof Prometheus.QUERIES)[number][0],
-        { time: string; data: number }[]
-      >,
-    );
+    return this.runInstantQueries(CURRENT_STATS_QUERIES, {
+      node: instance,
+    });
   }
 
   public async getNodes() {
@@ -131,6 +64,74 @@ export class Prometheus {
       });
     });
   }
+
+  private async runInstantQueries<
+    T extends readonly (readonly [string, string])[],
+  >(queries: T, replacements: Record<string, string>) {
+    return (
+      await Promise.all(
+        queries.map(async ([name, q]) => {
+          // replace $node with instance
+          const query = Object.entries(replacements).reduce(
+            (acc, [key, value]) =>
+              acc.replace(new RegExp(`\\$${key}`, "g"), value),
+            q,
+          );
+          const data = await this.queryClient.instantQuery(query);
+
+          return {
+            name,
+            data: data.result[0] as InstantResult,
+          };
+        }),
+      )
+    ).reduce(
+      (acc, { name, data }) => ({
+        ...acc,
+        [name]: data.value,
+      }),
+      {} as Record<T[number][0], { time: string; value: number }>,
+    );
+  }
+
+  private async runRangeQueries<
+    T extends readonly (readonly [string, string])[],
+  >(
+    queries: T,
+    replacements: Record<string, string>,
+    start: number,
+    end?: number,
+  ) {
+    return (
+      await Promise.all(
+        queries.map(async ([name, q]) => {
+          // replace $node with instance
+          const query = Object.entries(replacements).reduce(
+            (acc, [key, value]) =>
+              acc.replace(new RegExp(`\\$${key}`, "g"), value),
+            q,
+          );
+          const data = await this.queryClient.rangeQuery(
+            query,
+            start,
+            end,
+            "1m",
+          );
+
+          return {
+            name,
+            data: data.result as { time: string; data: number }[],
+          };
+        }),
+      )
+    ).reduce(
+      (acc, { name, data }) => ({
+        ...acc,
+        [name]: data,
+      }),
+      {} as Record<T[number][0], { time: string; data: number }[]>,
+    );
+  }
 }
 
 export interface Metrics {
@@ -142,4 +143,15 @@ export interface Metrics {
   };
 
   values: [number, string][];
+}
+
+interface InstantResult {
+  metric: {
+    labels: Record<string, string>;
+  };
+
+  value: {
+    time: string;
+    value: number;
+  };
 }

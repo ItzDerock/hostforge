@@ -30,7 +30,7 @@ import { type RouterOutputs } from "~/trpc/shared";
 
 const formValidator = z.object({
   replicas: z.coerce.number().int().min(0),
-  maxReplicasPerNode: z.number().int().positive().nullable(),
+  maxReplicasPerNode: z.coerce.number().int().positive().nullable(),
   deployMode: z.enum(["global", "replicated"]),
   zeroDowntime: z.boolean(),
   entrypoint: z.string().optional(),

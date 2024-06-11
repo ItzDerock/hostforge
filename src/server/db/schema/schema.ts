@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { sql } from "drizzle-orm";
 import {
   blob,
@@ -37,6 +38,9 @@ export const instanceSettings = sqliteTable("instance_settings", {
   letsencryptEmail: text("letsencrypt_email"),
   sessionSecret: text("session_secret").notNull(),
   netdataToken: text("netdata_token").default(uuidv7).notNull(),
+  registrySecret: text("registry_secret")
+    .$defaultFn(() => crypto.randomBytes(32).toString("hex"))
+    .notNull(),
 });
 
 /**

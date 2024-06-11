@@ -89,10 +89,6 @@ export const getServiceLogsSubscription = authenticatedProcedure
       "Unable to retrieve service logs. Maybe the service is not running",
     );
 
-    logs.on("data", (data: Buffer) => {
-      console.log(data.toString());
-    });
-
     const final = logs.pipe(Docker.demuxStream());
 
     function cleanup() {

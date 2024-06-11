@@ -208,7 +208,7 @@ export default class ServiceManager {
         }),
       );
 
-      const results = await Promise.all([
+      await Promise.all([
         // update the service's latest gen to point to the cloned generation
         // and set the deployed gen to the original
         trx
@@ -227,11 +227,6 @@ export default class ServiceManager {
           })
           .where(eq(serviceGeneration.id, this.serviceData.latestGenerationId)),
       ]);
-
-      console.log(results);
-      console.log(
-        `Cloned generation ${clonedLatestGeneration.id} from ${originalLatestGenerationId}`,
-      );
     });
 
     await this.refetch();

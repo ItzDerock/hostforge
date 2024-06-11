@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { Cpu, HardDrive, MemoryStick, Router } from "lucide-react";
 import { api } from "~/trpc/react";
 import { type RouterOutputs } from "~/trpc/shared";
 import { StatCard } from "./StatCard";
+import prettyBytes from "pretty-bytes";
 
 type StatData = RouterOutputs["system"]["currentStats"];
 type HistoricalStatData = RouterOutputs["system"]["history"];
@@ -23,19 +23,38 @@ export function SystemStatistics(props: {
     {
       refetchInterval: 5_000,
       initialData: props.initialData,
+      enabled: true,
     },
   );
 
-  console.log(data);
+  const memoryUsed = prettyBytes(data.usedMemory.value, {
+    locale: true,
+    binary: true,
+  });
+
+  const memoryTotal = prettyBytes(data.totalMemory.value, {
+    locale: true,
+    binary: true,
+  });
+
+  const diskUsed = prettyBytes(data.usedDisk.value, {
+    locale: true,
+    binary: true,
+  });
+
+  const diskTotal = prettyBytes(data.totalDisk.value, {
+    locale: true,
+    binary: true,
+  });
 
   return (
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
       {/* <motion.div layoutId="cpuUsage" onClick={() => setSelected("cpuUsage")}> */}
       <StatCard
         title="CPU Usage"
-        value={data.cpu}
+        value={data.cpu.value}
         unit="%"
-        subvalue={`of ${data.cpu.cores} CPUs`}
+        subvalue={`of ${data.cpuCores.value} CPUs`}
         icon={Cpu}
         data={props.historicalData.cpu}
         dataKey="value"
@@ -44,11 +63,9 @@ export function SystemStatistics(props: {
 
       <StatCard
         title="Memory Usage"
-        value={data.memory.used / data.memory.total}
+        value={data.usedMemory.value / data.totalMemory.value}
         unit="%"
-        subvalue={`${data.memory.used.toFixed(2)} / ${data.memory.total.toFixed(
-          2,
-        )} GB`}
+        subvalue={`${memoryUsed} / ${memoryTotal}`}
         icon={MemoryStick}
         data={props.historicalData.usedMemory}
         dataKey="value"
@@ -56,11 +73,9 @@ export function SystemStatistics(props: {
 
       <StatCard
         title="Disk Usage"
-        value={data.storage.used / data.storage.total}
+        value={data.usedDisk.value / data.totalDisk.value}
         unit="%"
-        subvalue={`${data.storage.used.toFixed(
-          2,
-        )} / ${data.storage.total.toFixed(2)} GB`}
+        subvalue={`${diskUsed} / ${diskTotal}`}
         icon={HardDrive}
         data={props.historicalData.usedDisk}
         dataKey="value"
@@ -69,11 +84,11 @@ export function SystemStatistics(props: {
       <StatCard
         title="Network Usage"
         // TX
-        value={data.network.tx}
+        value={data.networkTransmit.value}
         // unit="Mbps"
         subvalue="Mbps / TX"
         // RX
-        secondaryValue={data.network.rx}
+        secondaryValue={data.networkReceive.value}
         // secondaryUnit="Mbps"
         secondarySubvalue="RX / Mbps"
         // misc

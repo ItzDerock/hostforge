@@ -1,5 +1,3 @@
-"use client";
-
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 // import { yaml } from "@nicktomlin/codemirror-lang-yaml-lite";
 import { langs } from "@uiw/codemirror-extensions-langs";

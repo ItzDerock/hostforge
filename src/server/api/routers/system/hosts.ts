@@ -1,6 +1,7 @@
 import { isDefined } from "~/utils/utils";
 import { authenticatedProcedure } from "../../trpc";
 import type { paths as DockerAPITypes } from "~/server/docker/types";
+import logger from "~/server/utils/logger";
 
 export const getHostsProcedure = authenticatedProcedure.query(
   async ({ ctx }) => {
@@ -12,7 +13,10 @@ export const getHostsProcedure = authenticatedProcedure.query(
       ctx.docker.info() as Promise<
         DockerAPITypes["/info"]["get"]["responses"]["200"]["schema"]
       >,
-      ctx.globalStore.internalServices.prometheus.getNodes(),
+      ctx.globalStore.internalServices.prometheus.getNodes().catch((err) => {
+        logger.error("Failed to get prometheus nodes", err);
+        return [];
+      }),
     ]);
 
     // combine the nodes into a single array

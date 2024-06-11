@@ -3,6 +3,8 @@ import type { GlobalStore } from "~/server/managers/GlobalContext";
 import logger from "~/server/utils/logger";
 import type { paths as DockerAPITypes } from "~/server/docker/types";
 import { expectOrThrow } from "~/utils/utils";
+import { hash } from "@node-rs/bcrypt";
+import { ignore409 } from "~/server/docker/utils";
 
 export class PrometheusStack {
   static readonly STACK_FOLDER = join(process.cwd(), "assets/services");
@@ -13,7 +15,7 @@ export class PrometheusStack {
   async init() {
     this.log.debug("Deploying internal service stack...");
 
-    await this.labelPrimary();
+    await Promise.all([this.labelPrimary(), this.createRegistryConfig()]);
 
     const output = await this.store.docker
       .cli(
@@ -78,5 +80,19 @@ export class PrometheusStack {
         nodeId,
       ]);
     }
+  }
+
+  private async createRegistryConfig() {
+    // generate an htpasswd file for the registry
+    // htpasswd -cB htpasswd hostforge
+    const bcrypt = await hash(this.store.settings.getSettings().registrySecret);
+    const Data = Buffer.from(`hostforge:${bcrypt}\n`).toString("base64");
+
+    await this.store.docker
+      .createConfig({
+        Name: "hostforge-internal_registry-auth-1",
+        Data, // RFC 4648
+      })
+      .catch(ignore409);
   }
 }

@@ -21,7 +21,7 @@ export default async function StatCards({
   }
 
   const [initialStats, historicalData] = await Promise.all([
-    api.system.currentStats.query(),
+    api.system.currentStats.query({ instance: selectedHost! }),
     api.system.history.query({ instance: selectedHost! }),
   ]);
 
@@ -54,6 +54,7 @@ export default async function StatCards({
         historicalData={historicalData}
         initialData={initialStats}
         hosts={hosts}
+        selectedHost={selectedHost!}
       />
     </div>
   );

@@ -1,5 +1,4 @@
 import { observable } from "@trpc/server/observable";
-import { stats, type BasicServerStats } from "~/server/modules/stats";
 import { authenticatedProcedure, createTRPCRouter } from "../../trpc";
 import logger from "~/server/utils/logger";
 import { getHostsProcedure } from "./hosts";
@@ -8,20 +7,17 @@ import { z } from "zod";
 export const systemRouter = createTRPCRouter({
   hosts: getHostsProcedure,
 
-  currentStats: authenticatedProcedure.query(async () => {
-    return stats.getCurrentStats();
-  }),
-
-  liveStats: authenticatedProcedure.subscription(() => {
-    return observable<BasicServerStats>((observer) => {
-      const update = observer.next.bind(observer);
-
-      stats.events.on("onUpdate", update);
-      return () => {
-        stats.events.off("onUpdate", update);
-      };
-    });
-  }),
+  currentStats: authenticatedProcedure
+    .input(
+      z.strictObject({
+        instance: z.string()?.regex(/^[a-zA-Z0-9-]+$/),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return ctx.globalStore.internalServices.prometheus.getCurrentSystemStats(
+        input,
+      );
+    }),
 
   history: authenticatedProcedure
     .input(

@@ -14,21 +14,26 @@ export function SystemStatistics(props: {
   initialData: StatData;
   historicalData: HistoricalStatData;
   hosts: Hosts;
+  selectedHost: string;
 }) {
-  const [data, setData] = useState<StatData>(props.initialData);
-
-  api.system.liveStats.useSubscription(undefined, {
-    onData: (data) => {
-      setData(data);
+  const { data } = api.system.currentStats.useQuery(
+    {
+      instance: props.selectedHost,
     },
-  });
+    {
+      refetchInterval: 5_000,
+      initialData: props.initialData,
+    },
+  );
+
+  console.log(data);
 
   return (
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
       {/* <motion.div layoutId="cpuUsage" onClick={() => setSelected("cpuUsage")}> */}
       <StatCard
         title="CPU Usage"
-        value={data.cpu.usage}
+        value={data.cpu}
         unit="%"
         subvalue={`of ${data.cpu.cores} CPUs`}
         icon={Cpu}

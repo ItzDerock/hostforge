@@ -1,5 +1,6 @@
 import { PrometheusDriver, type Target } from "prometheus-query";
 import type { GlobalStore } from "~/server/managers/GlobalContext";
+import { PrometheusStack } from "./PrometheusStack";
 
 export class Prometheus {
   static readonly QUERIES = [
@@ -31,11 +32,13 @@ export class Prometheus {
   ] as const;
 
   private queryClient: PrometheusDriver;
+  public readonly stack: PrometheusStack;
 
   constructor(
     private readonly store: GlobalStore,
     readonly prometheusHost: string,
   ) {
+    this.stack = new PrometheusStack(store);
     this.queryClient = new PrometheusDriver({
       endpoint: this.prometheusHost,
     });
@@ -62,6 +65,33 @@ export class Prometheus {
             name,
             data: await this.queryClient
               .rangeQuery(query, start!, end ?? Date.now(), "1m")
+              .then((res) => res.result as [{ values: [number, string][] }]),
+          };
+        }),
+      )
+    ).reduce(
+      (acc, { name, data }) => ({
+        ...acc,
+        [name]: data[0].values,
+      }),
+      {} as Record<
+        (typeof Prometheus.QUERIES)[number][0],
+        { time: string; data: number }[]
+      >,
+    );
+  }
+
+  public async getCurrentSystemStats({ instance }: { instance: string }) {
+    return (
+      await Promise.all(
+        Prometheus.QUERIES.map(async ([name, q]) => {
+          // replace $node with instance
+          const query = q.replace(/\$node/g, instance);
+
+          return {
+            name,
+            data: await this.queryClient
+              .instantQuery(query)
               .then((res) => res.result as [{ values: [number, string][] }]),
           };
         }),

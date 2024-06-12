@@ -129,6 +129,7 @@ services:
         target: /auth/htpasswd
     networks:
       - hostforge-internal
+      - hostforge-registry
     environment:
       REGISTRY_AUTH: htpasswd
       REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
@@ -151,3 +152,6 @@ networks:
   hostforge-internal:
     external: true
     name: hostforge-internal
+  hostforge-registry:
+    external: true
+    name: hostforge-registry

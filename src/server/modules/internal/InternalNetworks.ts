@@ -1,3 +1,4 @@
+import type Dockerode from "dockerode";
 import { DockerNetworks } from "~/server/docker";
 import type { Docker } from "~/server/docker/docker";
 import type { GlobalStore } from "~/server/managers/GlobalContext";
@@ -7,7 +8,7 @@ import logger from "~/server/utils/logger";
  * @brief Responsible for creating and managing the internal networks.
  */
 export class NetworkManager {
-  private log = logger.child({ module: "mgr/internal-network" });
+  private log = logger.child({ module: "internal-network" });
   private promise: Promise<void>;
 
   constructor(
@@ -35,40 +36,46 @@ export class NetworkManager {
    * @brief Creates the internal networks.
    */
   public async createInternalNetworks() {
-    // create the networks
-    let created = await this.docker
-      .createNetwork({
+    const NETWORKS = [
+      {
         Name: DockerNetworks.Public,
         CheckDuplicate: true,
         Driver: "overlay",
         Attachable: true,
-      })
-      .then(() => true)
-      .catch((err: Error) => {
-        if ("statusCode" in err && err.statusCode == 409) {
-          // network already exists, ignore
-          return false;
-        }
-
-        throw err;
-      });
-
-    created ||= await this.docker
-      .createNetwork({
+      },
+      {
         Name: DockerNetworks.Internal,
         CheckDuplicate: true,
         Driver: "overlay",
         Attachable: true,
-      })
-      .then(() => true)
-      .catch((err: Error) => {
-        if ("statusCode" in err && err.statusCode == 409) {
-          // network already exists, ignore
-          return false;
-        }
+      },
+      {
+        Name: DockerNetworks.Registry,
+        CheckDuplicate: true,
+        Driver: "overlay",
+        Attachable: true,
+      },
+    ] satisfies Dockerode.NetworkCreateOptions[];
 
-        throw err;
-      });
+    let created = false;
+
+    // create the networks
+    await Promise.all(
+      NETWORKS.map(
+        async (network) =>
+          (created ||= await this.docker
+            .createNetwork(network)
+            .then(() => true)
+            .catch((err: Error) => {
+              if ("statusCode" in err && err.statusCode == 409) {
+                // network already exists, ignore
+                return false;
+              }
+
+              throw err;
+            })),
+      ),
+    );
 
     return created;
   }

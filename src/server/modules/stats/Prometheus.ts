@@ -114,7 +114,7 @@ export class Prometheus {
           const data = await this.queryClient.rangeQuery(
             query,
             start,
-            end,
+            end ?? Date.now(),
             "1m",
           );
 

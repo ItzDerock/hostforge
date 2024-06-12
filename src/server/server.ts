@@ -53,7 +53,6 @@ const globalContext = new GlobalStore(
 void settingsStore.waitForSetup().then(async () => {
   await globalContext.internalServices.networks.waitForNetworks();
   await new Promise((r) => setTimeout(r, 500)); // takes a bit for the networks to be ready
-  // void globalContext.internalServices.netdata.serviceManager.init();
   await globalContext.internalServices.traefik.init();
   await globalContext.internalServices.prometheus.stack.init();
 });

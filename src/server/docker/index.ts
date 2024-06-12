@@ -9,8 +9,14 @@ export async function getDockerInstance() {
  * Constants used throughout this application.
  */
 export enum DockerNetworks {
+  // Public network that traefik is attached to
   Public = "hostforge-public",
+
+  // Internal network for hostforge services
   Internal = "hostforge-internal",
+
+  // Builders are attached to this so they can push images
+  Registry = "hostforge-registry",
 }
 
 /**

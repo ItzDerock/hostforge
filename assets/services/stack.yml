@@ -130,6 +130,8 @@ services:
     networks:
       - hostforge-internal
       - hostforge-registry
+    expose:
+      - 5000
     environment:
       REGISTRY_AUTH: htpasswd
       REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd

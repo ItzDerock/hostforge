@@ -24,4 +24,8 @@ export enum DockerNetworks {
  */
 export enum DockerInternalServices {
   Traefik = "hostforge-traefik",
+
+  // Based off of stack.yml
+  Registry = "hostforge_internal_registry",
+  Prometheus = "hostforge_internal_prometheus",
 }

@@ -7,6 +7,9 @@ import { LogLevel } from "../build/utils/BuilderLogger";
 import { promisify } from "util";
 import type { DialOptions } from "docker-modem";
 
+import type { paths as DockerAPITypes } from "./types";
+export type { paths as DockerAPITypes } from "./types";
+
 export class Docker extends Dockerode {
   static buildContainerPrefixFromName(
     projectName: string,
@@ -136,5 +139,14 @@ export class Docker extends Dockerode {
         resolve(output);
       });
     });
+  }
+
+  public async getIpOrHostname(serviceName: string) {
+    const gwbridge = (await this.getNetwork(
+      "docker_gwbridge",
+    ).inspect()) as DockerAPITypes["/networks/{id}"]["get"]["responses"]["200"]["schema"];
+    // const container = await this.getContainer(serviceName);
+    // const inspect = await container.inspect();
+    // return inspect.NetworkSettings.IPAddress;
   }
 }

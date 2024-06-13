@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "npm run build:next && npm run build:server",
     "build:next": "next build",
-    "build:server-tsc": "tsc -p tsconfig.server.json && tscpaths -p tsconfig.server.json -s ./src -o ./dist/",
     "build:server": "tsup",
     "clean": "rm -rf .next dist",
     "db:push": "drizzle-kit push",
@@ -13,7 +13,7 @@
     "dev": "tsup --watch --onSuccess \"npm run dev:run\" --clean",
     "dev:run": "node --enable-source-maps dist/server.js",
     "lint": "next lint",
-    "start": "node -r tsconfig",
+    "start": "node dist/index.js",
     "fetch-compose-types": "curl -s https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json | json2ts > src/server/docker/compose.d.ts",
     "fetch-docker-types": "openapi-typescript https://docs.docker.com/reference/engine/v1.43.yaml -o ./src/server/docker/types.d.ts",
     "fetch-netdata-types": "openapi-typescript https://raw.githubusercontent.com/netdata/netdata/master/src/web/api/netdata-swagger.json -o ./src/server/modules/stats/netdata-api.d.ts"

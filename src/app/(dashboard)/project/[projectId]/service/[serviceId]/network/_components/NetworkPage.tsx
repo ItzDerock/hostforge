@@ -100,7 +100,9 @@ export function NetworkPage() {
             type="button"
             onClick={() =>
               append({
+                // @ts-expect-error user will fill this
                 externalPort: undefined,
+                // @ts-expect-error user will fill this
                 internalPort: undefined,
                 publishMode: "host",
                 type: "tcp",

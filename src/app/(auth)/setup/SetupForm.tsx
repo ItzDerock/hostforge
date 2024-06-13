@@ -42,6 +42,7 @@ export function SetupForm() {
       username: z.string().min(3),
       password: z.string().min(3),
       letsencryptEmail: z.string().email().optional(),
+      domain: z.string().optional(),
     }),
   );
 
@@ -70,6 +71,7 @@ export function SetupForm() {
                 username: data.username,
                 password: data.password,
                 letsencryptEmail: data.letsencryptEmail ?? null,
+                domain: data.domain ?? null,
               });
             })}
           >
@@ -96,6 +98,13 @@ export function SetupForm() {
               friendlyName="Let's Encrypt Email"
               description="An email address to use for Let's Encrypt SSL notifications."
               type="email"
+            />
+
+            <SimpleFormField
+              control={form.control}
+              name="domain"
+              friendlyName="Domain"
+              description="The domain to access the Hostforge instance."
             />
           </form>
         </Form>

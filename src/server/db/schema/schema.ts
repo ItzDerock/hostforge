@@ -37,10 +37,10 @@ export const instanceSettings = sqliteTable("instance_settings", {
   id: integer("id").primaryKey(),
   letsencryptEmail: text("letsencrypt_email"),
   sessionSecret: text("session_secret").notNull(),
-  netdataToken: text("netdata_token").default(uuidv7).notNull(),
   registrySecret: text("registry_secret")
     .$defaultFn(() => crypto.randomBytes(32).toString("hex"))
     .notNull(),
+  domain: text("domain"),
 });
 
 /**

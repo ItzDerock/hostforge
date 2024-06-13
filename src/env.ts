@@ -1,5 +1,6 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
+import { DockerInternalServices } from "./server/docker";
 
 export const env = createEnv({
   /**
@@ -15,7 +16,10 @@ export const env = createEnv({
       .default("development"),
 
     SQLITE_UUIDV7_EXT_PATH: z.string().optional(),
-    HOSTNAME: z.string().default("localhost"),
+    HOSTNAME: z
+      .string()
+      .default(process.env.NODE_ENV === "production" ? "0.0.0.0" : "localhost"),
+
     PORT: z
       .string()
       .default("3000")
@@ -29,7 +33,9 @@ export const env = createEnv({
       .default("32")
       .transform((str) => parseInt(str)),
 
-    PROMETHEUS_URL: z.string().default("http://prometheus:9090"),
+    PROMETHEUS_URL: z
+      .string()
+      .default(`http://${DockerInternalServices.Prometheus}:9090`),
   },
 
   /**

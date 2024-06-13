@@ -15,7 +15,8 @@ export class PrometheusStack {
   async init() {
     this.log.debug("Deploying internal service stack...");
 
-    await Promise.all([this.labelPrimary(), this.createRegistryConfig()]);
+    // await Promise.all([this.labelPrimary(), this.createRegistryConfig()]);
+    await this.labelPrimary();
 
     const output = await this.store.docker
       .cli(

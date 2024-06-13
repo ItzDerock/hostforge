@@ -48,14 +48,14 @@ const globalContext = new GlobalStore(
   await getDockerInstance(),
 );
 
-// start statistics
-// void stats.start();
-void settingsStore.waitForSetup().then(async () => {
-  await globalContext.internalServices.networks.waitForNetworks();
-  await new Promise((r) => setTimeout(r, 500)); // takes a bit for the networks to be ready
-  await globalContext.internalServices.traefik.init();
-  await globalContext.internalServices.prometheus.stack.init();
-});
+// start internal services
+await globalContext.internalServices.networks.waitForNetworks();
+await globalContext.internalServices.prometheus.stack.init();
+
+if (settingsStore.isInstanceSetup()) {
+  // update traefik
+  void globalContext.internalServices.traefik.init();
+}
 
 // initialize the next app
 const app = next({

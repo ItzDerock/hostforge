@@ -14,7 +14,7 @@ export class TraefikManager {
   /**
    * The expected version of Traefik to be running.
    */
-  static readonly EXPECTED_TRAEFIK_VERSION = "2.10";
+  static readonly EXPECTED_TRAEFIK_VERSION = "v3";
 
   /**
    * Internal traefik configuration version.

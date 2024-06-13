@@ -48,6 +48,9 @@ export const setupRouter = createTRPCRouter({
       // try to set the domain
       let successfullyUpdated = false;
       try {
+        // update traefik
+        await ctx.globalStore.internalServices.traefik.init();
+
         await ctx.docker.cli([
           "service",
           "update",

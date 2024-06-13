@@ -27,9 +27,6 @@ jobs:
       # Checkout the repo
       - uses: actions/checkout@v3
         name: Check out code
-        with:
-          submodules: recursive
-          token: ${{ secrets.PAT }}
 
       # Setup Docker Buildx
       - name: Set up Docker Buildx

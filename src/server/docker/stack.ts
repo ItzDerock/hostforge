@@ -23,6 +23,7 @@ import {
 } from "./compose";
 import { parse } from "dotenv";
 import { emptyStringIs } from "~/utils/utils";
+import { DockerNetworks } from ".";
 
 export type FullServiceGeneration = typeof serviceGeneration.$inferSelect & {
   service: typeof service.$inferSelect;
@@ -170,24 +171,38 @@ export async function buildDockerStackFile(
 
     if (service.domains.length > 0) {
       const labels = (swarmServices[service.service.name]!.deploy!.labels ??=
-        []);
+        []) as string[];
 
       for (const domain of service.domains) {
+        const routerName = `traefik.http.routers.${domain.id}`;
+        const serviceName = `traefik.http.services.${domain.id}`;
+
         labels.push(
-          `traefik.http.routers.${service.service.name}.rule=Host(\`${domain.domain}\`)`,
+          `traefik.constraint-label=traefik-public`,
+          `traefik.enable=true`,
+          `traefik.docker.network=${DockerNetworks.Public}`,
+
+          `${routerName}-http.rule=Host(\`${domain.domain}\`)`,
+          `${routerName}-http.entryPoints=http`,
         );
 
         if (domain.https) {
-          labels.push(`traefik.http.routers.${service.service.name}.tls=true`);
           labels.push(
-            `traefik.http.routers.${service.service.name}.tls.certresolver=letsencrypt`,
+            `${routerName}-https.rule=Host(\`${domain.domain}\`)`,
+            `${routerName}-https.entryPoints=https`,
+            `${routerName}-https.tls=true`,
+            `${serviceName}-https.api.loadbalancer.server.port=${domain.internalPort}`,
+
+            // auto redirect http to https
+            `${routerName}-http.middlewares=https-redirect.redirectscheme.scheme=https`,
+            `${routerName}-http.middlewares=https-redirect.redirectscheme.permanent=true`,
+          );
+        } else {
+          labels.push(
+            `${serviceName}-http.api.loadbalancer.server.port=${domain.internalPort}`,
           );
         }
       }
-
-      // swarmServices[service.name]?.deploy!.labels!
-      // TODO: domains
-      // services[service.name].networks add hostforge-internal
     }
   }
 

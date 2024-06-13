@@ -20,6 +20,8 @@ import BuilderLogger from "./utils/BuilderLogger";
 import zlib from "node:zlib";
 import type winston from "winston";
 import mainLogger from "../utils/logger";
+import type { GlobalStore } from "../managers/GlobalContext";
+import Buildpacks from "./builders/Buildpacks";
 
 export default class BuildTask {
   static BASE_BUILD_PATH = "/var/tmp";
@@ -41,6 +43,7 @@ export default class BuildTask {
     private readonly deploymentId: string,
     private readonly finishCallback: (imageTag: string) => void,
     private readonly errorCallback: (error: unknown) => void,
+    private readonly store: GlobalStore,
   ) {
     this.consoleLogger = mainLogger.child({
       module: "buildTask",
@@ -96,8 +99,18 @@ export default class BuildTask {
       // build the project
       switch (serviceDetails.buildMethod) {
         case ServiceBuildMethod.Nixpacks: {
-          dockerImageTag = await new Nixpacks(configuration).build();
+          dockerImageTag = await new Nixpacks(
+            configuration,
+            this.store.docker,
+          ).build();
+          break;
+        }
 
+        case ServiceBuildMethod.Buildpacks: {
+          dockerImageTag = await new Buildpacks(
+            configuration,
+            this.store.docker,
+          ).build();
           break;
         }
 

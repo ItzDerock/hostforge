@@ -4,11 +4,11 @@ import { joinPathLimited, waitForExit } from "../utils/utils";
 import BaseBuilder from "./BaseBuilder";
 import { parse } from "dotenv";
 
-export default class Nixpacks extends BaseBuilder {
-  public async build(): Promise<string> {
+export default class Buildpacks extends BaseBuilder {
+  public async build(type = "heroku/builder:22"): Promise<string> {
     this.configuration.fileLogger.write(
       LogLevel.Notice,
-      "> Building the service with Nixpacks.",
+      "> Building the service with Buildpacks.",
     );
 
     // join the build path with the work directory
@@ -23,9 +23,17 @@ export default class Nixpacks extends BaseBuilder {
       `${key}=${value}`,
     ]);
 
-    const nixpacks = spawn(
-      "nixpacks",
-      ["build", buildPath, "--name", this.dockerTag, ...envFlags],
+    const buildpacks = spawn(
+      "pack",
+      [
+        "build",
+        this.dockerTag,
+        "--path",
+        buildPath,
+        ...envFlags,
+        "--builder",
+        type,
+      ],
       {
         env: {
           ...process.env, // a bit dangerous, but nothing in env should be sensitive
@@ -36,10 +44,10 @@ export default class Nixpacks extends BaseBuilder {
     );
 
     // pipe output
-    this.configuration.fileLogger.withChildprocess(nixpacks);
+    this.configuration.fileLogger.withChildprocess(buildpacks);
 
     // wait for exit
-    await waitForExit(nixpacks);
+    await waitForExit(buildpacks);
 
     // return the docker tag
     return this.push();

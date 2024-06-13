@@ -25,9 +25,12 @@ export const deployProject = authenticatedProcedure
       });
     }
 
-    await ctx.project.deploy({
-      docker: ctx.docker,
-    });
+    await ctx.project.deploy(
+      {
+        docker: ctx.docker,
+      },
+      ctx.globalStore,
+    );
 
     // TODO: stream progress to client
     // https://github.com/trpc/trpc/issues/4477

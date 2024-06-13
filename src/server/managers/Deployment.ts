@@ -1,5 +1,4 @@
 import assert from "assert";
-import { BuildManager } from "../build/BuildManager";
 import { db } from "../db";
 import type { serviceDeployment } from "../db/schema";
 import { ServiceDeploymentStatus } from "../db/types";
@@ -11,6 +10,7 @@ import { waitForFileToExist } from "../utils/file/index";
 import { brotliDecompress } from "zlib";
 import { promisify } from "util";
 import { createReadStream } from "../utils/file/stream.mjs";
+import type { GlobalStore } from "./GlobalContext";
 
 const brotliDecompressAsync = promisify(brotliDecompress);
 
@@ -42,7 +42,7 @@ export default class Deployment {
    * Streams the build logs for this deployment.
    * TODO: possibly cache this globally, so we're not reading the buffer multiple times
    */
-  readBuildLogs(signal: AbortSignal): Readable {
+  readBuildLogs(signal: AbortSignal, store: GlobalStore): Readable {
     const returnStream = new PassThrough();
 
     // streaming done in the background
@@ -53,7 +53,7 @@ export default class Deployment {
         this.deploymentData.status == ServiceDeploymentStatus.Building ||
         this.deploymentData.status == ServiceDeploymentStatus.BuildPending
       ) {
-        const task = BuildManager.getInstance().getTask(this.deploymentData.id);
+        const task = store.builder.getTask(this.deploymentData.id);
         if (!task) {
           this.logger.error("Task not found for deployment");
           returnStream.destroy(new Error("Task not found for deployment"));

@@ -1,4 +1,4 @@
-import { observable } from "@trpc/server/observable";
+// import { observable } from "@trpc/server/observable";
 import { authenticatedProcedure, createTRPCRouter } from "../../trpc";
 import logger from "~/server/utils/logger";
 import { getHostsProcedure } from "./hosts";

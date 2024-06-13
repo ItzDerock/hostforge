@@ -6,14 +6,11 @@ import { ServiceDeploymentStatus, ServiceSource } from "../db/types";
 import { type FullServiceGeneration } from "../docker/stack";
 import logger from "../utils/logger";
 import BuildTask from "./BuildTask";
+import type { GlobalStore } from "../managers/GlobalContext";
 
 export class BuildManager {
   private static logger = logger.child({ module: "builds" });
-  private static instance = new BuildManager();
-
-  public static getInstance() {
-    return BuildManager.instance;
-  }
+  constructor(private store: GlobalStore) {}
 
   // CONFIGURATION --------
   public readonly MAX_CONCURRENT_BUILDS = 5; // TODO: make this configurable
@@ -27,7 +24,13 @@ export class BuildManager {
   // METHODS --------
   public startBuild(serviceId: string, deploymentId: string) {
     return new Promise<string>((resolve, reject) => {
-      const task = new BuildTask(serviceId, deploymentId, resolve, reject);
+      const task = new BuildTask(
+        serviceId,
+        deploymentId,
+        resolve,
+        reject,
+        this.store,
+      );
       this.tasks.set(deploymentId, task);
       this.queue.enqueue(deploymentId);
 
@@ -60,11 +63,10 @@ export class BuildManager {
           assert(deployment);
           deploymentIds.push(deployment.id);
 
-          service.finalizedDockerImage =
-            await BuildManager.getInstance().startBuild(
-              service.id,
-              deployment.id,
-            );
+          service.finalizedDockerImage = await this.startBuild(
+            service.id,
+            deployment.id,
+          );
         }
       }),
     );

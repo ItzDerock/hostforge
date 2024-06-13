@@ -1,6 +1,5 @@
 import assert from "assert";
 import { desc, eq, or } from "drizzle-orm";
-import { BuildManager } from "../build/BuildManager";
 import { db } from "../db";
 import {
   projectDeployment,
@@ -18,6 +17,7 @@ import {
 import logger from "../utils/logger";
 import ServiceManager from "./Service";
 import { isDefined } from "~/utils/utils";
+import type { GlobalStore } from "./GlobalContext";
 
 export default class ProjectManager {
   private static LOGGER = logger.child({
@@ -89,7 +89,10 @@ export default class ProjectManager {
   /**
    * Deploys the project.
    */
-  public async deploy(deployOptions: { docker: Docker; force?: boolean }) {
+  public async deploy(
+    deployOptions: { docker: Docker; force?: boolean },
+    store: GlobalStore,
+  ) {
     // 1. find all services
     const services = await this.getServices();
 
@@ -169,7 +172,7 @@ export default class ProjectManager {
 
           // run builds if needed
           if (await service.requiresImageBuild()) {
-            const image = await BuildManager.getInstance().startBuild(
+            const image = await store.builder.startBuild(
               serviceData.id,
               sDeployment.id,
             );

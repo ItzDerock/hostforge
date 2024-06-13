@@ -63,6 +63,10 @@ export class TraefikManager {
             `--certificatesresolvers.acme.acme.email=${letsencryptEmail}`,
             "--certificatesresolvers.acme.acme.storage=/etc/traefik/acme.json",
             "--certificatesresolvers.acme.acme.httpchallenge.entrypoint=web",
+            "--certificatesresolvers.le.acme.tlschallenge=true",
+
+            "--providers.docker.constraints=Label(`traefik.constraint-label`, `hostforge-public`)",
+            "--providers.docker.exposedByDefault=false",
           ],
 
           Mounts: [

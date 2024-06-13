@@ -1,4 +1,3 @@
-// import { dockerCommand } from "docker-cli-js";
 import { spawn } from "child_process";
 import Dockerode, { type DockerOptions } from "dockerode";
 import logger from "../utils/logger";
@@ -6,6 +5,7 @@ import { Transform } from "stream";
 import { LogLevel } from "../build/utils/BuilderLogger";
 import { promisify } from "util";
 import type { DialOptions } from "docker-modem";
+import { lookup } from "dns/promises";
 
 import type { paths as DockerAPITypes } from "./types";
 export type { paths as DockerAPITypes } from "./types";
@@ -142,11 +142,46 @@ export class Docker extends Dockerode {
   }
 
   public async getIpOrHostname(serviceName: string) {
+    // check if serviceName will resolve
+    const lookupResult = await lookup(serviceName).catch(() => null);
+    if (lookupResult) return serviceName;
+
+    // otherwise, this is likely a development environment
+    // and we need to resolve the IP address of the container from the docker gateway
     const gwbridge = (await this.getNetwork(
       "docker_gwbridge",
     ).inspect()) as DockerAPITypes["/networks/{id}"]["get"]["responses"]["200"]["schema"];
-    // const container = await this.getContainer(serviceName);
-    // const inspect = await container.inspect();
-    // return inspect.NetworkSettings.IPAddress;
+
+    // find the container
+    const containers = await this.listContainers({
+      filters: JSON.stringify({
+        label: [`com.docker.compose.service=${serviceName}`],
+        status: ["running"],
+      }),
+    });
+
+    if (containers.length > 0) {
+      this.log.warn(
+        `Ambiguous container name ${serviceName}, using first container found`,
+      );
+    }
+
+    if (containers.length < 0) {
+      this.log.warn(
+        `DNS did not resolve, container not found for service ${serviceName}`,
+      );
+      return serviceName;
+    }
+
+    const ipv4 = gwbridge.Containers?.[containers[0]!.Id]?.IPv4Address;
+
+    if (!ipv4) {
+      this.log.warn(
+        `DNS did not resolve, container does not have public IP for service ${serviceName}`,
+      );
+      return serviceName;
+    }
+
+    return ipv4.split("/")[0];
   }
 }

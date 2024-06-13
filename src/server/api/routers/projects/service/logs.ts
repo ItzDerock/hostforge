@@ -27,7 +27,7 @@ export const getDeploymentLogsSubscription = authenticatedProcedure
 
     return observable<LogLine>((emit) => {
       const abort = new AbortController();
-      const logs = deployment.readBuildLogs(abort.signal);
+      const logs = deployment.readBuildLogs(abort.signal, ctx.globalStore);
 
       logs.on("data", (data: Buffer) => {
         const lines = data.toString().split("\n");

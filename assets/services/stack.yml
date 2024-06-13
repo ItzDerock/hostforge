@@ -119,31 +119,32 @@ services:
     networks:
       - hostforge-internal
 
-  registry:
-    image: registry:2.8
-    hostname: hostforge_internal_registry
-    volumes:
-      - registry-data:/var/lib/registry
-    configs:
-      - source: hostforge-internal_registry-auth-1
-        target: /auth/htpasswd
-    networks:
-      - hostforge-internal
-      - hostforge-registry
-    expose:
-      - 5000
-    environment:
-      REGISTRY_AUTH: htpasswd
-      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
-      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-      placement:
-        constraints:
-          - node.role == manager
-          - node.labels.sh.hostforge.primary == true
+  # registry:
+  #   image: registry:2.8
+  #   hostname: hostforge_internal_registry
+  #   volumes:
+  #     - registry-data:/var/lib/registry
+  #   configs:
+  #     - source: hostforge-internal_registry-auth-1
+  #       target: /auth/htpasswd
+  #   networks:
+  #     - hostforge-internal
+  #     - hostforge-registry
+  #   expose:
+  #     - 80
+  #   environment:
+  #     REGISTRY_AUTH: htpasswd
+  #     REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+  #     REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+  #     REGISTRY_HTTP_ADDR: 0.0.0.0:80
+  #   deploy:
+  #     replicas: 1
+  #     restart_policy:
+  #       condition: on-failure
+  #     placement:
+  #       constraints:
+  #         - node.role == manager
+  #         - node.labels.sh.hostforge.primary == true
 
 volumes:
   grafana-data:

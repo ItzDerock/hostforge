@@ -23,7 +23,7 @@ export enum DockerNetworks {
  * Container names
  */
 export enum DockerInternalServices {
-  Traefik = "hostforge-traefik",
+  Traefik = "hostforge_internal_traefik",
 
   // Based off of stack.yml
   Registry = "hostforge_internal_registry",

@@ -52,6 +52,7 @@ COPY --from=builder /app/.next /app/.next
 COPY --from=builder /app/assets /app/assets
 COPY --from=builder /app/exts /app/exts
 COPY --from=builder /app/public /app/public
+COPY --from=builder /app/drizzle /app/drizzle
 
 # remove dev dependencies
 RUN pnpm prune --prod

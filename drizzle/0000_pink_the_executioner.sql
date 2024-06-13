@@ -1,3 +1,11 @@
+CREATE TABLE `instance_settings` (
+	`id` integer PRIMARY KEY NOT NULL,
+	`letsencrypt_email` text,
+	`session_secret` text NOT NULL,
+	`registry_secret` text NOT NULL,
+	`domain` text
+);
+--> statement-breakpoint
 CREATE TABLE `project_deployment` (
 	`id` text PRIMARY KEY DEFAULT (uuid_generate_v7()) NOT NULL,
 	`project_id` text NOT NULL,
@@ -56,7 +64,7 @@ CREATE TABLE `service_generation` (
 	`service_id` text NOT NULL,
 	`deployment_id` text,
 	`source` integer NOT NULL,
-	`environment` text,
+	`environment` text DEFAULT '' NOT NULL,
 	`docker_image` text,
 	`docker_registry_username` text,
 	`docker_registry_password` text,
@@ -67,8 +75,8 @@ CREATE TABLE `service_generation` (
 	`git_branch` text,
 	`build_method` integer DEFAULT 2 NOT NULL,
 	`build_path` text DEFAULT '/' NOT NULL,
-	`command` text,
-	`entrypoint` text,
+	`command` text DEFAULT '' NOT NULL,
+	`entrypoint` text DEFAULT '' NOT NULL,
 	`replicas` integer DEFAULT 1 NOT NULL,
 	`max_replicas_per_node` integer,
 	`deploy_mode` integer DEFAULT 1 NOT NULL,
@@ -97,8 +105,8 @@ CREATE TABLE `service_port` (
 	`service_id` text NOT NULL,
 	`internal_port` integer NOT NULL,
 	`external_port` integer NOT NULL,
-	`port_type` integer NOT NULL,
 	`type` integer NOT NULL,
+	`publish_mode` integer NOT NULL,
 	FOREIGN KEY (`service_id`) REFERENCES `service_generation`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -122,9 +130,9 @@ CREATE TABLE `service_ulimit` (
 CREATE TABLE `service_volume` (
 	`id` text PRIMARY KEY DEFAULT (uuid_generate_v7()) NOT NULL,
 	`service_id` text NOT NULL,
-	`source` text,
+	`source` text NOT NULL,
 	`target` text NOT NULL,
-	`type` text NOT NULL,
+	`type` integer NOT NULL,
 	FOREIGN KEY (`service_id`) REFERENCES `service_generation`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint

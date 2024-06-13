@@ -1,9 +1,53 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "4d1c3e48-c40b-401f-bb7b-742335b9ec44",
+  "id": "eef7764b-bfef-45e9-a254-490df731221c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
+    "instance_settings": {
+      "name": "instance_settings",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "letsencrypt_email": {
+          "name": "letsencrypt_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "session_secret": {
+          "name": "session_secret",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "registry_secret": {
+          "name": "registry_secret",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "domain": {
+          "name": "domain",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "project_deployment": {
       "name": "project_deployment",
       "columns": {
@@ -455,8 +499,9 @@
           "name": "environment",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
         },
         "docker_image": {
           "name": "docker_image",
@@ -534,15 +579,17 @@
           "name": "command",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
         },
         "entrypoint": {
           "name": "entrypoint",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
         },
         "replicas": {
           "name": "replicas",
@@ -767,15 +814,15 @@
           "notNull": true,
           "autoincrement": false
         },
-        "port_type": {
-          "name": "port_type",
+        "type": {
+          "name": "type",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "type": {
-          "name": "type",
+        "publish_mode": {
+          "name": "publish_mode",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -934,7 +981,7 @@
           "name": "source",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "target": {
@@ -946,7 +993,7 @@
         },
         "type": {
           "name": "type",
-          "type": "text",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false

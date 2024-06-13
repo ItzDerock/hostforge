@@ -50,7 +50,7 @@ docker service create \
   -e DATABASE_PATH=/app/data/db.sqlite \
   -e PORT=3000 \
   -e NODE_ENV=production \
-  ghcr.io/itzderock/hostforge:latest
+  ghcr.io/itzderock/hostforge:main
 
 # get the current IP address
 IP=$(ip addr show dev eth0 | grep inet | awk '{print $2}' | cut -d/ -f1)

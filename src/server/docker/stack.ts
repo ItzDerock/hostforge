@@ -191,6 +191,7 @@ export async function buildDockerStackFile(
             `${routerName}-https.rule=Host(\`${domain.domain}\`)`,
             `${routerName}-https.entryPoints=https`,
             `${routerName}-https.tls=true`,
+            `${routerName}-https.tls.certresolver=letsencrypt`,
             `${serviceName}-https.api.loadbalancer.server.port=${domain.internalPort}`,
 
             // auto redirect http to https

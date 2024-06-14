@@ -60,10 +60,10 @@ export class TraefikManager {
 
             "--entrypoints.web.address=:80",
             "--entrypoints.websecure.address=:443",
-            `--certificatesresolvers.acme.acme.email=${letsencryptEmail}`,
-            "--certificatesresolvers.acme.acme.storage=/etc/traefik/acme.json",
-            "--certificatesresolvers.acme.acme.httpchallenge.entrypoint=web",
-            "--certificatesresolvers.le.acme.tlschallenge=true",
+            `--certificatesresolvers.letsencrypt.acme.email=${letsencryptEmail}`,
+            "--certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme.json",
+            "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web",
+            "--certificatesresolvers.letsencrypt.acme.tlschallenge=true",
 
             "--providers.docker.constraints=Label(`traefik.constraint-label`, `hostforge-public`)",
             "--providers.docker.exposedByDefault=false",
@@ -128,7 +128,7 @@ export class TraefikManager {
       },
 
       UpdateConfig: {
-        Parallelism: 2,
+        Parallelism: 1,
         Order: "start-first",
       },
     } satisfies Dockerode.CreateServiceOptions;

@@ -51,7 +51,7 @@ docker service create \
   -e DATABASE_PATH=/app/data/db.sqlite \
   -e PORT=3000 \
   -e NODE_ENV=production \
-  -e HOST=0.0.0.0 \
+  -e HOSTNAME=0.0.0.0 \
   ghcr.io/itzderock/hostforge:main
 
 # get the current IP address
@@ -69,8 +69,8 @@ echo "                                     __/ |     "
 echo "                                    |___/      "
 echo ""
 echo "Hostforge is now running on port 3000."
-echo "Visit http://{$IP}:3000 to access the dashboard."
+echo "Visit http://$IP:3000 to access the dashboard."
 echo ""
 echo "Still have issues? Check out the documentation at https://docs.hostforge.sh/"
 
-sleep 5
+sleep 1

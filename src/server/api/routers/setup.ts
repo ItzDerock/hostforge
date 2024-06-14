@@ -51,33 +51,6 @@ export const setupRouter = createTRPCRouter({
         // update traefik
         await ctx.globalStore.internalServices.traefik.init();
 
-        await ctx.docker.cli([
-          "service",
-          "update",
-          "hostforge",
-          "--label-add",
-          "traefik.constraint-label=hostforge-public",
-          "--label-add",
-          "traefik.enable=true",
-          "--label-add",
-          `traefik.http.routers.hostforge.rule=Host(\`${input.domain}\`)`,
-          "--label-add",
-          "traefik.http.routers.hostforge.entrypoints=websecure",
-          "--label-add",
-          "traefik.http.routers.hostforge.tls=true",
-          "--label-add",
-          "traefik.http.routers.hostforge.tls.certresolver=letsencrypt",
-          "--label-add",
-          "traefik.http.services.api.loadbalancer.server.port=3000",
-          "--label-add",
-          `traefik.docker.network=${DockerNetworks.Public}`,
-          // redirect http to https
-          "--label-add",
-          "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https",
-          "--label-add",
-          "traefik.http.routers.hostforge.middlewares=redirect-to-https",
-        ]);
-
         successfullyUpdated = true;
       } catch (err) {
         if (env.NODE_ENV !== "production") {

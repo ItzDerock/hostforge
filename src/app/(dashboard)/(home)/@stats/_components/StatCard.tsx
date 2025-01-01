@@ -26,11 +26,12 @@ export function StatCard(props: {
   const rechartsColorId = `color${props.dataKey}`;
   const Icon = props.icon;
 
+  console.log(props.data, props.dataKey);
+
   return (
     <Card
-      className={`relative overflow-clip ${
-        props.type === "fullscreen" ? "h-full w-full" : undefined
-      }`}
+      className={`relative overflow-clip ${props.type === "fullscreen" ? "h-full w-full" : undefined
+        }`}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle>{props.title}</CardTitle>

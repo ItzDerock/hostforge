@@ -56,7 +56,7 @@ export function SystemStatistics(props: {
         unit="%"
         subvalue={`of ${data.cpuCores.value} CPUs`}
         icon={Cpu}
-        data={props.historicalData.cpu}
+        data={props.historicalData.cpu[0].values}
         dataKey="value"
       />
       {/* </motion.div> */}
@@ -67,7 +67,7 @@ export function SystemStatistics(props: {
         unit="%"
         subvalue={`${memoryUsed} / ${memoryTotal}`}
         icon={MemoryStick}
-        data={props.historicalData.usedMemory}
+        data={props.historicalData.usedMemory[0].values}
         dataKey="value"
       />
 
@@ -77,23 +77,23 @@ export function SystemStatistics(props: {
         unit="%"
         subvalue={`${diskUsed} / ${diskTotal}`}
         icon={HardDrive}
-        data={props.historicalData.usedDisk}
+        data={props.historicalData.usedDisk[0].values}
         dataKey="value"
       />
 
       <StatCard
         title="Network Usage"
         // TX
-        value={data.networkTransmit.value}
+        value={data.networkTransmit.value / 1000}
         // unit="Mbps"
         subvalue="Mbps / TX"
         // RX
-        secondaryValue={data.networkReceive.value}
+        secondaryValue={data.networkReceive.value / 1000}
         // secondaryUnit="Mbps"
         secondarySubvalue="RX / Mbps"
         // misc
         icon={Router}
-        data={props.historicalData.networkTransmit}
+        data={props.historicalData.networkTransmit[0].values}
         dataKey="value"
       />
     </div>

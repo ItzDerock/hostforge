@@ -129,7 +129,7 @@ export class Prometheus {
         ...acc,
         [name]: data,
       }),
-      {} as Record<T[number][0], { time: string; data: number }[]>,
+      {} as Record<T[number][0], { time: string; data: number }[][]>,
     );
   }
 }

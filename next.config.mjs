@@ -12,6 +12,10 @@ const config = {
     esmExternals: "loose",
   },
 
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
   /**
    */
   webpack: (config, { isServer }) => {

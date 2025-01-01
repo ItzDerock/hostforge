@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y \
 ENV DOCKER_VERSION=24.0.5
 ENV NIXPACKS_VERSION=1.24.1
 ENV BUILDPACKS_VERSION=0.34.2
+ENV DOCKER_BUILDX_VERSION=0.19.3
+ENV PLATFORM=linux-amd64
 
 RUN curl -LsSo /tmp/nixpacks.deb \
   https://github.com/railwayapp/nixpacks/releases/download/v${NIXPACKS_VERSION}/nixpacks-v${NIXPACKS_VERSION}-amd64.deb \
@@ -30,6 +32,10 @@ RUN curl -LsSo /tmp/buildpacks.tgz \
   https://github.com/buildpacks/pack/releases/download/v${BUILDPACKS_VERSION}/pack-v${BUILDPACKS_VERSION}-linux.tgz \
   && tar xzvf /tmp/buildpacks.tgz -C /usr/local/bin \
   && rm /tmp/buildpacks.tgz
+
+RUN mkdir -p /usr/local/lib/docker/cli-plugins \
+    && curl -LsSo /usr/local/lib/docker/cli-plugins/docker-buildx \
+    https://github.com/docker/buildx/releases/download/v0.19.3/buildx-v${DOCKER_BUILDX_VERSION}.${PLATFORM}
 
 # Copy and install dependencies
 WORKDIR /app

@@ -35,7 +35,8 @@ RUN curl -LsSo /tmp/buildpacks.tgz \
 
 RUN mkdir -p /usr/local/lib/docker/cli-plugins \
     && curl -LsSo /usr/local/lib/docker/cli-plugins/docker-buildx \
-    https://github.com/docker/buildx/releases/download/v0.19.3/buildx-v${DOCKER_BUILDX_VERSION}.${PLATFORM}
+    https://github.com/docker/buildx/releases/download/v0.19.3/buildx-v${DOCKER_BUILDX_VERSION}.${PLATFORM} \
+    && chmod +x /usr/local/lib/docker/cli-plugins/docker-buildx
 
 # Copy and install dependencies
 WORKDIR /app
